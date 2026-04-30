@@ -121,8 +121,8 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .breadcrumb{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:.3rem}
 .breadcrumb a{color:var(--red);text-decoration:underline}
 .product-layout{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start}
-.product-gallery{background:var(--grey);border-radius:12px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:5rem}
-.product-gallery img{width:100%;height:100%;object-fit:contain}
+.product-gallery{background:var(--grey);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:5rem;min-height:300px}
+.product-gallery img{width:100%;height:auto;max-height:550px;object-fit:contain;display:block}
 .product-info h1{font-family:var(--fd);font-size:2.2rem;letter-spacing:.04em;margin-bottom:.5rem}
 .product-brand-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.25rem .7rem;border-radius:2px;margin-bottom:1rem}
 .product-description{font-size:.92rem;line-height:1.7;color:var(--muted);margin-bottom:1.5rem}
