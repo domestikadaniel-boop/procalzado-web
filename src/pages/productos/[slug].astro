@@ -87,7 +87,7 @@ const schemaProduct = {
         ) : (
           <span>👢</span>
         )}
-        {images.length > 1 && (
+        {primaryImg && (
           <>
             <button type="button" class="gallery-nav prev" id="galPrev" aria-label="Imagen anterior">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -95,7 +95,7 @@ const schemaProduct = {
             <button type="button" class="gallery-nav next" id="galNext" aria-label="Imagen siguiente">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
-            <div class="gallery-counter"><span id="galCurrent">1</span> / {images.length}</div>
+            <div class="gallery-counter"><span id="galCurrent">1</span> / {images.length || 1}</div>
           </>
         )}
       </div>
@@ -218,43 +218,39 @@ const schemaProduct = {
     selectedColor = colorBtns[0].dataset.color;
     if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
 
-    // Filtrar imágenes al color inicial si hay match
-    filterImagesByColor(selectedColor);
-
     colorBtns.forEach(btn => btn.addEventListener('click', () => {
       colorBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedColor = btn.dataset.color;
       if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
-      filterImagesByColor(selectedColor);
     }));
   }
 
-  function filterImagesByColor(color) {
-    const filtered = allImages.filter(i => i.color === color);
-    if (filtered.length > 0) {
-      visibleImages = filtered;
-    } else {
-      visibleImages = allImages;
-    }
-    currentImgIdx = 0;
-    updateGallery();
-  }
+  // Inicializar galería con TODAS las imágenes (no se filtra por color)
+  updateGallery();
 
   function updateGallery() {
     const mainImg = document.getElementById('mainImg');
     if (visibleImages.length === 0 || !mainImg) return;
     mainImg.src = visibleImages[currentImgIdx].url;
 
-    // Mostrar/ocultar flechas y contador según cantidad de imágenes
+    // Las flechas siempre se muestran si hay al menos 1 imagen
     const prevBtn = document.getElementById('galPrev');
     const nextBtn = document.getElementById('galNext');
     const counter = document.querySelector('.gallery-counter');
-    const showControls = visibleImages.length > 1;
-    if (prevBtn) prevBtn.style.display = showControls ? 'flex' : 'none';
-    if (nextBtn) nextBtn.style.display = showControls ? 'flex' : 'none';
+    const onlyOne = visibleImages.length <= 1;
+    if (prevBtn) {
+      prevBtn.style.display = 'flex';
+      prevBtn.style.opacity = onlyOne ? '0.4' : '1';
+      prevBtn.style.cursor = onlyOne ? 'default' : 'pointer';
+    }
+    if (nextBtn) {
+      nextBtn.style.display = 'flex';
+      nextBtn.style.opacity = onlyOne ? '0.4' : '1';
+      nextBtn.style.cursor = onlyOne ? 'default' : 'pointer';
+    }
     if (counter) {
-      counter.style.display = showControls ? 'block' : 'none';
+      counter.style.display = 'block';
       counter.innerHTML = `<span id="galCurrent">${currentImgIdx + 1}</span> / ${visibleImages.length}`;
     }
   }
