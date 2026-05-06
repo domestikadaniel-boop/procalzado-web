@@ -131,12 +131,21 @@ const totalBrands = brandsInUse.length;
           <div class="filter-group">
             <div class="filter-group-title">Género</div>
             <div class="filter-options">
-              {gendersInUse.map(g => (
-                <label class="filter-check">
-                  <input type="checkbox" data-filter="gender" value={g}/>
-                  <span style="text-transform:capitalize">{g}</span>
-                </label>
-              ))}
+              {gendersInUse.map(g => {
+                const labels: Record<string, string> = {
+                  'nino': 'Niño',
+                  'nina': 'Niña',
+                  'hombre': 'Hombre',
+                  'mujer': 'Mujer',
+                  'unisex': 'Unisex'
+                };
+                return (
+                  <label class="filter-check">
+                    <input type="checkbox" data-filter="gender" value={g}/>
+                    <span>{labels[g] || g.charAt(0).toUpperCase() + g.slice(1)}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
         )}
