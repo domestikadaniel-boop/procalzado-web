@@ -266,7 +266,7 @@ async function loadData(){
   const[br,ca,pr]=await Promise.all([
     supabase.from('brands').select('*').order('display_order'),
     supabase.from('categories').select('*').order('display_order'),
-    supabase.from('products').select('*,brands(name),categories(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active)').order('created_at',{ascending:false})
+    supabase.from('products').select('*,brands(name),categories!products_category_id_fkey(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active)').order('created_at',{ascending:false})
   ]);
   brands=br.data||[];categories=ca.data||[];products=pr.data||[];
 

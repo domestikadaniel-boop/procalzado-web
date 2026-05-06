@@ -83,7 +83,7 @@ export async function getProducts() {
     .select(`
       *,
       brands ( id, slug, name, logo_url ),
-      categories ( id, slug, name ),
+      categories!products_category_id_fkey ( id, slug, name ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
       product_variants ( id, size, color, color_hex, stock, active )
     `)
@@ -117,7 +117,7 @@ export async function getProductBySlug(slug: string) {
     .select(`
       *,
       brands ( id, slug, name, logo_url ),
-      categories ( id, slug, name, meta_title, meta_description ),
+      categories!products_category_id_fkey ( id, slug, name, meta_title, meta_description ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
       product_variants ( id, size, color, color_hex, stock, active )
     `)
@@ -131,10 +131,10 @@ export async function getProductBySlug(slug: string) {
   // Cargar categorías múltiples por aparte
   const { data: pcData } = await supabase
     .from('product_categories')
-    .select('category_id, is_primary, categories ( id, slug, name, meta_title, meta_description )')
+    .select('product_id, category_id, is_primary, categories ( id, slug, name, meta_title, meta_description )')
     .eq('product_id', (data as any).id);
 
-  (data as any).product_categories = pcData || [];
+  if (pcData) (data as any).product_categories = pcData;
 
   return data as Product;
 }
