@@ -89,83 +89,88 @@ const totalBrands = brandsInUse.length;
       </div>
       <button class="toggle-cats-btn" id="toggleFiltersBtn" type="button" title="Mostrar filtros">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Filtros
+        <span class="toggle-label">Filtros</span>
         <span class="filter-count-badge" id="filterCountBadge" style="display:none">0</span>
       </button>
     </div>
 
-    <!-- Categorías principales (siempre visibles) -->
-    <div class="pills">
-      <button class="pill active" type="button" data-cat="todas">Todas</button>
-      {mainCategories.map(cat => (
-        <button class="pill" type="button" data-cat={cat.slug} data-cat-id={cat.id}>{cat.name}</button>
-      ))}
-    </div>
+    <!-- Todo lo que se puede ocultar/mostrar -->
+    <div class="collapsible-filters hidden" id="collapsibleFilters">
+      <!-- Categorías principales -->
+      <div class="filter-section-title">Categorías</div>
+      <div class="pills main-pills">
+        <button class="pill active" type="button" data-cat="todas">Todas</button>
+        {mainCategories.map(cat => (
+          <button class="pill" type="button" data-cat={cat.slug} data-cat-id={cat.id}>{cat.name}</button>
+        ))}
+      </div>
 
-    <!-- Subcategorías (aparecen al elegir una categoría principal) -->
-    <div class="subcats-wrapper" id="subcatsWrapper" style="display:none">
-      <div class="pills subcats-pills" id="subcatsPills"></div>
-    </div>
+      <!-- Subcategorías (aparecen al elegir una categoría principal) -->
+      <div class="subcats-wrapper" id="subcatsWrapper" style="display:none">
+        <div class="filter-section-title">Subcategorías</div>
+        <div class="pills subcats-pills" id="subcatsPills"></div>
+      </div>
 
-    <!-- Panel de filtros avanzados -->
-    <div class="filters-panel hidden" id="filtersPanel">
-      {brandsInUse.length > 0 && (
-        <div class="filter-group">
-          <div class="filter-group-title">Marca</div>
-          <div class="filter-options">
-            {brandsInUse.map(b => (
-              <label class="filter-check">
-                <input type="checkbox" data-filter="brand" value={b.slug}/>
-                <span>{b.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {gendersInUse.length > 0 && (
-        <div class="filter-group">
-          <div class="filter-group-title">Género</div>
-          <div class="filter-options">
-            {gendersInUse.map(g => (
-              <label class="filter-check">
-                <input type="checkbox" data-filter="gender" value={g}/>
-                <span style="text-transform:capitalize">{g}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {productPrices.length > 0 && (
-        <div class="filter-group">
-          <div class="filter-group-title">Precio</div>
-          <div class="filter-price">
-            <div style="display:flex;gap:.4rem;align-items:center">
-              <input type="number" id="priceMin" placeholder="Min" min={minPrice} max={maxPrice}/>
-              <span style="color:var(--muted)">—</span>
-              <input type="number" id="priceMax" placeholder="Max" min={minPrice} max={maxPrice}/>
+      <!-- Panel de filtros avanzados -->
+      <div class="filters-panel" id="filtersPanel">
+        {brandsInUse.length > 0 && (
+          <div class="filter-group">
+            <div class="filter-group-title">Marca</div>
+            <div class="filter-options">
+              {brandsInUse.map(b => (
+                <label class="filter-check">
+                  <input type="checkbox" data-filter="brand" value={b.slug}/>
+                  <span>{b.name}</span>
+                </label>
+              ))}
             </div>
-            <small style="color:var(--muted);font-size:.7rem">Rango: ${minPrice.toLocaleString('es-CO')} - ${maxPrice.toLocaleString('es-CO')}</small>
           </div>
-        </div>
-      )}
+        )}
 
-      <div class="filter-group">
-        <div class="filter-group-title">Otros</div>
-        <div class="filter-options">
-          <label class="filter-check">
-            <input type="checkbox" data-filter="hasPrice" value="true"/>
-            <span>Solo con precio visible</span>
-          </label>
-          <label class="filter-check">
-            <input type="checkbox" data-filter="featured" value="true"/>
-            <span>Destacados ⭐</span>
-          </label>
+        {gendersInUse.length > 0 && (
+          <div class="filter-group">
+            <div class="filter-group-title">Género</div>
+            <div class="filter-options">
+              {gendersInUse.map(g => (
+                <label class="filter-check">
+                  <input type="checkbox" data-filter="gender" value={g}/>
+                  <span style="text-transform:capitalize">{g}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {productPrices.length > 0 && (
+          <div class="filter-group">
+            <div class="filter-group-title">Precio</div>
+            <div class="filter-price">
+              <div style="display:flex;gap:.4rem;align-items:center">
+                <input type="number" id="priceMin" placeholder="Min" min={minPrice} max={maxPrice}/>
+                <span style="color:var(--muted)">—</span>
+                <input type="number" id="priceMax" placeholder="Max" min={minPrice} max={maxPrice}/>
+              </div>
+              <small style="color:var(--muted);font-size:.7rem">Rango: ${minPrice.toLocaleString('es-CO')} - ${maxPrice.toLocaleString('es-CO')}</small>
+            </div>
+          </div>
+        )}
+
+        <div class="filter-group">
+          <div class="filter-group-title">Otros</div>
+          <div class="filter-options">
+            <label class="filter-check">
+              <input type="checkbox" data-filter="hasPrice" value="true"/>
+              <span>Solo con precio visible</span>
+            </label>
+            <label class="filter-check">
+              <input type="checkbox" data-filter="featured" value="true"/>
+              <span>Destacados ⭐</span>
+            </label>
+          </div>
         </div>
       </div>
 
-      <button class="filter-clear" id="filterClearBtn" type="button">Limpiar filtros</button>
+      <button class="filter-clear" id="filterClearBtn" type="button">Limpiar todos los filtros</button>
     </div>
   </div>
 </div>
@@ -245,7 +250,7 @@ const totalBrands = brandsInUse.length;
 // === FILTRADO AVANZADO ===
 const searchInput = document.getElementById('searchInput');
 const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
-const filtersPanel = document.getElementById('filtersPanel');
+const collapsibleFilters = document.getElementById('collapsibleFilters');
 const subcatsWrapper = document.getElementById('subcatsWrapper');
 const subcatsPills = document.getElementById('subcatsPills');
 const filterCountBadge = document.getElementById('filterCountBadge');
@@ -256,16 +261,16 @@ const subcatsData = JSON.parse(document.getElementById('subcatsData').textConten
 let currentCat = 'todas';
 let currentSubcat = '';
 
-// Toggle panel filtros
+// Toggle TODO el panel (categorías + subcategorías + filtros)
 toggleFiltersBtn.addEventListener('click', () => {
-  filtersPanel.classList.toggle('hidden');
-  toggleFiltersBtn.classList.toggle('active-toggle', !filtersPanel.classList.contains('hidden'));
+  collapsibleFilters.classList.toggle('hidden');
+  toggleFiltersBtn.classList.toggle('active-toggle', !collapsibleFilters.classList.contains('hidden'));
 });
 
 // Click en pill principal
-document.querySelectorAll('.filter-bar > .filter-inner > .pills .pill').forEach(pill => {
+document.querySelectorAll('.main-pills .pill').forEach(pill => {
   pill.addEventListener('click', () => {
-    document.querySelectorAll('.filter-bar > .filter-inner > .pills .pill').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.main-pills .pill').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
     currentCat = pill.dataset.cat || 'todas';
     currentSubcat = '';
