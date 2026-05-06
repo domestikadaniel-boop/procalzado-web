@@ -84,7 +84,6 @@ export async function getProducts() {
       *,
       brands ( id, slug, name, logo_url ),
       categories ( id, slug, name ),
-      product_categories ( category_id, is_primary, categories ( id, slug, name ) ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
       product_variants ( id, size, color, color_hex, stock, active )
     `)
@@ -93,6 +92,22 @@ export async function getProducts() {
     .order('created_at', { ascending: false });
 
   if (error) { console.error('Error fetching products:', error); return []; }
+  if (!data || data.length === 0) return [];
+
+  // Cargar categorías múltiples por aparte (no rompe si falla)
+  const productIds = data.map((p: any) => p.id);
+  const { data: pcData } = await supabase
+    .from('product_categories')
+    .select('product_id, category_id, is_primary, categories ( id, slug, name )')
+    .in('product_id', productIds);
+
+  // Asociar a cada producto
+  if (pcData) {
+    data.forEach((p: any) => {
+      p.product_categories = pcData.filter((pc: any) => pc.product_id === p.id);
+    });
+  }
+
   return (data as Product[]) || [];
 }
 
@@ -103,7 +118,6 @@ export async function getProductBySlug(slug: string) {
       *,
       brands ( id, slug, name, logo_url ),
       categories ( id, slug, name, meta_title, meta_description ),
-      product_categories ( category_id, is_primary, categories ( id, slug, name, meta_title, meta_description ) ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
       product_variants ( id, size, color, color_hex, stock, active )
     `)
@@ -112,6 +126,16 @@ export async function getProductBySlug(slug: string) {
     .single();
 
   if (error) { console.error('Error fetching product:', error); return null; }
+  if (!data) return null;
+
+  // Cargar categorías múltiples por aparte
+  const { data: pcData } = await supabase
+    .from('product_categories')
+    .select('category_id, is_primary, categories ( id, slug, name, meta_title, meta_description )')
+    .eq('product_id', (data as any).id);
+
+  (data as any).product_categories = pcData || [];
+
   return data as Product;
 }
 

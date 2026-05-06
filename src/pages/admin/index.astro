@@ -266,9 +266,19 @@ async function loadData(){
   const[br,ca,pr]=await Promise.all([
     supabase.from('brands').select('*').order('display_order'),
     supabase.from('categories').select('*').order('display_order'),
-    supabase.from('products').select('*,brands(name),categories(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active),product_categories(category_id,is_primary,categories(id,name,slug))').order('created_at',{ascending:false})
+    supabase.from('products').select('*,brands(name),categories(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active)').order('created_at',{ascending:false})
   ]);
   brands=br.data||[];categories=ca.data||[];products=pr.data||[];
+
+  // Cargar categorías múltiples aparte
+  if(products.length>0){
+    const pids = products.map(p=>p.id);
+    const {data: pcData} = await supabase.from('product_categories').select('product_id, category_id, is_primary, categories(id,name,slug)').in('product_id', pids);
+    if(pcData){
+      products.forEach(p => { p.product_categories = pcData.filter(pc => pc.product_id === p.id); });
+    }
+  }
+
   renderProducts();renderBrands();renderCategories();populateSelects();loading(false);
 }
 
