@@ -91,6 +91,9 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .color-row1 input[type="color"]{width:40px;height:36px;padding:2px;border:1px solid var(--grey2);border-radius:5px;cursor:pointer;background:var(--white)}
 .color-row1 .remove-color{padding:.4rem .6rem;background:none;border:1px solid var(--grey2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:.85rem;background:var(--white)}
 .color-row1 .remove-color:hover{color:var(--red);border-color:var(--red);background:#ffe6e6}
+.color-row1 .dual-toggle{padding:.35rem .55rem;background:var(--white);border:1px solid var(--grey2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:1rem;line-height:1;transition:all .15s}
+.color-row1 .dual-toggle:hover{border-color:var(--red);color:var(--red)}
+.color-row1 .dual-toggle.active{background:var(--black);border-color:var(--black);color:var(--white)}
 .color-imgs{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
 .color-img-thumb{position:relative;width:70px!important;height:70px!important;max-width:70px!important;max-height:70px!important;border-radius:5px;overflow:hidden;border:2px solid var(--white);flex-shrink:0;display:block}
 .color-img-thumb img{width:70px!important;height:70px!important;max-width:70px!important;max-height:70px!important;object-fit:cover;display:block}
@@ -465,18 +468,19 @@ function renderColors(){
   $('colorsContainer').innerHTML = formColors.map((c,idx) => `
     <div class="color-block" data-idx="${idx}">
       <div class="color-row1">
-        <input type="color" value="${c.hex||'#000000'}" data-action="hex" data-idx="${idx}" title="Color visual"/>
-        <input type="text" placeholder="Nombre del color (ej: Negro)" value="${c.name||''}" data-action="name" data-idx="${idx}"/>
-        <input type="color" value="${c.hex||'#000000'}" data-action="hex2" data-idx="${idx}" style="width:40px"/>
+        <input type="color" value="${c.hex||'#000000'}" data-action="hex" data-idx="${idx}" title="Color principal"/>
+        ${c.dual ? `<input type="color" value="${c.hex2||'#FFFFFF'}" data-action="hex2color" data-idx="${idx}" title="Segundo color"/>` : ''}
+        <input type="text" placeholder="Nombre del color (ej: Negro/Rojo)" value="${c.name||''}" data-action="name" data-idx="${idx}"/>
+        <button type="button" class="dual-toggle ${c.dual?'active':''}" data-action="toggleDual" data-idx="${idx}" title="${c.dual?'Color simple':'Color dual'}">${c.dual?'◐':'⬤'}</button>
         <button type="button" class="remove-color" data-action="remove" data-idx="${idx}">✕</button>
       </div>
+      ${c.dual ? `<div class="color-preview-dual" style="background:linear-gradient(135deg,${c.hex||'#000'} 50%, ${c.hex2||'#FFF'} 50%);width:32px;height:32px;border-radius:50%;border:2px solid var(--white);box-shadow:0 0 0 1px var(--grey2);margin:0 0 .5rem"></div>` : ''}
       <div class="color-imgs" data-imgs="${idx}">
         ${(c.images||[]).map((img,i)=>`<div class="color-img-thumb" style="width:70px;height:70px"><img src="${img.url}" width="70" height="70" style="width:70px;height:70px;object-fit:cover;display:block"/><button type="button" class="x" data-rmimg="${idx}-${i}">×</button></div>`).join('')}
         <button type="button" class="upload-color-btn" data-action="upload" data-idx="${idx}">📷 Subir imagen</button>
       </div>
     </div>`).join('');
 
-  // Wire up events
   $('colorsContainer').querySelectorAll('[data-action]').forEach(el=>{
     el.addEventListener('change',handleColorChange);
     el.addEventListener('click',handleColorClick);
@@ -489,14 +493,13 @@ function renderColors(){
     });
   });
 }
+
 function handleColorChange(e){
   const idx=parseInt(e.target.dataset.idx);
   const action=e.target.dataset.action;
   if(action==='name')formColors[idx].name=e.target.value;
-  if(action==='hex'||action==='hex2'){formColors[idx].hex=e.target.value;
-    // Sync both color pickers
-    $('colorsContainer').querySelectorAll(`[data-idx="${idx}"][type="color"]`).forEach(c=>c.value=e.target.value);
-  }
+  if(action==='hex'){formColors[idx].hex=e.target.value; renderColors();}
+  if(action==='hex2color'){formColors[idx].hex2=e.target.value; renderColors();}
 }
 function handleColorClick(e){
   const action=e.target.dataset.action;
@@ -506,6 +509,10 @@ function handleColorClick(e){
   } else if(action==='upload'){
     activeColorIdx=idx;
     $('hiddenColorInput').click();
+  } else if(action==='toggleDual'){
+    formColors[idx].dual = !formColors[idx].dual;
+    if(formColors[idx].dual && !formColors[idx].hex2) formColors[idx].hex2 = '#FFFFFF';
+    renderColors();
   }
 }
 $('hiddenColorInput').addEventListener('change',async e=>{
@@ -525,7 +532,7 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',images:[]});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[]});
   renderColors();
 });
 
@@ -563,10 +570,16 @@ function openProductForm(p=null){
     formColors=uniqueColors.map(cname=>{
       const variant=p.product_variants.find(v=>v.color===cname);
       const colorImages=(p.product_images||[]).filter(i=>i.color===cname);
-      return{name:cname,hex:variant?.color_hex||'#000000',images:colorImages.map(i=>({url:i.url,id:i.id,existing:true}))};
+      return{
+        name:cname,
+        hex:variant?.color_hex||'#000000',
+        hex2:variant?.color_hex_2||'#FFFFFF',
+        dual:!!variant?.color_hex_2,
+        images:colorImages.map(i=>({url:i.url,id:i.id,existing:true}))
+      };
     });
   }
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',images:[]});
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[]});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -613,17 +626,13 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const validColors = formColors.filter(c=>c.name.trim());
   const variants=[];
   if (validColors.length === 0 && sizes.length === 0) {
-    // Sin colores ni tallas - crear variante única
-    variants.push({product_id:pid,color:'Único',color_hex:'#000000',size:'Única',stock:0,active:true});
+    variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:'Única',stock:0,active:true});
   } else if (validColors.length === 0) {
-    // Solo tallas
-    sizes.forEach(s => variants.push({product_id:pid,color:'Único',color_hex:'#000000',size:s,stock:0,active:true}));
+    sizes.forEach(s => variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:s,stock:0,active:true}));
   } else if (sizes.length === 0) {
-    // Solo colores
-    validColors.forEach(c => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,size:'Única',stock:0,active:true}));
+    validColors.forEach(c => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:'Única',stock:0,active:true}));
   } else {
-    // Tallas y colores - producto cartesiano
-    validColors.forEach(c => sizes.forEach(s => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,size:s,stock:0,active:true})));
+    validColors.forEach(c => sizes.forEach(s => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:s,stock:0,active:true})));
   }
   if(variants.length)await supabase.from('product_variants').insert(variants);
 

@@ -29,7 +29,11 @@ const variants = product.product_variants?.filter(v => v.active) || [];
 const sizes = [...new Set(variants.map(v => v.size))];
 const colors = [...new Set(variants.map(v => v.color))].map(colorName => {
   const variant = variants.find(v => v.color === colorName);
-  return { name: colorName, hex: variant?.color_hex || '#999' };
+  return { 
+    name: colorName, 
+    hex: variant?.color_hex || '#999',
+    hex2: (variant as any)?.color_hex_2 || null
+  };
 });
 
 // Specs
@@ -152,9 +156,14 @@ const schemaProduct = {
         <div class="product-variants">
           <div class="variant-title">Colores disponibles <span id="selectedColorName" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:.85rem"></span></div>
           <div class="color-list" id="colorList">
-            {colors.map((c, i) => (
-              <button type="button" class={`color-dot-btn ${i === 0 ? 'selected' : ''}`} style={`background:${c.hex}`} data-color={c.name} title={c.name}></button>
-            ))}
+            {colors.map((c, i) => {
+              const bg = c.hex2 
+                ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
+                : c.hex;
+              return (
+                <button type="button" class={`color-dot-btn ${i === 0 ? 'selected' : ''}`} style={`background:${bg}`} data-color={c.name} title={c.name}></button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -199,6 +208,12 @@ const schemaProduct = {
   const dataEl = document.getElementById('galleryData');
   const allImages = dataEl ? JSON.parse(dataEl.textContent) : [];
   visibleImages = allImages.slice();
+
+  // Precargar TODAS las imágenes al inicio para que el cambio sea instantáneo
+  allImages.forEach(imgData => {
+    const preload = new Image();
+    preload.src = imgData.url;
+  });
 
   // Inicializar tallas
   const sizeBtns = document.querySelectorAll('.size-tag-btn');
