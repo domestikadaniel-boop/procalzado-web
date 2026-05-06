@@ -76,6 +76,14 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .size-check input{display:none}
 .size-check.checked{background:var(--red);border-color:var(--red);color:var(--white)}
 
+/* CATEGORÍAS GRID */
+.cats-checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-top:.3rem;padding:.7rem;background:var(--grey);border-radius:6px;border:1px solid var(--grey2)}
+.cat-check{display:flex;align-items:center;gap:.4rem;padding:.5rem .7rem;border:2px solid var(--grey2);border-radius:5px;background:var(--white);cursor:pointer;font-size:.82rem;transition:all .15s;user-select:none}
+.cat-check:hover{border-color:var(--red)}
+.cat-check.checked{background:#fff5f5;border-color:var(--red);color:var(--red);font-weight:600}
+.cat-check input{margin:0}
+.cat-check.is-primary::after{content:'★';color:var(--red);margin-left:auto;font-size:.85rem}
+
 /* COLORES E IMÁGENES */
 .color-block{border:2px solid var(--grey2);border-radius:8px;padding:1rem;margin-bottom:.8rem;background:var(--grey)}
 .color-row1{display:flex;gap:.5rem;align-items:center;margin-bottom:.7rem}
@@ -170,8 +178,10 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         <div class="field"><label>Nombre *</label><input type="text" id="pName" placeholder="Ej: Dakar"/></div>
         <div class="field"><label>Slug (URL) *</label><input type="text" id="pSlug" placeholder="auto-generado"/></div>
         <div class="field"><label>Marca</label><select id="pBrand"><option value="">Seleccionar...</option></select></div>
-        <div class="field"><label>Categoría</label><select id="pCategory"><option value="">Seleccionar...</option></select></div>
         <div class="field"><label>Género</label><select id="pGender"><option value="">Seleccionar...</option><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="unisex">Unisex</option><option value="nino">Niño</option><option value="nina">Niña</option></select></div>
+        <div class="field full"><label>Categorías (puedes elegir varias)</label>
+          <div class="cats-checkbox-grid" id="pCategoriesGrid"></div>
+        </div>
         <div class="field"><label>Precio (COP)</label><input type="number" id="pPrice" placeholder="0"/></div>
         <div class="field"><label><input type="checkbox" id="pShowPrice"/> Mostrar precio en el sitio</label></div>
         <div class="field"><label><input type="checkbox" id="pFeatured"/> Producto destacado</label></div>
@@ -256,7 +266,7 @@ async function loadData(){
   const[br,ca,pr]=await Promise.all([
     supabase.from('brands').select('*').order('display_order'),
     supabase.from('categories').select('*').order('display_order'),
-    supabase.from('products').select('*,brands(name),categories(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active)').order('created_at',{ascending:false})
+    supabase.from('products').select('*,brands(name),categories(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active),product_categories(category_id,is_primary,categories(id,name,slug))').order('created_at',{ascending:false})
   ]);
   brands=br.data||[];categories=ca.data||[];products=pr.data||[];
   renderProducts();renderBrands();renderCategories();populateSelects();loading(false);
@@ -266,10 +276,14 @@ function renderProducts(filter=''){
   const f=products.filter(p=>!filter||p.name.toLowerCase().includes(filter)||(p.brands?.name||'').toLowerCase().includes(filter));
   $('productTableBody').innerHTML=f.map(p=>{
     const img=p.product_images?.find(i=>i.is_primary)||p.product_images?.[0];
+    // Obtener nombres de categorías (de la nueva tabla, con fallback a la vieja)
+    const catNames = p.product_categories?.length
+      ? p.product_categories.map(pc => pc.categories?.name).filter(Boolean).join(', ')
+      : (p.categories?.name || '-');
     return `<tr>
       <td style="width:60px;max-width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;max-width:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
       <td><strong>${p.name}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p.slug}</span></td>
-      <td>${p.brands?.name||'-'}</td><td>${p.categories?.name||'-'}</td>
+      <td>${p.brands?.name||'-'}</td><td>${catNames}</td>
       <td>${p.show_price&&p.price?'$'+Number(p.price).toLocaleString():'-'}</td>
       <td><span class="badge ${p.active?'badge-active':'badge-inactive'}">${p.active?'Activo':'Off'}</span></td>
       <td class="actions-cell"><button class="action-btn edit" onclick="window.editProduct('${p.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteProduct('${p.id}',\`${p.name.replace(/`/g,'')}\`)">🗑️</button></td>
@@ -294,7 +308,28 @@ function renderCategories(){
 }
 function populateSelects(){
   $('pBrand').innerHTML='<option value="">Seleccionar...</option>'+brands.filter(b=>b.active).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-  $('pCategory').innerHTML='<option value="">Seleccionar...</option>'+categories.filter(c=>c.active).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function renderCategoriesCheckboxes(selectedIds=[], primaryId=null){
+  const grid = $('pCategoriesGrid');
+  if(!grid) return;
+  grid.innerHTML = categories.filter(c=>c.active).map(c => {
+    const checked = selectedIds.includes(c.id);
+    const isPrimary = primaryId === c.id;
+    return `<label class="cat-check ${checked?'checked':''} ${isPrimary?'is-primary':''}" data-id="${c.id}">
+      <input type="checkbox" value="${c.id}" ${checked?'checked':''}/>
+      <span>${c.name}</span>
+    </label>`;
+  }).join('');
+  grid.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      e.target.closest('.cat-check').classList.toggle('checked', e.target.checked);
+    });
+  });
+}
+
+function getSelectedCategories(){
+  return Array.from($('pCategoriesGrid').querySelectorAll('input:checked')).map(i=>i.value);
 }
 
 // SPECS
@@ -391,9 +426,21 @@ function openProductForm(p=null){
   editingProduct=p;formColors=[];
   $('formTitle').textContent=p?'Editar Producto':'Nuevo Producto';
   $('productId').value=p?.id||'';$('pName').value=p?.name||'';$('pSlug').value=p?.slug||'';
-  $('pBrand').value=p?.brand_id||'';$('pCategory').value=p?.category_id||'';$('pGender').value=p?.gender||'';
+  $('pBrand').value=p?.brand_id||'';$('pGender').value=p?.gender||'';
   $('pPrice').value=p?.price||'';$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;
   $('pShortDesc').value=p?.short_description||'';$('pDesc').value=p?.description||'';
+
+  // Categorías - de la nueva tabla, con fallback a la vieja
+  let selectedCatIds = [];
+  let primaryCatId = null;
+  if (p?.product_categories?.length) {
+    selectedCatIds = p.product_categories.map(pc => pc.category_id);
+    primaryCatId = p.product_categories.find(pc => pc.is_primary)?.category_id || selectedCatIds[0];
+  } else if (p?.category_id) {
+    selectedCatIds = [p.category_id];
+    primaryCatId = p.category_id;
+  }
+  renderCategoriesCheckboxes(selectedCatIds, primaryCatId);
 
   $('specsContainer').innerHTML='';
   const specs=p?.specs||{};Object.entries(specs).forEach(([k,v])=>addSpecRow(k,String(v)));if(!Object.keys(specs).length)addSpecRow();
@@ -431,11 +478,26 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const specRows=$('specsContainer').querySelectorAll('.spec-row');const specs={};
   specRows.forEach(r=>{const i=r.querySelectorAll('input');const k=i[0].value.trim(),v=i[1].value.trim();if(k&&v)specs[k]=v});
 
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:$('pCategory').value||null,gender:$('pGender').value||null,price:$('pPrice').value?parseFloat($('pPrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,specs,active:true};
+  const selectedCatIds = getSelectedCategories();
+  const primaryCatId = selectedCatIds[0] || null; // primera = principal
+
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:$('pGender').value||null,price:$('pPrice').value?parseFloat($('pPrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,specs,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}
   else{const{data,error}=await supabase.from('products').insert(pd).select().single();if(error){loading(false);alert('Error: '+error.message);return}pid=data.id}
+
+  // CATEGORÍAS (múltiples)
+  await supabase.from('product_categories').delete().eq('product_id', pid);
+  if (selectedCatIds.length > 0) {
+    await supabase.from('product_categories').insert(
+      selectedCatIds.map((cid, idx) => ({
+        product_id: pid,
+        category_id: cid,
+        is_primary: idx === 0
+      }))
+    );
+  }
 
   // VARIANTS = combinación de cada color con cada talla
   await supabase.from('product_variants').delete().eq('product_id',pid);

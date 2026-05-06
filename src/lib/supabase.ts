@@ -43,8 +43,15 @@ export interface Product {
   // Joins
   brands?: Brand;
   categories?: Category;
+  product_categories?: ProductCategory[];
   product_images?: ProductImage[];
   product_variants?: ProductVariant[];
+}
+
+export interface ProductCategory {
+  category_id: string;
+  is_primary: boolean;
+  categories?: Category;
 }
 
 export interface ProductImage {
@@ -77,6 +84,7 @@ export async function getProducts() {
       *,
       brands ( id, slug, name, logo_url ),
       categories ( id, slug, name ),
+      product_categories ( category_id, is_primary, categories ( id, slug, name ) ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
       product_variants ( id, size, color, color_hex, stock, active )
     `)
@@ -95,6 +103,7 @@ export async function getProductBySlug(slug: string) {
       *,
       brands ( id, slug, name, logo_url ),
       categories ( id, slug, name, meta_title, meta_description ),
+      product_categories ( category_id, is_primary, categories ( id, slug, name, meta_title, meta_description ) ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
       product_variants ( id, size, color, color_hex, stock, active )
     `)

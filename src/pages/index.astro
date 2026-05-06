@@ -96,10 +96,15 @@ const totalBrands = new Set(products.map(p => p.brands?.name).filter(Boolean)).s
     {products.map((p, i) => {
       const primaryImg = p.product_images?.find(img => img.is_primary) || p.product_images?.[0];
       const brandName = p.brands?.name || '';
-      const catName = p.categories?.name || '';
-      const catSlug = p.categories?.slug || '';
+      // Categorías del producto (de la nueva tabla, con fallback a la vieja)
+      const productCats = p.product_categories?.length
+        ? p.product_categories.map(pc => pc.categories).filter(Boolean)
+        : (p.categories ? [p.categories] : []);
+      const catSlugs = productCats.map(c => c?.slug).filter(Boolean).join(',');
+      const primaryCat = p.product_categories?.find(pc => pc.is_primary)?.categories || p.categories;
+      const catName = primaryCat?.name || '';
       return (
-        <a href={`/productos/${p.slug}`} class="card" style={`animation-delay:${i * 30}ms`} data-cat={catSlug} data-name={p.name.toLowerCase()} data-brand={brandName.toLowerCase()}>
+        <a href={`/productos/${p.slug}`} class="card" style={`animation-delay:${i * 30}ms`} data-cat={catSlugs} data-name={p.name.toLowerCase()} data-brand={brandName.toLowerCase()}>
           <div class="card-top-bar"></div>
           <div class="card-img">
             {primaryImg ? (
@@ -170,10 +175,10 @@ function filterProducts() {
   const q = searchInput?.value.toLowerCase().trim() || '';
   let count = 0;
   cards.forEach(card => {
-    const cat = card.dataset.cat || '';
+    const cats = (card.dataset.cat || '').split(',').filter(Boolean);
     const name = card.dataset.name || '';
     const brand = card.dataset.brand || '';
-    const matchCat = currentCat === 'todas' || cat === currentCat;
+    const matchCat = currentCat === 'todas' || cats.includes(currentCat);
     const matchSearch = !q || name.includes(q) || brand.includes(q);
     const show = matchCat && matchSearch;
     card.style.display = show ? '' : 'none';
