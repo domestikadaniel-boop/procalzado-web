@@ -72,6 +72,7 @@ export interface ProductVariant {
   size: string;
   color: string;
   color_hex: string | null;
+  color_hex_2: string | null;
   stock: number;
   sku: string | null;
   active: boolean;
@@ -87,7 +88,7 @@ export async function getProducts() {
       brands ( id, slug, name, logo_url ),
       categories!products_category_id_fkey ( id, slug, name ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
-      product_variants ( id, size, color, color_hex, stock, active )
+      product_variants ( id, size, color, color_hex, color_hex_2, stock, active )
     `)
     .eq('active', true)
     .order('display_order', { ascending: true })
@@ -121,7 +122,7 @@ export async function getProductBySlug(slug: string) {
       brands ( id, slug, name, logo_url ),
       categories!products_category_id_fkey ( id, slug, name, meta_title, meta_description ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
-      product_variants ( id, size, color, color_hex, stock, active )
+      product_variants ( id, size, color, color_hex, color_hex_2, stock, active )
     `)
     .eq('slug', slug)
     .eq('active', true)
