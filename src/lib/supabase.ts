@@ -88,7 +88,7 @@ export async function getProducts() {
       product_variants ( id, size, color, color_hex, stock, active )
     `)
     .eq('active', true)
-    .order('featured', { ascending: false })
+    .order('display_order', { ascending: true })
     .order('created_at', { ascending: false });
 
   if (error) { console.error('Error fetching products:', error); return []; }

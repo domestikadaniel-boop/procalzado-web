@@ -115,6 +115,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .toggle-switch input:checked+.toggle-slider::before{transform:translateX(16px)}
 
 @media(max-width:640px){.form-grid{grid-template-columns:1fr}}
+.draggable-row{cursor:default;transition:background .15s}
+.draggable-row:hover{background:rgba(255,0,0,.03)!important}
+.draggable-row td:first-child{cursor:grab}
+.draggable-row td:first-child:active{cursor:grabbing}
+.order-input:focus{outline:2px solid var(--red);border-color:var(--red)}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:var(--white);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:600;display:none;align-items:center;justify-content:center;font-size:1.1rem;font-weight:600;color:var(--muted)}
@@ -155,15 +160,15 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
   <div class="admin-body">
     <div id="tab-products">
       <div class="toolbar"><input type="text" id="adminSearch" placeholder="Buscar productos..."/><button class="btn-add" id="addProductBtn">+ Nuevo producto</button></div>
-      <div class="product-table"><table><thead><tr><th style="width:60px">Img</th><th>Nombre</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="productTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th style="width:60px">Img</th><th>Nombre</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="productTableBody"></tbody></table></div>
     </div>
     <div id="tab-brands" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las marcas</span><button class="btn-add" id="addBrandBtn">+ Nueva marca</button></div>
-      <div class="product-table"><table><thead><tr><th>Nombre</th><th>Slug</th><th>Dist. Autorizado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="brandTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:50px">Orden</th><th>Nombre</th><th>Slug</th><th>Dist. Autorizado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="brandTableBody"></tbody></table></div>
     </div>
     <div id="tab-categories" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las categorías</span><button class="btn-add" id="addCatBtn">+ Nueva categoría</button></div>
-      <div class="product-table"><table><thead><tr><th>Nombre</th><th>Slug</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="catTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:50px">Orden</th><th>Nombre</th><th>Slug</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="catTableBody"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -213,12 +218,33 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="form-body">
       <input type="hidden" id="brandId"/>
       <div class="field"><label>Nombre *</label><input type="text" id="bName" placeholder="Ej: Venus"/></div>
-      <div class="field"><label>Slug</label><input type="text" id="bSlug" placeholder="auto-generado"/></div>
+      <div class="field"><label>Slug</label><input type="text" id="bSlug" placeholder="auto-generado-de-nombre"/></div>
+      <div class="field"><label>Orden de aparición</label><input type="number" id="bOrder" value="0" min="0"/><small style="color:var(--muted);font-size:.72rem">Menor número aparece primero</small></div>
       <div class="field"><label><input type="checkbox" id="bAuthorized"/> Somos distribuidores autorizados</label></div>
     </div>
     <div class="form-actions">
       <button class="btn-cancel" onclick="document.getElementById('brandModal').classList.remove('open')">Cancelar</button>
       <button class="btn-save" id="brandSaveBtn">Guardar marca</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-bg" id="categoryModal">
+  <div class="form-modal" style="max-width:500px">
+    <div class="form-header"><h3 id="catFormTitle">Nueva Categoría</h3><button class="form-close" onclick="document.getElementById('categoryModal').classList.remove('open')">&times;</button></div>
+    <div class="form-body">
+      <input type="hidden" id="catId"/>
+      <div class="field"><label>Nombre *</label><input type="text" id="cName" placeholder="Ej: Botas de Caucho"/></div>
+      <div class="field"><label>Slug (URL) *</label><input type="text" id="cSlug" placeholder="botas-de-caucho"/><small style="color:var(--muted);font-size:.72rem">Solo minúsculas, números y guiones. Ej: <code>botas-caucho</code></small></div>
+      <div class="field"><label>Orden de aparición</label><input type="number" id="cOrder" value="0" min="0"/><small style="color:var(--muted);font-size:.72rem">Menor número aparece primero</small></div>
+      <div class="field"><label>Meta Title (SEO)</label><input type="text" id="cMetaTitle" placeholder="Botas de Caucho en Colombia | Procalzado"/></div>
+      <div class="field"><label>Meta Description (SEO)</label><textarea id="cMetaDesc" rows="2" maxlength="160" placeholder="Descripción para Google (máx 160 chars)"></textarea></div>
+      <div class="field"><label><input type="checkbox" id="cActive" checked/> Categoría activa</label></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="document.getElementById('categoryModal').classList.remove('open')">Cancelar</button>
+      <button class="btn-save" id="catSaveBtn">Guardar categoría</button>
     </div>
   </div>
 </div>
@@ -266,7 +292,7 @@ async function loadData(){
   const[br,ca,pr]=await Promise.all([
     supabase.from('brands').select('*').order('display_order'),
     supabase.from('categories').select('*').order('display_order'),
-    supabase.from('products').select('*,brands(name),categories!products_category_id_fkey(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active)').order('created_at',{ascending:false})
+    supabase.from('products').select('*,brands(name),categories!products_category_id_fkey(name),product_images(id,url,color,is_primary,display_order),product_variants(id,size,color,color_hex,active)').order('display_order',{ascending:true}).order('created_at',{ascending:false})
   ]);
   brands=br.data||[];categories=ca.data||[];products=pr.data||[];
 
@@ -284,37 +310,107 @@ async function loadData(){
 
 function renderProducts(filter=''){
   const f=products.filter(p=>!filter||p.name.toLowerCase().includes(filter)||(p.brands?.name||'').toLowerCase().includes(filter));
-  $('productTableBody').innerHTML=f.map(p=>{
+  $('productTableBody').innerHTML=f.map((p,i)=>{
     const img=p.product_images?.find(i=>i.is_primary)||p.product_images?.[0];
-    // Obtener nombres de categorías (de la nueva tabla, con fallback a la vieja)
     const catNames = p.product_categories?.length
       ? p.product_categories.map(pc => pc.categories?.name).filter(Boolean).join(', ')
       : (p.categories?.name || '-');
-    return `<tr>
+    return `<tr draggable="true" data-id="${p.id}" data-idx="${i}" class="draggable-row">
+      <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
       <td style="width:60px;max-width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;max-width:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
       <td><strong>${p.name}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p.slug}</span></td>
-      <td>${p.brands?.name||'-'}</td><td>${catNames}</td>
+      <td>${p.brands?.name||'-'}</td><td style="font-size:.78rem">${catNames}</td>
       <td>${p.show_price&&p.price?'$'+Number(p.price).toLocaleString():'-'}</td>
       <td><span class="badge ${p.active?'badge-active':'badge-inactive'}">${p.active?'Activo':'Off'}</span></td>
       <td class="actions-cell"><button class="action-btn edit" onclick="window.editProduct('${p.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteProduct('${p.id}',\`${p.name.replace(/`/g,'')}\`)">🗑️</button></td>
-    </tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos. Click "+ Nuevo producto".</td></tr>';
+    </tr>`}).join('')||'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos. Click "+ Nuevo producto".</td></tr>';
+
+  // Habilitar drag and drop
+  setupDragAndDrop();
+}
+
+function setupDragAndDrop() {
+  const tbody = $('productTableBody');
+  if (!tbody) return;
+  let dragSrc = null;
+  tbody.querySelectorAll('tr.draggable-row').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragSrc = row;
+      row.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.style.opacity = '1';
+      tbody.querySelectorAll('tr').forEach(r => r.style.borderTop = '');
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      tbody.querySelectorAll('tr').forEach(r => r.style.borderTop = '');
+      if (dragSrc !== row) row.style.borderTop = '2px solid var(--red)';
+      return false;
+    });
+    row.addEventListener('drop', async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (dragSrc === row) return false;
+      const srcId = dragSrc.dataset.id;
+      const tgtId = row.dataset.id;
+      // Reordenar el array local
+      const srcIdx = products.findIndex(p => p.id === srcId);
+      const tgtIdx = products.findIndex(p => p.id === tgtId);
+      const [moved] = products.splice(srcIdx, 1);
+      products.splice(tgtIdx, 0, moved);
+      // Reasignar display_order y guardar
+      loading(true);
+      const updates = products.map((p, idx) => supabase.from('products').update({display_order: idx}).eq('id', p.id));
+      await Promise.all(updates);
+      // Actualizar local también
+      products.forEach((p, idx) => p.display_order = idx);
+      renderProducts(filter);
+      loading(false);
+      showToast('Orden actualizado ✓');
+    });
+  });
 }
 $('adminSearch').addEventListener('input',e=>renderProducts(e.target.value.toLowerCase()));
 
 function renderBrands(){
   $('brandTableBody').innerHTML=brands.map(b=>`<tr>
-    <td><strong>${b.name}</strong></td><td>${b.slug}</td>
+    <td style="width:50px;text-align:center"><input type="number" class="order-input" value="${b.display_order||0}" data-id="${b.id}" data-table="brands" style="width:50px;padding:.3rem;border:1px solid var(--grey2);border-radius:4px;font-size:.82rem;text-align:center"/></td>
+    <td><strong>${b.name}</strong></td><td><code style="font-size:.78rem;color:var(--muted)">${b.slug}</code></td>
     <td><label class="toggle-switch"><input type="checkbox" ${b.is_authorized_distributor?'checked':''} onchange="window.toggleBrandAuth('${b.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
     <td><span class="badge ${b.active?'badge-active':'badge-inactive'}">${b.active?'Activa':'Off'}</span></td>
-    <td class="actions-cell"><button class="action-btn edit" onclick="window.editBrand('${b.id}')">✏️</button><button class="action-btn delete" onclick="window.deleteBrand('${b.id}',\`${b.name}\`)">🗑️</button></td>
+    <td class="actions-cell"><button class="action-btn edit" onclick="window.editBrand('${b.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteBrand('${b.id}',\`${b.name}\`)">🗑️</button></td>
   </tr>`).join('');
+  attachOrderInputListeners();
 }
 function renderCategories(){
   $('catTableBody').innerHTML=categories.map(c=>`<tr>
-    <td><strong>${c.name}</strong></td><td>${c.slug}</td>
+    <td style="width:50px;text-align:center"><input type="number" class="order-input" value="${c.display_order||0}" data-id="${c.id}" data-table="categories" style="width:50px;padding:.3rem;border:1px solid var(--grey2);border-radius:4px;font-size:.82rem;text-align:center"/></td>
+    <td><strong>${c.name}</strong></td><td><code style="font-size:.78rem;color:var(--muted)">${c.slug}</code></td>
     <td><span class="badge ${c.active?'badge-active':'badge-inactive'}">${c.active?'Activa':'Off'}</span></td>
-    <td><button class="action-btn delete" onclick="window.deleteCategory('${c.id}',\`${c.name}\`)">🗑️</button></td>
+    <td class="actions-cell">
+      <button class="action-btn edit" onclick="window.editCategory('${c.id}')">✏️ Editar</button>
+      <button class="action-btn delete" onclick="window.deleteCategory('${c.id}',\`${c.name}\`)">🗑️</button>
+    </td>
   </tr>`).join('');
+  attachOrderInputListeners();
+}
+
+function attachOrderInputListeners() {
+  document.querySelectorAll('.order-input').forEach(inp => {
+    inp.addEventListener('change', async e => {
+      const id = e.target.dataset.id;
+      const table = e.target.dataset.table;
+      const newOrder = parseInt(e.target.value) || 0;
+      loading(true);
+      await supabase.from(table).update({display_order: newOrder}).eq('id', id);
+      await loadData();
+      loading(false);
+      showToast('Orden actualizado ✓');
+    });
+  });
 }
 function populateSelects(){
   $('pBrand').innerHTML='<option value="">Seleccionar...</option>'+brands.filter(b=>b.active).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
@@ -564,20 +660,34 @@ window.editProduct=id=>{const p=products.find(x=>x.id===id);if(p)openProductForm
 window.deleteProduct=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('products').delete().eq('id',id);await loadData();loading(false);showToast('Eliminado')};
 
 // BRANDS
-$('addBrandBtn').addEventListener('click',()=>{$('brandId').value='';$('bName').value='';$('bSlug').value='';$('bAuthorized').checked=false;$('brandFormTitle').textContent='Nueva Marca';$('brandModal').classList.add('open')});
+$('addBrandBtn').addEventListener('click',()=>{$('brandId').value='';$('bName').value='';$('bSlug').value='';$('bOrder').value='0';$('bAuthorized').checked=false;$('brandFormTitle').textContent='Nueva Marca';$('brandModal').classList.add('open')});
 $('bName').addEventListener('input',()=>{if(!$('brandId').value)$('bSlug').value=slugify($('bName').value)});
+$('bSlug').addEventListener('blur',e=>{ e.target.value=slugify(e.target.value); });
 $('brandSaveBtn').addEventListener('click',async()=>{
   const name=$('bName').value.trim();if(!name){alert('Nombre obligatorio');return}
-  const slug=$('bSlug').value.trim()||slugify(name);const d={name,slug,is_authorized_distributor:$('bAuthorized').checked,active:true};
+  const slug=$('bSlug').value.trim()||slugify(name);
+  const d={name,slug,is_authorized_distributor:$('bAuthorized').checked,display_order:parseInt($('bOrder').value)||0,active:true};
   loading(true);const id=$('brandId').value;
   if(id)await supabase.from('brands').update(d).eq('id',id);else await supabase.from('brands').insert(d);
   $('brandModal').classList.remove('open');await loadData();loading(false);showToast('Marca guardada ✓');
 });
-window.editBrand=id=>{const b=brands.find(x=>x.id===id);if(!b)return;$('brandId').value=b.id;$('bName').value=b.name;$('bSlug').value=b.slug;$('bAuthorized').checked=b.is_authorized_distributor;$('brandFormTitle').textContent='Editar Marca';$('brandModal').classList.add('open')};
+window.editBrand=id=>{const b=brands.find(x=>x.id===id);if(!b)return;$('brandId').value=b.id;$('bName').value=b.name;$('bSlug').value=b.slug;$('bOrder').value=b.display_order||0;$('bAuthorized').checked=b.is_authorized_distributor;$('brandFormTitle').textContent='Editar Marca';$('brandModal').classList.add('open')};
 window.toggleBrandAuth=async(id,checked)=>{await supabase.from('brands').update({is_authorized_distributor:checked}).eq('id',id);const b=brands.find(x=>x.id===id);if(b)b.is_authorized_distributor=checked;showToast(checked?'Autorizado ✓':'Desmarcado')};
 window.deleteBrand=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('brands').delete().eq('id',id);await loadData();loading(false)};
 
-$('addCatBtn').addEventListener('click',async()=>{const name=prompt('Nombre de la categoría:');if(!name)return;loading(true);await supabase.from('categories').insert({name,slug:slugify(name),active:true});await loadData();loading(false);showToast('Categoría creada ✓')});
+// CATEGORIES
+$('addCatBtn').addEventListener('click',()=>{$('catId').value='';$('cName').value='';$('cSlug').value='';$('cOrder').value='0';$('cMetaTitle').value='';$('cMetaDesc').value='';$('cActive').checked=true;$('catFormTitle').textContent='Nueva Categoría';$('categoryModal').classList.add('open')});
+$('cName').addEventListener('input',()=>{if(!$('catId').value)$('cSlug').value=slugify($('cName').value)});
+$('cSlug').addEventListener('blur',e=>{ e.target.value=slugify(e.target.value); });
+$('catSaveBtn').addEventListener('click',async()=>{
+  const name=$('cName').value.trim();if(!name){alert('Nombre obligatorio');return}
+  const slug=$('cSlug').value.trim()||slugify(name);
+  const d={name,slug,display_order:parseInt($('cOrder').value)||0,meta_title:$('cMetaTitle').value.trim()||null,meta_description:$('cMetaDesc').value.trim()||null,active:$('cActive').checked};
+  loading(true);const id=$('catId').value;
+  if(id)await supabase.from('categories').update(d).eq('id',id);else await supabase.from('categories').insert(d);
+  $('categoryModal').classList.remove('open');await loadData();loading(false);showToast('Categoría guardada ✓');
+});
+window.editCategory=id=>{const c=categories.find(x=>x.id===id);if(!c)return;$('catId').value=c.id;$('cName').value=c.name;$('cSlug').value=c.slug;$('cOrder').value=c.display_order||0;$('cMetaTitle').value=c.meta_title||'';$('cMetaDesc').value=c.meta_description||'';$('cActive').checked=c.active;$('catFormTitle').textContent='Editar Categoría';$('categoryModal').classList.add('open')};
 window.deleteCategory=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('categories').delete().eq('id',id);await loadData();loading(false)};
 
 checkAuth();
