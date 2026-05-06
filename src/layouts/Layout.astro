@@ -79,15 +79,37 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .search-wrap input:focus{border-color:var(--red)}
 .pills-wrapper{overflow:hidden;max-height:200px;opacity:1;transition:max-height .3s ease,opacity .25s ease,margin .25s ease}
 .pills-wrapper.hidden{max-height:0;opacity:0;margin-top:-.4rem}
-.toggle-cats-btn{display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:2px solid var(--grey2);border-radius:6px;background:var(--white);font-family:var(--fb);font-size:.8rem;font-weight:600;letter-spacing:.03em;color:var(--muted);cursor:pointer;transition:all .18s;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.toggle-cats-btn{display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:2px solid var(--grey2);border-radius:6px;background:var(--white);font-family:var(--fb);font-size:.8rem;font-weight:600;letter-spacing:.03em;color:var(--muted);cursor:pointer;transition:all .18s;text-transform:uppercase;white-space:nowrap;flex-shrink:0;position:relative}
 .toggle-cats-btn svg{width:15px;height:15px;flex-shrink:0}
 .toggle-cats-btn:hover{border-color:var(--red);color:var(--red)}
 .toggle-cats-btn.active-toggle{background:var(--red);border-color:var(--red);color:var(--white)}
+.filter-count-badge{background:var(--red);color:var(--white);font-size:.65rem;font-weight:700;padding:.1rem .35rem;border-radius:8px;min-width:18px;display:inline-flex;align-items:center;justify-content:center}
+.toggle-cats-btn.active-toggle .filter-count-badge{background:var(--white);color:var(--red)}
 .filter-top-row{display:flex;align-items:center;gap:.7rem}
 .pills{display:flex;flex-wrap:wrap;gap:.45rem}
 .pill{padding:.42rem .95rem;border:2px solid var(--grey2);border-radius:4px;background:var(--white);font-family:var(--fb);font-size:.8rem;font-weight:600;letter-spacing:.03em;cursor:pointer;transition:all .18s;color:var(--muted);text-transform:uppercase;border:2px solid var(--grey2)}
 .pill:hover{border-color:var(--red);color:var(--red)}
 .pill.active{background:var(--red);border-color:var(--red);color:var(--white)}
+
+/* SUBCATS */
+.subcats-wrapper{margin-top:.4rem;padding-top:.5rem;border-top:1px dashed var(--grey2)}
+.subcat-pill{font-size:.72rem!important;padding:.3rem .7rem!important;background:var(--grey)!important}
+.subcat-pill.active{background:var(--black)!important;border-color:var(--black)!important;color:var(--white)!important}
+
+/* FILTERS PANEL */
+.filters-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;padding:1rem;background:var(--white);border:2px solid var(--grey2);border-radius:8px;margin-top:.6rem;max-height:600px;overflow:hidden;transition:max-height .3s,opacity .25s,margin .25s,padding .25s,border-width .25s}
+.filters-panel.hidden{max-height:0;opacity:0;margin-top:0;padding:0;border-width:0}
+.filter-group{display:flex;flex-direction:column;gap:.5rem}
+.filter-group-title{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--black);padding-bottom:.3rem;border-bottom:1px solid var(--grey2)}
+.filter-options{display:flex;flex-direction:column;gap:.3rem}
+.filter-check{display:flex;align-items:center;gap:.4rem;font-size:.82rem;cursor:pointer;color:var(--muted);user-select:none}
+.filter-check:hover{color:var(--black)}
+.filter-check input{accent-color:var(--red)}
+.filter-price{display:flex;flex-direction:column;gap:.3rem}
+.filter-price input{padding:.4rem .55rem;border:1.5px solid var(--grey2);border-radius:5px;font-family:var(--fb);font-size:.8rem;outline:none;width:80px}
+.filter-price input:focus{border-color:var(--red)}
+.filter-clear{grid-column:1/-1;padding:.5rem;background:none;border:1px dashed var(--grey2);border-radius:5px;cursor:pointer;font-family:var(--fb);font-size:.78rem;color:var(--muted);transition:all .15s}
+.filter-clear:hover{border-color:var(--red);color:var(--red)}
 
 /* PRODUCTS */
 .products-section{max-width:1280px;margin:0 auto;padding:2.2rem clamp(1rem,4vw,3rem) 5rem}
@@ -426,7 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (it.price) msg += `   Precio: $${Number(it.price).toLocaleString('es-CO')}\n`;
       msg += `   Link: https://procalzado.com/productos/${it.slug}\n\n`;
     });
-    msg += '_Quisiera confirmar disponibilidad y precio al por mayor._';
     window.open(`https://wa.me/${WA_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
   });
 });

@@ -18,8 +18,10 @@ export interface Category {
   id: string;
   slug: string;
   name: string;
+  parent_id: string | null;
   meta_title: string | null;
   meta_description: string | null;
+  display_order: number;
   active: boolean;
 }
 

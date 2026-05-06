@@ -236,6 +236,10 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
       <input type="hidden" id="catId"/>
       <div class="field"><label>Nombre *</label><input type="text" id="cName" placeholder="Ej: Botas de Caucho"/></div>
       <div class="field"><label>Slug (URL) *</label><input type="text" id="cSlug" placeholder="botas-de-caucho"/><small style="color:var(--muted);font-size:.72rem">Solo minúsculas, números y guiones. Ej: <code>botas-caucho</code></small></div>
+      <div class="field"><label>Categoría padre (opcional)</label>
+        <select id="cParent"><option value="">— Es una categoría principal —</option></select>
+        <small style="color:var(--muted);font-size:.72rem">Si la categoría es una subcategoría, elige aquí su categoría padre.</small>
+      </div>
       <div class="field"><label>Meta Title (SEO)</label><input type="text" id="cMetaTitle" placeholder="Botas de Caucho en Colombia | Procalzado"/></div>
       <div class="field"><label>Meta Description (SEO)</label><textarea id="cMetaDesc" rows="2" maxlength="160" placeholder="Descripción para Google (máx 160 chars)"></textarea></div>
       <div class="field"><label><input type="checkbox" id="cActive" checked/> Categoría activa</label></div>
@@ -383,15 +387,30 @@ function renderBrands(){
   setupDragAndDrop('brandTableBody', brands, 'brands');
 }
 function renderCategories(){
-  $('catTableBody').innerHTML=categories.map(c=>`<tr draggable="true" data-id="${c.id}" class="draggable-row">
-    <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
-    <td><strong>${c.name}</strong></td><td><code style="font-size:.78rem;color:var(--muted)">${c.slug}</code></td>
-    <td><span class="badge ${c.active?'badge-active':'badge-inactive'}">${c.active?'Activa':'Off'}</span></td>
-    <td class="actions-cell">
-      <button class="action-btn edit" onclick="window.editCategory('${c.id}')">✏️ Editar</button>
-      <button class="action-btn delete" onclick="window.deleteCategory('${c.id}',\`${c.name}\`)">🗑️</button>
-    </td>
-  </tr>`).join('');
+  // Ordenar: primero categorías principales, luego sus hijas indentadas
+  const principales = categories.filter(c => !c.parent_id);
+  const sortedCats = [];
+  principales.forEach(p => {
+    sortedCats.push(p);
+    categories.filter(c => c.parent_id === p.id).forEach(child => sortedCats.push(child));
+  });
+  // Las que tienen parent_id pero el padre no existe (huérfanas)
+  categories.filter(c => c.parent_id && !categories.find(p => p.id === c.parent_id)).forEach(c => sortedCats.push(c));
+
+  $('catTableBody').innerHTML=sortedCats.map(c=>{
+    const isChild = !!c.parent_id;
+    const parent = isChild ? categories.find(p => p.id === c.parent_id) : null;
+    return `<tr draggable="true" data-id="${c.id}" class="draggable-row">
+      <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
+      <td>${isChild?'<span style="color:var(--muted);margin-right:.4rem">↳</span>':''}<strong>${c.name}</strong>${parent?`<br><span style="font-size:.7rem;color:var(--muted)">en ${parent.name}</span>`:''}</td>
+      <td><code style="font-size:.78rem;color:var(--muted)">${c.slug}</code></td>
+      <td><span class="badge ${c.active?'badge-active':'badge-inactive'}">${c.active?'Activa':'Off'}</span></td>
+      <td class="actions-cell">
+        <button class="action-btn edit" onclick="window.editCategory('${c.id}')">✏️ Editar</button>
+        <button class="action-btn delete" onclick="window.deleteCategory('${c.id}',\`${c.name}\`)">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
   setupDragAndDrop('catTableBody', categories, 'categories');
 }
 
@@ -659,18 +678,38 @@ window.toggleBrandAuth=async(id,checked)=>{await supabase.from('brands').update(
 window.deleteBrand=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('brands').delete().eq('id',id);await loadData();loading(false)};
 
 // CATEGORIES
-$('addCatBtn').addEventListener('click',()=>{$('catId').value='';$('cName').value='';$('cSlug').value='';$('cMetaTitle').value='';$('cMetaDesc').value='';$('cActive').checked=true;$('catFormTitle').textContent='Nueva Categoría';$('categoryModal').classList.add('open')});
+function populateCatParentSelect(currentCatId = null) {
+  const sel = $('cParent');
+  // No puedes ser padre de ti mismo, ni hijo de tus hijos (evitar bucles)
+  const validParents = categories.filter(c => c.id !== currentCatId && c.parent_id !== currentCatId && !c.parent_id);
+  sel.innerHTML = '<option value="">— Es una categoría principal —</option>' +
+    validParents.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+$('addCatBtn').addEventListener('click',()=>{
+  $('catId').value='';$('cName').value='';$('cSlug').value='';$('cMetaTitle').value='';$('cMetaDesc').value='';$('cActive').checked=true;
+  populateCatParentSelect();
+  $('cParent').value='';
+  $('catFormTitle').textContent='Nueva Categoría';$('categoryModal').classList.add('open');
+});
 $('cName').addEventListener('input',()=>{if(!$('catId').value)$('cSlug').value=slugify($('cName').value)});
 $('cSlug').addEventListener('blur',e=>{ e.target.value=slugify(e.target.value); });
 $('catSaveBtn').addEventListener('click',async()=>{
   const name=$('cName').value.trim();if(!name){alert('Nombre obligatorio');return}
   const slug=$('cSlug').value.trim()||slugify(name);
-  const d={name,slug,meta_title:$('cMetaTitle').value.trim()||null,meta_description:$('cMetaDesc').value.trim()||null,active:$('cActive').checked};
+  const d={name,slug,parent_id:$('cParent').value||null,meta_title:$('cMetaTitle').value.trim()||null,meta_description:$('cMetaDesc').value.trim()||null,active:$('cActive').checked};
   loading(true);const id=$('catId').value;
   if(id)await supabase.from('categories').update(d).eq('id',id);else await supabase.from('categories').insert(d);
   $('categoryModal').classList.remove('open');await loadData();loading(false);showToast('Categoría guardada ✓');
 });
-window.editCategory=id=>{const c=categories.find(x=>x.id===id);if(!c)return;$('catId').value=c.id;$('cName').value=c.name;$('cSlug').value=c.slug;$('cMetaTitle').value=c.meta_title||'';$('cMetaDesc').value=c.meta_description||'';$('cActive').checked=c.active;$('catFormTitle').textContent='Editar Categoría';$('categoryModal').classList.add('open')};
+window.editCategory=id=>{
+  const c=categories.find(x=>x.id===id);if(!c)return;
+  $('catId').value=c.id;$('cName').value=c.name;$('cSlug').value=c.slug;
+  $('cMetaTitle').value=c.meta_title||'';$('cMetaDesc').value=c.meta_description||'';$('cActive').checked=c.active;
+  populateCatParentSelect(id);
+  $('cParent').value=c.parent_id||'';
+  $('catFormTitle').textContent='Editar Categoría';$('categoryModal').classList.add('open');
+};
 window.deleteCategory=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('categories').delete().eq('id',id);await loadData();loading(false)};
 
 checkAuth();

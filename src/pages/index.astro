@@ -1,13 +1,33 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getProducts, getCategories } from '../lib/supabase';
+import { getProducts, getCategories, getBrands } from '../lib/supabase';
 
 const products = await getProducts();
 const categories = await getCategories();
+const brands = await getBrands();
+
+// Separar categorías principales y subcategorías
+const mainCategories = categories.filter(c => !c.parent_id);
+const subCategoriesByParent: Record<string, typeof categories> = {};
+categories.filter(c => c.parent_id).forEach(c => {
+  if (!subCategoriesByParent[c.parent_id!]) subCategoriesByParent[c.parent_id!] = [];
+  subCategoriesByParent[c.parent_id!].push(c);
+});
+
+// Lista de marcas únicas presentes en productos
+const brandsInUse = brands.filter(b => products.some(p => p.brands?.id === b.id));
+
+// Géneros únicos
+const gendersInUse = [...new Set(products.map(p => p.gender).filter(Boolean))] as string[];
+
+// Rango de precios
+const productPrices = products.filter(p => p.show_price && p.price).map(p => Number(p.price));
+const minPrice = productPrices.length ? Math.floor(Math.min(...productPrices)) : 0;
+const maxPrice = productPrices.length ? Math.ceil(Math.max(...productPrices)) : 0;
 
 const totalProducts = products.length;
-const totalCategories = categories.length;
-const totalBrands = new Set(products.map(p => p.brands?.name).filter(Boolean)).size;
+const totalCategories = mainCategories.length;
+const totalBrands = brandsInUse.length;
 ---
 
 <Layout title="Procalzado | Botas de Caucho, Botas de Lluvia y Calzado Industrial en Colombia">
@@ -67,18 +87,85 @@ const totalBrands = new Set(products.map(p => p.brands?.name).filter(Boolean)).s
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchInput" placeholder="Buscar producto o marca…"/>
       </div>
-      <button class="toggle-cats-btn" id="toggleCatsBtn" type="button" title="Filtrar por categoría">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Categorías
+      <button class="toggle-cats-btn" id="toggleFiltersBtn" type="button" title="Mostrar filtros">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtros
+        <span class="filter-count-badge" id="filterCountBadge" style="display:none">0</span>
       </button>
     </div>
-    <div class="pills-wrapper hidden" id="pillsWrapper">
-      <div class="pills">
-        <button class="pill active" type="button" data-cat="todas">Todas</button>
-        {categories.map(cat => (
-          <button class="pill" type="button" data-cat={cat.slug}>{cat.name}</button>
-        ))}
+
+    <!-- Categorías principales (siempre visibles) -->
+    <div class="pills">
+      <button class="pill active" type="button" data-cat="todas">Todas</button>
+      {mainCategories.map(cat => (
+        <button class="pill" type="button" data-cat={cat.slug} data-cat-id={cat.id}>{cat.name}</button>
+      ))}
+    </div>
+
+    <!-- Subcategorías (aparecen al elegir una categoría principal) -->
+    <div class="subcats-wrapper" id="subcatsWrapper" style="display:none">
+      <div class="pills subcats-pills" id="subcatsPills"></div>
+    </div>
+
+    <!-- Panel de filtros avanzados -->
+    <div class="filters-panel hidden" id="filtersPanel">
+      {brandsInUse.length > 0 && (
+        <div class="filter-group">
+          <div class="filter-group-title">Marca</div>
+          <div class="filter-options">
+            {brandsInUse.map(b => (
+              <label class="filter-check">
+                <input type="checkbox" data-filter="brand" value={b.slug}/>
+                <span>{b.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {gendersInUse.length > 0 && (
+        <div class="filter-group">
+          <div class="filter-group-title">Género</div>
+          <div class="filter-options">
+            {gendersInUse.map(g => (
+              <label class="filter-check">
+                <input type="checkbox" data-filter="gender" value={g}/>
+                <span style="text-transform:capitalize">{g}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {productPrices.length > 0 && (
+        <div class="filter-group">
+          <div class="filter-group-title">Precio</div>
+          <div class="filter-price">
+            <div style="display:flex;gap:.4rem;align-items:center">
+              <input type="number" id="priceMin" placeholder="Min" min={minPrice} max={maxPrice}/>
+              <span style="color:var(--muted)">—</span>
+              <input type="number" id="priceMax" placeholder="Max" min={minPrice} max={maxPrice}/>
+            </div>
+            <small style="color:var(--muted);font-size:.7rem">Rango: ${minPrice.toLocaleString('es-CO')} - ${maxPrice.toLocaleString('es-CO')}</small>
+          </div>
+        </div>
+      )}
+
+      <div class="filter-group">
+        <div class="filter-group-title">Otros</div>
+        <div class="filter-options">
+          <label class="filter-check">
+            <input type="checkbox" data-filter="hasPrice" value="true"/>
+            <span>Solo con precio visible</span>
+          </label>
+          <label class="filter-check">
+            <input type="checkbox" data-filter="featured" value="true"/>
+            <span>Destacados ⭐</span>
+          </label>
+        </div>
       </div>
+
+      <button class="filter-clear" id="filterClearBtn" type="button">Limpiar filtros</button>
     </div>
   </div>
 </div>
@@ -96,6 +183,7 @@ const totalBrands = new Set(products.map(p => p.brands?.name).filter(Boolean)).s
     {products.map((p, i) => {
       const primaryImg = p.product_images?.find(img => img.is_primary) || p.product_images?.[0];
       const brandName = p.brands?.name || '';
+      const brandSlug = p.brands?.slug || '';
       // Categorías del producto (de la nueva tabla, con fallback a la vieja)
       const productCats = p.product_categories?.length
         ? p.product_categories.map(pc => pc.categories).filter(Boolean)
@@ -104,7 +192,15 @@ const totalBrands = new Set(products.map(p => p.brands?.name).filter(Boolean)).s
       const primaryCat = p.product_categories?.find(pc => pc.is_primary)?.categories || p.categories;
       const catName = primaryCat?.name || '';
       return (
-        <a href={`/productos/${p.slug}`} class="card" style={`animation-delay:${i * 30}ms`} data-cat={catSlugs} data-name={p.name.toLowerCase()} data-brand={brandName.toLowerCase()}>
+        <a href={`/productos/${p.slug}`} class="card" style={`animation-delay:${i * 30}ms`}
+          data-cat={catSlugs}
+          data-name={p.name.toLowerCase()}
+          data-brand={brandName.toLowerCase()}
+          data-brand-slug={brandSlug}
+          data-gender={p.gender || ''}
+          data-price={p.show_price && p.price ? p.price : ''}
+          data-has-price={p.show_price && p.price ? 'true' : 'false'}
+          data-featured={p.featured ? 'true' : 'false'}>
           <div class="card-top-bar"></div>
           <div class="card-img">
             {primaryImg ? (
@@ -143,44 +239,126 @@ const totalBrands = new Set(products.map(p => p.brands?.name).filter(Boolean)).s
 </div>
 </main>
 
-<script>
-// Client-side filtering (search + category pills)
-const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-const toggleBtn = document.getElementById('toggleCatsBtn')!;
-const pillsWrapper = document.getElementById('pillsWrapper')!;
-const pills = document.querySelectorAll('.pill');
-const cards = document.querySelectorAll('.card') as NodeListOf<HTMLElement>;
-const sectionTitle = document.getElementById('sectionTitle')!;
-const sectionCount = document.getElementById('sectionCount')!;
+<script type="application/json" id="subcatsData" set:html={JSON.stringify(subCategoriesByParent)}></script>
+
+<script is:inline>
+// === FILTRADO AVANZADO ===
+const searchInput = document.getElementById('searchInput');
+const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+const filtersPanel = document.getElementById('filtersPanel');
+const subcatsWrapper = document.getElementById('subcatsWrapper');
+const subcatsPills = document.getElementById('subcatsPills');
+const filterCountBadge = document.getElementById('filterCountBadge');
+const cards = document.querySelectorAll('.card');
+const sectionCount = document.getElementById('sectionCount');
+const subcatsData = JSON.parse(document.getElementById('subcatsData').textContent || '{}');
 
 let currentCat = 'todas';
+let currentSubcat = '';
 
-toggleBtn.addEventListener('click', () => {
-  pillsWrapper.classList.toggle('hidden');
-  toggleBtn.classList.toggle('active-toggle', !pillsWrapper.classList.contains('hidden'));
+// Toggle panel filtros
+toggleFiltersBtn.addEventListener('click', () => {
+  filtersPanel.classList.toggle('hidden');
+  toggleFiltersBtn.classList.toggle('active-toggle', !filtersPanel.classList.contains('hidden'));
 });
 
-pills.forEach(pill => {
+// Click en pill principal
+document.querySelectorAll('.filter-bar > .filter-inner > .pills .pill').forEach(pill => {
   pill.addEventListener('click', () => {
-    pills.forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.filter-bar > .filter-inner > .pills .pill').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
-    currentCat = (pill as HTMLElement).dataset.cat || 'todas';
+    currentCat = pill.dataset.cat || 'todas';
+    currentSubcat = '';
+    renderSubcategories(pill.dataset.catId);
     filterProducts();
   });
 });
 
+function renderSubcategories(parentId) {
+  const subs = parentId ? (subcatsData[parentId] || []) : [];
+  if (subs.length === 0) {
+    subcatsWrapper.style.display = 'none';
+    subcatsPills.innerHTML = '';
+    return;
+  }
+  subcatsWrapper.style.display = 'block';
+  subcatsPills.innerHTML = '<button class="pill subcat-pill active" type="button" data-subcat="">Todas las subcategorías</button>' +
+    subs.map(s => `<button class="pill subcat-pill" type="button" data-subcat="${s.slug}">${s.name}</button>`).join('');
+
+  subcatsPills.querySelectorAll('.subcat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      subcatsPills.querySelectorAll('.subcat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentSubcat = pill.dataset.subcat || '';
+      filterProducts();
+    });
+  });
+}
+
+// Search input
 searchInput?.addEventListener('input', filterProducts);
+
+// Filtros checkbox
+document.querySelectorAll('[data-filter]').forEach(inp => {
+  inp.addEventListener('change', () => { updateFilterBadge(); filterProducts(); });
+});
+
+// Filtros precio
+document.getElementById('priceMin')?.addEventListener('input', filterProducts);
+document.getElementById('priceMax')?.addEventListener('input', filterProducts);
+
+// Limpiar filtros
+document.getElementById('filterClearBtn')?.addEventListener('click', () => {
+  document.querySelectorAll('[data-filter]').forEach(inp => inp.checked = false);
+  const min = document.getElementById('priceMin'); if (min) min.value = '';
+  const max = document.getElementById('priceMax'); if (max) max.value = '';
+  updateFilterBadge();
+  filterProducts();
+});
+
+function updateFilterBadge() {
+  let count = 0;
+  document.querySelectorAll('[data-filter]:checked').forEach(() => count++);
+  if (document.getElementById('priceMin')?.value) count++;
+  if (document.getElementById('priceMax')?.value) count++;
+  if (count > 0) {
+    filterCountBadge.textContent = count;
+    filterCountBadge.style.display = 'inline-flex';
+  } else {
+    filterCountBadge.style.display = 'none';
+  }
+}
 
 function filterProducts() {
   const q = searchInput?.value.toLowerCase().trim() || '';
+  const selectedBrands = Array.from(document.querySelectorAll('[data-filter="brand"]:checked')).map(i => i.value);
+  const selectedGenders = Array.from(document.querySelectorAll('[data-filter="gender"]:checked')).map(i => i.value);
+  const onlyWithPrice = document.querySelector('[data-filter="hasPrice"]:checked') !== null;
+  const onlyFeatured = document.querySelector('[data-filter="featured"]:checked') !== null;
+  const priceMin = parseFloat(document.getElementById('priceMin')?.value) || 0;
+  const priceMax = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
+
   let count = 0;
   cards.forEach(card => {
     const cats = (card.dataset.cat || '').split(',').filter(Boolean);
     const name = card.dataset.name || '';
     const brand = card.dataset.brand || '';
-    const matchCat = currentCat === 'todas' || cats.includes(currentCat);
+    const brandSlug = card.dataset.brandSlug || '';
+    const gender = card.dataset.gender || '';
+    const price = parseFloat(card.dataset.price) || 0;
+    const hasPrice = card.dataset.hasPrice === 'true';
+    const featured = card.dataset.featured === 'true';
+
+    const matchCat = currentCat === 'todas' || cats.includes(currentCat) || (currentSubcat && cats.includes(currentSubcat));
+    const matchSubcat = !currentSubcat || cats.includes(currentSubcat);
     const matchSearch = !q || name.includes(q) || brand.includes(q);
-    const show = matchCat && matchSearch;
+    const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(brandSlug);
+    const matchGender = selectedGenders.length === 0 || selectedGenders.includes(gender);
+    const matchPriceMin = !onlyWithPrice || hasPrice;
+    const matchPriceRange = !hasPrice ? (priceMin === 0 && priceMax === Infinity) : (price >= priceMin && price <= priceMax);
+    const matchFeatured = !onlyFeatured || featured;
+
+    const show = matchCat && matchSubcat && matchSearch && matchBrand && matchGender && matchPriceMin && matchPriceRange && matchFeatured;
     card.style.display = show ? '' : 'none';
     if (show) count++;
   });
