@@ -153,11 +153,11 @@ const totalBrands = brandsInUse.length;
             <div class="filter-group-title">Precio</div>
             <div class="filter-price">
               <div style="display:flex;gap:.4rem;align-items:center">
-                <input type="number" id="priceMin" placeholder="Min" min={minPrice} max={maxPrice}/>
+                <input type="number" id="priceMin" placeholder={`Min: $${minPrice.toLocaleString('es-CO')}`} min={minPrice} max={maxPrice}/>
                 <span style="color:var(--muted)">—</span>
-                <input type="number" id="priceMax" placeholder="Max" min={minPrice} max={maxPrice}/>
+                <input type="number" id="priceMax" placeholder={`Max: $${maxPrice.toLocaleString('es-CO')}`} min={minPrice} max={maxPrice}/>
               </div>
-              <small style="color:var(--muted);font-size:.7rem">Rango: ${minPrice.toLocaleString('es-CO')} - ${maxPrice.toLocaleString('es-CO')}</small>
+              <small id="priceRangeLabel" style="color:var(--muted);font-size:.7rem">Rango disponible: ${minPrice.toLocaleString('es-CO')} - ${maxPrice.toLocaleString('es-CO')}</small>
             </div>
           </div>
         )}
@@ -379,10 +379,15 @@ function filterProducts() {
   const selectedGenders = Array.from(document.querySelectorAll('[data-filter="gender"]:checked')).map(i => i.value);
   const onlyWithPrice = document.querySelector('[data-filter="hasPrice"]:checked') !== null;
   const onlyFeatured = document.querySelector('[data-filter="featured"]:checked') !== null;
-  const priceMin = parseFloat(document.getElementById('priceMin')?.value) || 0;
-  const priceMax = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
+  const priceMinInput = document.getElementById('priceMin');
+  const priceMaxInput = document.getElementById('priceMax');
+  const priceMin = parseFloat(priceMinInput?.value) || 0;
+  const priceMax = parseFloat(priceMaxInput?.value) || Infinity;
 
   let count = 0;
+  // Para calcular el rango dinámico de precios (sin contar el filtro de precio mismo)
+  let visiblePrices = [];
+
   cards.forEach(card => {
     const cats = (card.dataset.cat || '').split(',').filter(Boolean);
     const name = card.dataset.name || '';
@@ -398,14 +403,46 @@ function filterProducts() {
     const matchSearch = !q || name.includes(q) || brand.includes(q);
     const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(brandSlug);
     const matchGender = selectedGenders.length === 0 || selectedGenders.includes(gender);
-    const matchPriceMin = !onlyWithPrice || hasPrice;
-    const matchPriceRange = !hasPrice ? (priceMin === 0 && priceMax === Infinity) : (price >= priceMin && price <= priceMax);
     const matchFeatured = !onlyFeatured || featured;
 
-    const show = matchCat && matchSubcat && matchSearch && matchBrand && matchGender && matchPriceMin && matchPriceRange && matchFeatured;
+    // Match parcial: todos los filtros EXCEPTO precio
+    const matchAllExceptPrice = matchCat && matchSubcat && matchSearch && matchBrand && matchGender && matchFeatured;
+
+    // Si pasa todos los filtros excepto precio, contamos su precio para el rango dinámico
+    if (matchAllExceptPrice && hasPrice) {
+      visiblePrices.push(price);
+    }
+
+    // Match completo (incluyendo filtro de precio)
+    const matchPriceMin = !onlyWithPrice || hasPrice;
+    const matchPriceRange = !hasPrice ? (priceMin === 0 && priceMax === Infinity) : (price >= priceMin && price <= priceMax);
+    const show = matchAllExceptPrice && matchPriceMin && matchPriceRange;
+
     card.style.display = show ? '' : 'none';
     if (show) count++;
   });
+
+  // Actualizar placeholder y rango del filtro de precio dinámicamente
+  if (visiblePrices.length > 0) {
+    const dynMin = Math.floor(Math.min(...visiblePrices));
+    const dynMax = Math.ceil(Math.max(...visiblePrices));
+    if (priceMinInput) {
+      priceMinInput.placeholder = `Min: $${dynMin.toLocaleString('es-CO')}`;
+      priceMinInput.min = dynMin;
+      priceMinInput.max = dynMax;
+    }
+    if (priceMaxInput) {
+      priceMaxInput.placeholder = `Max: $${dynMax.toLocaleString('es-CO')}`;
+      priceMaxInput.min = dynMin;
+      priceMaxInput.max = dynMax;
+    }
+    const rangeLabel = document.getElementById('priceRangeLabel');
+    if (rangeLabel) rangeLabel.textContent = `Rango disponible: $${dynMin.toLocaleString('es-CO')} - $${dynMax.toLocaleString('es-CO')}`;
+  } else {
+    const rangeLabel = document.getElementById('priceRangeLabel');
+    if (rangeLabel) rangeLabel.textContent = 'Sin productos con precio en esta selección';
+  }
+
   sectionCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
 }
 </script>
