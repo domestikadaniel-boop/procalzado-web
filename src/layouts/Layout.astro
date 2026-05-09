@@ -162,10 +162,15 @@ body.filters-open{overflow:hidden}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.1rem}
 
 /* CARD */
-.card{background:var(--white);border:2px solid var(--grey2);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;animation:fadeUp .32s ease both;text-decoration:none;color:inherit}
+.card{background:var(--white);border:2px solid var(--grey2);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;animation:fadeUp .32s ease both;text-decoration:none;color:inherit;position:relative}
 .card:hover{border-color:var(--red);transform:translateY(-4px);box-shadow:0 10px 32px rgba(255,0,0,.1)}
 .card-top-bar{height:4px;background:var(--grey2);transition:background .2s}
 .card:hover .card-top-bar{background:var(--red)}
+
+/* Badge Destacado */
+.card-badge-featured{position:absolute;top:.6rem;left:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .55rem;border-radius:4px;display:inline-flex;align-items:center;gap:.25rem;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.2);animation:badgePulse 2s ease-in-out infinite}
+.card-badge-featured svg{width:11px;height:11px;flex-shrink:0}
+@keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .card-img{width:100%;aspect-ratio:1;background:var(--grey);display:flex;align-items:center;justify-content:center;font-size:3.8rem;overflow:hidden}
 .card-img img{width:100%;height:100%;object-fit:cover}
 .card-body{padding:.9rem .9rem 1rem;flex:1;display:flex;flex-direction:column}

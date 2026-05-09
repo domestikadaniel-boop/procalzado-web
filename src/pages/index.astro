@@ -217,6 +217,12 @@ const totalBrands = brandsInUse.length;
           data-has-price={p.show_price && p.price ? 'true' : 'false'}
           data-featured={p.featured ? 'true' : 'false'}>
           <div class="card-top-bar"></div>
+          {p.featured && (
+            <div class="card-badge-featured">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              Destacado
+            </div>
+          )}
           <div class="card-img">
             {primaryImg ? (
               <img src={primaryImg.url} alt={`${brandName} ${p.name} - ${catName}`} loading="lazy" width="210" height="210"/>
