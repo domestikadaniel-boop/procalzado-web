@@ -19,8 +19,12 @@ categories.filter(c => c.parent_id).forEach(c => {
   subCategoriesByParent[c.parent_id!].push(c);
 });
 
-// Lista de marcas únicas presentes en productos
-const brandsInUse = brands.filter(b => products.some(p => p.brands?.id === b.id));
+// Lista de marcas únicas presentes en productos (con 2 o más productos)
+const brandProductCount: Record<string, number> = {};
+products.forEach(p => {
+  if (p.brands?.id) brandProductCount[p.brands.id] = (brandProductCount[p.brands.id] || 0) + 1;
+});
+const brandsInUse = brands.filter(b => (brandProductCount[b.id] || 0) >= 2);
 
 // Géneros únicos
 const gendersInUse = [...new Set(products.map(p => p.gender).filter(Boolean))] as string[];
