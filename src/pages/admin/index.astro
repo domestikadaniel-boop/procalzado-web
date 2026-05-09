@@ -216,6 +216,21 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         <div class="field"><label><input type="checkbox" id="pFeatured"/> Producto destacado</label></div>
         <div class="field full"><label>Descripción corta (SEO)</label><textarea id="pShortDesc" rows="2" maxlength="160"></textarea></div>
         <div class="field full"><label>Descripción completa</label><textarea id="pDesc" rows="4"></textarea></div>
+        <div class="field full">
+          <label>Aviso especial (opcional)</label>
+          <input type="text" id="pNotice" placeholder="Ej: Solo se vende por docena" maxlength="120"/>
+          <small style="color:var(--muted);font-size:.72rem">Aparecerá destacado en la página del producto. Déjalo vacío si no aplica.</small>
+        </div>
+        <div class="field">
+          <label>Tipo de aviso</label>
+          <select id="pNoticeType">
+            <option value="info">ℹ️ Información (azul)</option>
+            <option value="warning">⚠️ Importante (amarillo)</option>
+            <option value="success">✅ Positivo (verde)</option>
+            <option value="danger">🔴 Atención (rojo)</option>
+          </select>
+        </div>
+        <div class="field"></div>
       </div>
 
       <div class="section-label">Especificaciones Técnicas</div>
@@ -565,6 +580,7 @@ function openProductForm(p=null){
   $('pBrand').value=p?.brand_id||'';$('pGender').value=p?.gender||'';
   $('pPrice').value=p?.price||'';$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;
   $('pShortDesc').value=p?.short_description||'';$('pDesc').value=p?.description||'';
+  $('pNotice').value=p?.notice||'';$('pNoticeType').value=p?.notice_type||'info';
 
   // Categorías - de la nueva tabla, con fallback a la vieja
   let selectedCatIds = [];
@@ -623,7 +639,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const selectedCatIds = getSelectedCategories();
   const primaryCatId = selectedCatIds[0] || null; // primera = principal
 
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:$('pGender').value||null,price:$('pPrice').value?parseFloat($('pPrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,specs,active:true};
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:$('pGender').value||null,price:$('pPrice').value?parseFloat($('pPrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}
