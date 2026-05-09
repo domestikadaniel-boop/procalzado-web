@@ -178,6 +178,7 @@ const totalBrands = brandsInUse.length;
       </div>
 
       <button class="filter-clear" id="filterClearBtn" type="button">Limpiar todos los filtros</button>
+      <button class="filter-apply" id="filterApplyBtn" type="button">Ver resultados</button>
     </div>
   </div>
 </div>
@@ -270,8 +271,30 @@ let currentSubcat = '';
 
 // Toggle TODO el panel (categorías + subcategorías + filtros)
 toggleFiltersBtn.addEventListener('click', () => {
-  collapsibleFilters.classList.toggle('hidden');
-  toggleFiltersBtn.classList.toggle('active-toggle', !collapsibleFilters.classList.contains('hidden'));
+  const isOpen = !collapsibleFilters.classList.contains('hidden');
+  if (isOpen) {
+    collapsibleFilters.classList.add('hidden');
+    toggleFiltersBtn.classList.remove('active-toggle');
+    document.body.classList.remove('filters-open');
+  } else {
+    collapsibleFilters.classList.remove('hidden');
+    toggleFiltersBtn.classList.add('active-toggle');
+    document.body.classList.add('filters-open');
+  }
+});
+
+// Cerrar al hacer click fuera (en el overlay)
+document.addEventListener('click', e => {
+  const isOpen = !collapsibleFilters.classList.contains('hidden');
+  if (!isOpen) return;
+  // Si el click es en el overlay (el body con filters-open) pero no dentro del panel ni del botón
+  if (window.innerWidth <= 768) {
+    if (!collapsibleFilters.contains(e.target) && !toggleFiltersBtn.contains(e.target)) {
+      collapsibleFilters.classList.add('hidden');
+      toggleFiltersBtn.classList.remove('active-toggle');
+      document.body.classList.remove('filters-open');
+    }
+  }
 });
 
 // Click en pill principal
@@ -326,6 +349,15 @@ document.getElementById('filterClearBtn')?.addEventListener('click', () => {
   const max = document.getElementById('priceMax'); if (max) max.value = '';
   updateFilterBadge();
   filterProducts();
+});
+
+// Botón "Ver resultados" - cierra el panel
+document.getElementById('filterApplyBtn')?.addEventListener('click', () => {
+  collapsibleFilters.classList.add('hidden');
+  toggleFiltersBtn.classList.remove('active-toggle');
+  document.body.classList.remove('filters-open');
+  // Scroll suave al inicio de la sección de productos
+  document.querySelector('.products-section')?.scrollIntoView({behavior: 'smooth', block: 'start'});
 });
 
 function updateFilterBadge() {

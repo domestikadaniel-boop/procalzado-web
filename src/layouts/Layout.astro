@@ -82,6 +82,10 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .collapsible-filters.hidden{max-height:0;opacity:0;margin-top:0;padding-top:0;border-top:0}
 .filter-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;margin-top:.6rem}
 .filter-section-title:first-child{margin-top:0}
+.filter-apply{display:none}
+
+/* Bloquear scroll del fondo cuando hay filtros abiertos en mobile */
+body.filters-open{overflow:hidden}
 
 .toggle-cats-btn{display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:2px solid var(--grey2);border-radius:6px;background:var(--white);font-family:var(--fb);font-size:.8rem;font-weight:600;letter-spacing:.03em;color:var(--muted);cursor:pointer;transition:all .18s;text-transform:uppercase;white-space:nowrap;flex-shrink:0;position:relative}
 .toggle-cats-btn svg{width:15px;height:15px;flex-shrink:0}
@@ -113,6 +117,24 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .filter-price input:focus{border-color:var(--red)}
 .filter-clear{width:100%;padding:.55rem;background:var(--white);border:1px dashed var(--grey2);border-radius:5px;cursor:pointer;font-family:var(--fb);font-size:.78rem;color:var(--muted);transition:all .15s;margin-top:.7rem}
 .filter-clear:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
+
+/* MOBILE: Drawer fullscreen */
+@media(max-width:768px){
+  .filter-bar{position:relative;z-index:5}
+  .collapsible-filters{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--white);z-index:1000;margin:0!important;padding:0!important;border:0!important;max-height:none!important;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding-bottom:6rem!important}
+  .collapsible-filters:not(.hidden){animation:slideUp .3s ease}
+  .collapsible-filters.hidden{display:none!important;opacity:0}
+  .collapsible-filters::before{content:'FILTROS';display:block;padding:1rem 1.2rem;font-family:var(--fd);font-size:1.2rem;letter-spacing:.04em;color:var(--white);background:var(--black);border-bottom:3px solid var(--red);position:sticky;top:0;z-index:2}
+  .filter-section-title{padding:0 1.2rem;margin-top:1.2rem!important}
+  .filter-section-title:first-of-type{margin-top:1rem!important}
+  .pills{padding:0 1.2rem .5rem;gap:.4rem}
+  .subcats-wrapper{padding-bottom:.5rem}
+  .filters-panel{margin:0 1rem;padding:.7rem;background:var(--grey);grid-template-columns:1fr 1fr;gap:.8rem}
+  .filter-clear{margin:1rem 1.2rem 0!important;width:calc(100% - 2.4rem)}
+  .filter-apply{display:block;position:fixed;bottom:0;left:0;right:0;width:100%;padding:1rem;background:var(--red);color:var(--white);border:none;font-family:var(--fb);font-size:.95rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;z-index:1001;box-shadow:0 -4px 16px rgba(0,0,0,.1)}
+  .filter-apply:hover{background:#cc0000}
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* PRODUCTS */
 .products-section{max-width:1280px;margin:0 auto;padding:2.2rem clamp(1rem,4vw,3rem) 5rem}
