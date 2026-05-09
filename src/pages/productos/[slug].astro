@@ -238,10 +238,17 @@ const schemaProduct = {
       btn.classList.add('selected');
       selectedColor = btn.dataset.color;
       if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
+
+      // Saltar a la primera imagen de ese color (sin filtrar la galería)
+      const firstImgIdx = visibleImages.findIndex(img => img.color === selectedColor);
+      if (firstImgIdx >= 0) {
+        currentImgIdx = firstImgIdx;
+        updateGallery();
+      }
     }));
   }
 
-  // Inicializar galería con TODAS las imágenes (no se filtra por color)
+  // Inicializar galería con TODAS las imágenes
   updateGallery();
 
   function updateGallery() {
