@@ -92,7 +92,9 @@ const totalBrands = brandsInUse.length;
     <div class="filter-top-row">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="searchInput" placeholder="Buscar producto o marca…"/>
+        <input type="text" id="searchInput" placeholder="Buscar producto o marca…" autocomplete="off"/>
+        <button type="button" class="search-clear" id="searchClear" style="display:none" aria-label="Limpiar búsqueda">&times;</button>
+        <div class="search-suggestions" id="searchSuggestions"></div>
       </div>
       <button class="toggle-cats-btn" id="toggleFiltersBtn" type="button" title="Mostrar filtros">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -253,6 +255,16 @@ const totalBrands = brandsInUse.length;
 </main>
 
 <script type="application/json" id="subcatsData" set:html={JSON.stringify(subCategoriesByParent)}></script>
+<script type="application/json" id="productsData" set:html={JSON.stringify(products.map(p => {
+  const primaryImg = p.product_images?.find(img => img.is_primary) || p.product_images?.[0];
+  return {
+    slug: p.slug,
+    name: p.name,
+    brand: p.brands?.name || '',
+    img: primaryImg?.url || '',
+    price: p.show_price && p.price ? Number(p.price) : null
+  };
+}))}></script>
 
 <script is:inline>
 // === FILTRADO AVANZADO ===
@@ -330,8 +342,107 @@ function renderSubcategories(parentId) {
   });
 }
 
-// Search input
-searchInput?.addEventListener('input', filterProducts);
+// === AUTOCOMPLETE BUSCADOR ===
+const allProducts = JSON.parse(document.getElementById('productsData').textContent || '[]');
+const searchSuggestions = document.getElementById('searchSuggestions');
+const searchClear = document.getElementById('searchClear');
+
+function renderSuggestions(query) {
+  const q = query.toLowerCase().trim();
+  if (q.length < 1) {
+    searchSuggestions.classList.remove('show');
+    searchSuggestions.innerHTML = '';
+    return;
+  }
+
+  const matches = allProducts.filter(p =>
+    p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
+  ).slice(0, 6);
+
+  if (matches.length === 0) {
+    searchSuggestions.innerHTML = `<div class="suggestion-empty">No se encontraron productos para "${query}"</div>`;
+    searchSuggestions.classList.add('show');
+    return;
+  }
+
+  searchSuggestions.innerHTML = matches.map(p => {
+    // Resaltar coincidencia
+    const highlight = (text) => {
+      const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})`, 'gi');
+      return text.replace(regex, '<mark>$1</mark>');
+    };
+    return `<a href="/productos/${p.slug}" class="suggestion-item">
+      ${p.img ? `<img src="${p.img}" alt="${p.name}" width="40" height="40"/>` : '<div class="suggestion-noimg">👢</div>'}
+      <div class="suggestion-info">
+        ${p.brand ? `<div class="suggestion-brand">${highlight(p.brand)}</div>` : ''}
+        <div class="suggestion-name">${highlight(p.name)}</div>
+      </div>
+      ${p.price ? `<div class="suggestion-price">$${p.price.toLocaleString('es-CO')}</div>` : ''}
+    </a>`;
+  }).join('');
+  searchSuggestions.classList.add('show');
+}
+
+// Mostrar sugerencias al escribir
+searchInput?.addEventListener('input', () => {
+  const value = searchInput.value;
+  searchClear.style.display = value ? 'flex' : 'none';
+  renderSuggestions(value);
+  filterProducts();
+});
+
+// Mostrar sugerencias al enfocar (si ya hay texto)
+searchInput?.addEventListener('focus', () => {
+  if (searchInput.value) renderSuggestions(searchInput.value);
+});
+
+// Botón limpiar
+searchClear?.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.style.display = 'none';
+  searchSuggestions.classList.remove('show');
+  filterProducts();
+  searchInput.focus();
+});
+
+// Cerrar al hacer click fuera del buscador
+document.addEventListener('click', e => {
+  if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+    searchSuggestions.classList.remove('show');
+  }
+});
+
+// Navegación con teclado (flechas y Enter)
+searchInput?.addEventListener('keydown', e => {
+  const items = searchSuggestions.querySelectorAll('.suggestion-item');
+  if (items.length === 0) return;
+
+  const current = searchSuggestions.querySelector('.suggestion-item.active');
+  let nextIdx = -1;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    nextIdx = current ? Array.from(items).indexOf(current) + 1 : 0;
+    if (nextIdx >= items.length) nextIdx = 0;
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    nextIdx = current ? Array.from(items).indexOf(current) - 1 : items.length - 1;
+    if (nextIdx < 0) nextIdx = items.length - 1;
+  } else if (e.key === 'Enter' && current) {
+    e.preventDefault();
+    window.location.href = current.getAttribute('href');
+    return;
+  } else if (e.key === 'Escape') {
+    searchSuggestions.classList.remove('show');
+    return;
+  } else {
+    return;
+  }
+
+  items.forEach(i => i.classList.remove('active'));
+  items[nextIdx].classList.add('active');
+  items[nextIdx].scrollIntoView({block: 'nearest'});
+});
 
 // Filtros checkbox
 document.querySelectorAll('[data-filter]').forEach(inp => {
