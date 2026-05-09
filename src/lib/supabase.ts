@@ -163,3 +163,14 @@ export async function getBrands() {
   if (error) { console.error('Error fetching brands:', error); return []; }
   return (data as Brand[]) || [];
 }
+
+export async function getSiteSetting(key: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', key)
+    .maybeSingle();
+
+  if (error) { console.error('Error fetching setting:', error); return null; }
+  return data?.value || null;
+}

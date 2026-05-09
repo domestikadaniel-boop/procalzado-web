@@ -159,6 +159,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab active" data-tab="products">Productos</button>
     <button class="tab" data-tab="brands">Marcas</button>
     <button class="tab" data-tab="categories">Categorías</button>
+    <button class="tab" data-tab="settings">Configuración</button>
   </div>
   <div class="admin-body">
     <div id="tab-products">
@@ -172,6 +173,26 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div id="tab-categories" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las categorías (arrastra para reordenar)</span><button class="btn-add" id="addCatBtn">+ Nueva categoría</button></div>
       <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="catTableBody"></tbody></table></div>
+    </div>
+
+    <div id="tab-settings" style="display:none">
+      <div style="background:var(--white);padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);max-width:800px">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;margin-bottom:.3rem">Textos del Sitio</h3>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.5rem">Aquí puedes personalizar los textos que aparecen en la página principal del sitio.</p>
+
+        <div class="field" style="margin-bottom:1.5rem">
+          <label style="display:block;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem">Texto de introducción del catálogo</label>
+          <small style="display:block;color:var(--muted);font-size:.72rem;margin-bottom:.5rem">Aparece en la página principal, debajo del título "Todos los productos". Puedes usar **texto en negrita** poniendo dos asteriscos al inicio y al final de las palabras.</small>
+          <textarea id="setHomeIntro" rows="4" style="width:100%;padding:.7rem .9rem;border:2px solid var(--grey2);border-radius:6px;font-size:.88rem;font-family:inherit;outline:none;resize:vertical;line-height:1.5" placeholder="Escribe aquí el texto que verán tus clientes..."></textarea>
+        </div>
+
+        <div style="background:var(--grey);padding:1rem;border-radius:6px;margin-bottom:1.5rem">
+          <div style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Vista previa</div>
+          <div id="introPreview" style="font-size:.88rem;color:var(--black);line-height:1.5"></div>
+        </div>
+
+        <button class="btn-save" id="settingsSaveBtn">Guardar cambios</button>
+      </div>
     </div>
   </div>
 </div>
@@ -283,12 +304,12 @@ $('loginBtn').addEventListener('click',async()=>{
   showAdmin(data.user.email);
 });
 $('logoutBtn').addEventListener('click',async()=>{await supabase.auth.signOut();$('loginWrap').style.display='';$('adminPanel').style.display='none'});
-async function showAdmin(email){$('loginWrap').style.display='none';$('adminPanel').style.display='block';$('adminEmail').textContent=email;await loadData()}
+async function showAdmin(email){$('loginWrap').style.display='none';$('adminPanel').style.display='block';$('adminEmail').textContent=email;await loadData();await loadSettings()}
 
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
 }));
 
 // LOAD
@@ -720,6 +741,39 @@ window.editCategory=id=>{
   $('catFormTitle').textContent='Editar Categoría';$('categoryModal').classList.add('open');
 };
 window.deleteCategory=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('categories').delete().eq('id',id);await loadData();loading(false)};
+
+// SETTINGS
+async function loadSettings() {
+  const {data} = await supabase.from('site_settings').select('*');
+  if (!data) return;
+  const intro = data.find(s => s.key === 'home_intro');
+  if (intro) {
+    $('setHomeIntro').value = intro.value || '';
+    updateIntroPreview();
+  }
+}
+
+function updateIntroPreview() {
+  const text = $('setHomeIntro').value;
+  // Convertir **bold** a <strong>
+  const html = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  $('introPreview').innerHTML = html || '<em style="color:var(--muted)">El texto aparecerá aquí mientras escribes...</em>';
+}
+
+$('setHomeIntro')?.addEventListener('input', updateIntroPreview);
+
+$('settingsSaveBtn')?.addEventListener('click', async () => {
+  loading(true);
+  const value = $('setHomeIntro').value;
+  await supabase.from('site_settings').upsert({key: 'home_intro', value, updated_at: new Date().toISOString()});
+  loading(false);
+  showToast('Configuración guardada ✓');
+});
+
+// Cargar settings al inicio
+async function showAdminWithSettings(email) {
+  await loadSettings();
+}
 
 checkAuth();
 </script>

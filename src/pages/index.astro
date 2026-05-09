@@ -1,10 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getProducts, getCategories, getBrands } from '../lib/supabase';
+import { getProducts, getCategories, getBrands, getSiteSetting } from '../lib/supabase';
 
 const products = await getProducts();
 const categories = await getCategories();
 const brands = await getBrands();
+const homeIntroRaw = await getSiteSetting('home_intro');
+
+// Convertir **bold** a HTML
+const homeIntroHtml = (homeIntroRaw || 'Catálogo completo de **botas de caucho**, **botas de lluvia**, **botas de moto**, **botas de trabajo**, sandalias, zuecos y zapatos de lona. Venta al detal y al por mayor en toda Colombia.')
+  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
 // Separar categorías principales y subcategorías
 const mainCategories = categories.filter(c => !c.parent_id);
@@ -191,9 +196,7 @@ const totalBrands = brandsInUse.length;
     <h2 class="section-title" id="sectionTitle">TODOS LOS <span class="red">PRODUCTOS</span></h2>
     <span class="section-count" id="sectionCount">{totalProducts} productos</span>
   </div>
-  <p style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:700px;margin-bottom:2rem;padding:1rem 1.2rem;background:var(--grey);border-radius:8px;border-left:3px solid var(--red)">
-    Catálogo completo de <strong>botas de caucho</strong>, <strong>botas de lluvia</strong>, <strong>botas de moto</strong>, <strong>botas de trabajo</strong>, sandalias, zuecos y zapatos de lona. Venta al detal y al por mayor en toda Colombia.
-  </p>
+  <p style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:700px;margin-bottom:2rem;padding:1rem 1.2rem;background:var(--grey);border-radius:8px;border-left:3px solid var(--red)" set:html={homeIntroHtml}></p>
   <div class="product-grid" id="productGrid">
     {products.map((p, i) => {
       const primaryImg = p.product_images?.find(img => img.is_primary) || p.product_images?.[0];
