@@ -110,6 +110,10 @@ const totalBrands = brandsInUse.length;
 
     <!-- Todo lo que se puede ocultar/mostrar -->
     <div class="collapsible-filters hidden" id="collapsibleFilters">
+      <div class="filters-modal-header">
+        <h3>FILTROS</h3>
+        <button class="filters-close-btn" id="filtersCloseBtn" type="button" aria-label="Cerrar">&times;</button>
+      </div>
       <!-- Categorías principales -->
       <div class="filter-section-title">Categorías</div>
       <div class="pills main-pills">
@@ -308,13 +312,19 @@ toggleFiltersBtn.addEventListener('click', () => {
 document.addEventListener('click', e => {
   const isOpen = !collapsibleFilters.classList.contains('hidden');
   if (!isOpen) return;
-  // Si el click es en el overlay (el body con filters-open) pero no dentro del panel ni del botón
-  if (window.innerWidth <= 768) {
-    if (!collapsibleFilters.contains(e.target) && !toggleFiltersBtn.contains(e.target)) {
-      collapsibleFilters.classList.add('hidden');
-      toggleFiltersBtn.classList.remove('active-toggle');
-      document.body.classList.remove('filters-open');
-    }
+  if (!collapsibleFilters.contains(e.target) && !toggleFiltersBtn.contains(e.target)) {
+    collapsibleFilters.classList.add('hidden');
+    toggleFiltersBtn.classList.remove('active-toggle');
+    document.body.classList.remove('filters-open');
+  }
+});
+
+// Cerrar con tecla Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !collapsibleFilters.classList.contains('hidden')) {
+    collapsibleFilters.classList.add('hidden');
+    toggleFiltersBtn.classList.remove('active-toggle');
+    document.body.classList.remove('filters-open');
   }
 });
 
@@ -478,6 +488,13 @@ document.getElementById('filterApplyBtn')?.addEventListener('click', () => {
   document.body.classList.remove('filters-open');
   // Scroll suave al inicio de la sección de productos
   document.querySelector('.products-section')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+
+// Botón X del header cierra el panel
+document.getElementById('filtersCloseBtn')?.addEventListener('click', () => {
+  collapsibleFilters.classList.add('hidden');
+  toggleFiltersBtn.classList.remove('active-toggle');
+  document.body.classList.remove('filters-open');
 });
 
 function updateFilterBadge() {

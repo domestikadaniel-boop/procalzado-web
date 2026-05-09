@@ -94,14 +94,22 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .suggestion-price{font-size:.82rem;font-weight:700;color:var(--black);flex-shrink:0;white-space:nowrap}
 .suggestion-empty{padding:1rem;text-align:center;color:var(--muted);font-size:.85rem}
 .suggestion-item mark{background:#ffeb3b;color:var(--black);padding:0 1px;border-radius:2px;font-weight:600}
-/* Contenedor que se colapsa */
-.collapsible-filters{overflow:hidden;max-height:2000px;opacity:1;transition:max-height .35s ease,opacity .25s ease,margin-top .25s ease,padding-top .25s ease;margin-top:.7rem;padding-top:.5rem;border-top:1px solid var(--grey2)}
-.collapsible-filters.hidden{max-height:0;opacity:0;margin-top:0;padding-top:0;border-top:0}
-.filter-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;margin-top:.6rem}
-.filter-section-title:first-child{margin-top:0}
-.filter-apply{display:none}
+/* Contenedor que se colapsa - SIEMPRE como modal fullscreen */
+.collapsible-filters{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--white);z-index:1000;margin:0!important;padding:0!important;border:0!important;max-height:none!important;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding-bottom:6rem!important}
+.collapsible-filters:not(.hidden){animation:slideUp .3s ease}
+.collapsible-filters.hidden{display:none!important;opacity:0}
 
-/* Bloquear scroll del fondo cuando hay filtros abiertos en mobile */
+/* Header del modal con botón X */
+.filters-modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.4rem;color:var(--white);background:var(--black);border-bottom:3px solid var(--red);position:sticky;top:0;z-index:2}
+.filters-modal-header h3{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;margin:0}
+.filters-close-btn{background:none;border:1px solid rgba(255,255,255,.3);color:var(--white);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s}
+.filters-close-btn:hover{background:var(--red);border-color:var(--red)}
+.filter-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;margin-top:1.2rem;padding:0 1.4rem}
+.filter-section-title:first-child{margin-top:1rem}
+.filter-apply{display:block;position:fixed;bottom:0;left:0;right:0;width:100%;padding:1rem;background:var(--red);color:var(--white);border:none;font-family:var(--fb);font-size:.95rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;z-index:1001;box-shadow:0 -4px 16px rgba(0,0,0,.1)}
+.filter-apply:hover{background:#cc0000}
+
+/* Bloquear scroll del fondo cuando hay filtros abiertos */
 body.filters-open{overflow:hidden}
 
 .toggle-cats-btn{display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:2px solid var(--grey2);border-radius:6px;background:var(--white);font-family:var(--fb);font-size:.8rem;font-weight:600;letter-spacing:.03em;color:var(--muted);cursor:pointer;transition:all .18s;text-transform:uppercase;white-space:nowrap;flex-shrink:0;position:relative}
@@ -111,47 +119,39 @@ body.filters-open{overflow:hidden}
 .filter-count-badge{background:var(--red);color:var(--white);font-size:.65rem;font-weight:700;padding:.1rem .35rem;border-radius:8px;min-width:18px;display:inline-flex;align-items:center;justify-content:center}
 .toggle-cats-btn.active-toggle .filter-count-badge{background:var(--white);color:var(--red)}
 .filter-top-row{display:flex;align-items:center;gap:.7rem}
-.pills{display:flex;flex-wrap:wrap;gap:.4rem}
+.pills{display:flex;flex-wrap:wrap;gap:.4rem;padding:0 1.4rem;margin-bottom:.5rem}
 .pill{padding:.42rem .95rem;border:2px solid var(--grey2);border-radius:4px;background:var(--white);font-family:var(--fb);font-size:.8rem;font-weight:600;letter-spacing:.03em;cursor:pointer;transition:all .18s;color:var(--muted);text-transform:uppercase;border:2px solid var(--grey2)}
 .pill:hover{border-color:var(--red);color:var(--red)}
 .pill.active{background:var(--red);border-color:var(--red);color:var(--white)}
 
 /* SUBCATS */
-.subcats-wrapper{margin-top:.5rem}
+.subcats-wrapper{margin-top:.3rem}
 .subcat-pill{font-size:.72rem!important;padding:.3rem .7rem!important;background:var(--grey)!important}
 .subcat-pill.active{background:var(--black)!important;border-color:var(--black)!important;color:var(--white)!important}
 
 /* FILTERS PANEL */
-.filters-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;padding:1rem;background:var(--grey);border-radius:8px;margin-top:.7rem}
+.filters-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;padding:1rem;background:var(--grey);border-radius:8px;margin:.5rem 1.4rem 0}
 .filter-group{display:flex;flex-direction:column;gap:.5rem}
 .filter-group-title{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--black);padding-bottom:.3rem;border-bottom:1px solid var(--grey2)}
 .filter-options{display:flex;flex-direction:column;gap:.3rem}
 .filter-check{display:flex;align-items:center;gap:.4rem;font-size:.82rem;cursor:pointer;color:var(--muted);user-select:none}
 .filter-check:hover{color:var(--black)}
-.filter-check input{accent-color:var(--red)}
+.filter-check input{accent-color:var(--red);width:18px;height:18px;cursor:pointer}
 .filter-price{display:flex;flex-direction:column;gap:.3rem}
 .filter-price input{padding:.4rem .55rem;border:1.5px solid var(--grey2);border-radius:5px;font-family:var(--fb);font-size:.8rem;outline:none;width:80px}
 .filter-price input:focus{border-color:var(--red)}
-.filter-clear{width:100%;padding:.55rem;background:var(--white);border:1px dashed var(--grey2);border-radius:5px;cursor:pointer;font-family:var(--fb);font-size:.78rem;color:var(--muted);transition:all .15s;margin-top:.7rem}
+.filter-clear{margin:1rem 1.4rem 0!important;padding:.55rem;background:var(--white);border:1px dashed var(--grey2);border-radius:5px;cursor:pointer;font-family:var(--fb);font-size:.78rem;color:var(--muted);transition:all .15s;width:calc(100% - 2.8rem)}
 .filter-clear:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
 
-/* MOBILE: Drawer fullscreen */
-@media(max-width:768px){
-  .filter-bar{position:relative;z-index:5}
-  .collapsible-filters{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--white);z-index:1000;margin:0!important;padding:0!important;border:0!important;max-height:none!important;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding-bottom:6rem!important}
-  .collapsible-filters:not(.hidden){animation:slideUp .3s ease}
-  .collapsible-filters.hidden{display:none!important;opacity:0}
-  .collapsible-filters::before{content:'FILTROS';display:block;padding:1rem 1.2rem;font-family:var(--fd);font-size:1.2rem;letter-spacing:.04em;color:var(--white);background:var(--black);border-bottom:3px solid var(--red);position:sticky;top:0;z-index:2}
-  .filter-section-title{padding:0 1.2rem;margin-top:1.2rem!important}
-  .filter-section-title:first-of-type{margin-top:1rem!important}
-  .pills{padding:0 1.2rem .5rem;gap:.4rem}
-  .subcats-wrapper{padding-bottom:.5rem}
-  .filters-panel{margin:0 1rem;padding:.7rem;background:var(--grey);grid-template-columns:1fr 1fr;gap:.8rem}
-  .filter-clear{margin:1rem 1.2rem 0!important;width:calc(100% - 2.4rem)}
-  .filter-apply{display:block;position:fixed;bottom:0;left:0;right:0;width:100%;padding:1rem;background:var(--red);color:var(--white);border:none;font-family:var(--fb);font-size:.95rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;z-index:1001;box-shadow:0 -4px 16px rgba(0,0,0,.1)}
-  .filter-apply:hover{background:#cc0000}
-}
 @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* En mobile, ajustes de espaciado */
+@media(max-width:640px){
+  .filters-panel{grid-template-columns:1fr 1fr;gap:.8rem;padding:.8rem;margin:.5rem 1rem 0}
+  .filter-section-title{padding:0 1rem}
+  .pills{padding:0 1rem}
+  .filter-clear{margin:1rem 1rem 0!important;width:calc(100% - 2rem)}
+}
 
 /* PRODUCTS */
 .products-section{max-width:1280px;margin:0 auto;padding:2.2rem clamp(1rem,4vw,3rem) 5rem}
