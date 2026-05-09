@@ -32,6 +32,7 @@ export interface Product {
   brand_id: string | null;
   category_id: string | null;
   gender: string | null;
+  genders: string[] | null;
   short_description: string | null;
   description: string | null;
   price: number | null;

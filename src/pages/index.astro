@@ -22,8 +22,13 @@ categories.filter(c => c.parent_id).forEach(c => {
 // Lista de marcas únicas presentes en productos (al menos 1 producto)
 const brandsInUse = brands.filter(b => products.some(p => p.brands?.id === b.id));
 
-// Géneros únicos
-const gendersInUse = [...new Set(products.map(p => p.gender).filter(Boolean))] as string[];
+// Géneros únicos (de array nuevo, con fallback a campo viejo)
+const allGenderValues = products.flatMap(p => {
+  const arr = (p as any).genders as string[] | null;
+  if (arr && arr.length > 0) return arr;
+  return p.gender ? [p.gender] : [];
+});
+const gendersInUse = [...new Set(allGenderValues)];
 const genderLabels: Record<string, string> = {
   'nino': 'Niño',
   'nina': 'Niña',
@@ -213,13 +218,18 @@ const totalBrands = brandsInUse.length;
       const catSlugs = productCats.map(c => c?.slug).filter(Boolean).join(',');
       const primaryCat = p.product_categories?.find(pc => pc.is_primary)?.categories || p.categories;
       const catName = primaryCat?.name || '';
+      // Géneros del producto (array nuevo o campo viejo single)
+      const productGenders = ((p as any).genders && (p as any).genders.length > 0)
+        ? (p as any).genders
+        : (p.gender ? [p.gender] : []);
+      const genderSlugs = productGenders.join(',');
       return (
         <a href={`/productos/${p.slug}`} class="card" style={`animation-delay:${i * 30}ms`}
           data-cat={catSlugs}
           data-name={p.name.toLowerCase()}
           data-brand={brandName.toLowerCase()}
           data-brand-slug={brandSlug}
-          data-gender={p.gender || ''}
+          data-gender={genderSlugs}
           data-price={p.show_price && p.price ? p.price : ''}
           data-has-price={p.show_price && p.price ? 'true' : 'false'}
           data-featured={p.featured ? 'true' : 'false'}>
@@ -531,6 +541,7 @@ function filterProducts() {
     const brand = card.dataset.brand || '';
     const brandSlug = card.dataset.brandSlug || '';
     const gender = card.dataset.gender || '';
+    const productGenders = gender.split(',').filter(Boolean);
     const price = parseFloat(card.dataset.price) || 0;
     const hasPrice = card.dataset.hasPrice === 'true';
     const featured = card.dataset.featured === 'true';
@@ -539,7 +550,7 @@ function filterProducts() {
     const matchSubcat = !currentSubcat || cats.includes(currentSubcat);
     const matchSearch = !q || name.includes(q) || brand.includes(q);
     const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(brandSlug);
-    const matchGender = selectedGenders.length === 0 || selectedGenders.includes(gender);
+    const matchGender = selectedGenders.length === 0 || selectedGenders.some(g => productGenders.includes(g));
     const matchFeatured = !onlyFeatured || featured;
 
     // Match parcial: todos los filtros EXCEPTO precio
