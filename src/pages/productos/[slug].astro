@@ -125,11 +125,6 @@ const schemaProduct = {
 
       {(product as any).notice && (
         <div class={`product-notice notice-${(product as any).notice_type || 'info'}`}>
-          <span class="notice-icon">
-            {(product as any).notice_type === 'warning' ? '⚠️' :
-             (product as any).notice_type === 'danger' ? '🔴' :
-             (product as any).notice_type === 'success' ? '✅' : 'ℹ️'}
-          </span>
           <span>{(product as any).notice}</span>
         </div>
       )}
