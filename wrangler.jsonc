@@ -1,0 +1,9 @@
+{
+  "name": "procalzado-web",
+  "compatibility_date": "2025-05-01",
+  "assets": {
+    "directory": "./dist/",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
