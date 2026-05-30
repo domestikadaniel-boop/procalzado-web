@@ -56,9 +56,9 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .cart-badge.show{display:flex}
 
 /* HERO */
-.hero{background:var(--black);color:var(--white);padding:clamp(3rem,7vw,5.5rem) clamp(1rem,4vw,3rem);position:relative;overflow:hidden}
+.hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,3rem);position:relative;overflow:hidden;min-height:calc(100vh - 64px);display:flex;align-items:center}
 .hero::after{content:'';position:absolute;right:-80px;top:-60px;width:400px;height:400px;background:var(--red);clip-path:polygon(30% 0%,100% 0%,100% 100%,60% 100%);opacity:.1;pointer-events:none}
-.hero-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;position:relative;z-index:1}
+.hero-inner{max-width:1280px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;position:relative;z-index:1}
 .hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:1rem}
 .hero h1{font-family:var(--fd);font-size:clamp(2.8rem,6.5vw,5rem);line-height:.95;letter-spacing:.03em;margin-bottom:1.1rem}
 .hero h1 .accent{color:var(--red)}
@@ -67,7 +67,7 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .stat{border-left:3px solid var(--red);padding-left:.9rem}
 .stat-num{font-family:var(--fd);font-size:2rem;line-height:1;color:var(--white)}
 .stat-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-top:.15rem}
-.hero-badge{flex-shrink:0;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 8px 24px rgba(255,0,0,0.4))}
+.hero-badge{flex-shrink:0;display:flex;align-items:center;justify-content:center}
 
 /* FILTER BAR */
 .filter-bar{background:var(--grey);border-bottom:1px solid var(--grey2);padding:.85rem clamp(1rem,4vw,3rem);position:sticky;top:64px;z-index:200}
@@ -313,7 +313,7 @@ footer a{color:#FF4444;text-decoration:underline}
 <!-- HEADER -->
 <header role="banner">
   <a href="/" class="logo">
-    <img src="/logotipo.png" class="logo-img" alt="Procalzado" width="180" height="28"/>
+    <img src="/logotipo-rojo.png" class="logo-img" alt="Procalzado" width="180" height="28"/>
   </a>
   <div class="header-right">
     <a href="https://wa.me/573213154654?text=Hola%2C+me+gustar%C3%ADa+conocer+su+cat%C3%A1logo." class="header-wa" target="_blank" rel="noopener noreferrer">
