@@ -69,7 +69,7 @@ const introHtml = homeIntro
   : '';
 
 const pageTitle = 'Procalzado | Botas de Caucho, Trabajo, Moto y más en Colombia';
-const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas de trabajo, sandalias y zapatos industriales en Colombia. Procalzado: distribuidor autorizado. Venta al detal y al por mayor con envíos a todo el país.';
+const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas de trabajo, sandalias, zapatos industriales y mucho más en Colombia. Procalzado: distribuidor autorizado. Venta al detal y al por mayor con envíos a todo el país.';
 ---
 
 <Layout title={pageTitle} description={pageDesc}>
@@ -79,8 +79,8 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
   <div class="hero-inner">
     <div>
       <span class="hero-tag">Catálogo Oficial 2026</span>
-      <h1>Botas y <span class="accent-block">calzado de <span class="accent">calidad</span> garantizada</span></h1>
-      <p class="hero-sub">Botas de caucho, botas de lluvia, botas de moto y calzado industrial. Distribuidores autorizados de las principales marcas en Colombia.</p>
+      <h1>Calzado de <span class="accent">calidad</span> garantizada</h1>
+      <p class="hero-sub">Botas de caucho, de lluvia, de moto y de trabajo, calzado industrial, sandalias y mucho más. Distribuidores autorizados de las principales marcas en Colombia.</p>
       <div class="hero-stats">
         <div class="stat"><div class="stat-num" data-count={parentCats.length}>0</div><div class="stat-label">Categorías</div></div>
         <div class="stat"><div class="stat-num" data-count={products.length}>0</div><div class="stat-label">Productos</div></div>
@@ -88,7 +88,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
       </div>
     </div>
     <div class="hero-badge">
-      <img src="/isotipo.png" width="220" height="220" alt="Procalzado" loading="eager"/>
+      <img src="/isotipo.png" width="220" height="220" class="hero-isotipo" alt="Procalzado" loading="eager"/>
     </div>
   </div>
 </section>
@@ -258,9 +258,8 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 <script type="application/json" id="catsMeta" set:html={JSON.stringify(parentCats.map(c => ({ id: c.id, slug: c.slug, name: c.name })))}></script>
 
 <style>
-/* Hero título en bloque (como el original) */
-.hero h1 .accent-block{display:block}
-.hero-badge img{filter:drop-shadow(0 0 40px rgba(255,0,0,.55));display:block}
+/* Hero isotipo circular (sin resplandor) */
+.hero-isotipo{display:block}
 /* Bolitas de color en las tarjetas */
 .card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
 .card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
