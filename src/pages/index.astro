@@ -7,8 +7,9 @@ import type { Product, Category, Brand } from '../lib/supabase';
 const products: Product[] = await getProducts();
 const categories: Category[] = await getCategories();
 const brands: Brand[] = await getBrands();
-// Marcas que deben aparecer en el panel de filtros (show_in_filters != false)
+// Marcas destacadas en filtros (show_in_filters != false) y el resto bajo "Ver más"
 const filterBrands = brands.filter(b => (b as any).show_in_filters !== false);
+const moreBrands = brands.filter(b => (b as any).show_in_filters === false);
 const homeIntro = await getSiteSetting('home_intro');
 
 // Categorías principales y subcategorías
@@ -133,14 +134,27 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
       )}
 
       <div class="filters-panel">
-        {filterBrands.length > 0 && (
+        {(filterBrands.length > 0 || moreBrands.length > 0) && (
           <div class="filter-group">
             <div class="filter-group-title">Marca</div>
             <div class="filter-options">
               {filterBrands.map(b => (
                 <label class="filter-check"><input type="checkbox" class="f-brand" value={b.id}/> {b.name}</label>
               ))}
+              {moreBrands.length > 0 && (
+                <div class="more-brands" id="moreBrands" hidden>
+                  {moreBrands.map(b => (
+                    <label class="filter-check"><input type="checkbox" class="f-brand" value={b.id}/> {b.name}</label>
+                  ))}
+                </div>
+              )}
             </div>
+            {moreBrands.length > 0 && (
+              <button type="button" class="more-brands-btn" id="moreBrandsBtn" aria-expanded="false">
+                <span class="more-brands-label">Ver más ({moreBrands.length})</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            )}
           </div>
         )}
 
@@ -263,6 +277,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 /* Hero isotipo circular (sin resplandor) */
 .hero-isotipo{display:block;width:clamp(220px,30vw,380px);height:auto}
 /* Bolitas de color en las tarjetas */
+.more-brands{display:flex;flex-direction:column;gap:inherit}
+.more-brands-btn{display:inline-flex;align-items:center;gap:.3rem;background:none;border:none;color:var(--red);font-size:.8rem;font-weight:600;cursor:pointer;padding:.4rem 0 0;font-family:inherit}
+.more-brands-btn svg{width:15px;height:15px;transition:transform .2s}
+.more-brands-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
 .card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
 .card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
 .card-color-more{font-size:.68rem;font-weight:600;color:var(--muted);margin-left:.1rem}
@@ -440,6 +458,21 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
         renderSubcats(activeCat);
         applyFilters();
       });
+    });
+  }
+
+  // ── VER MÁS MARCAS ──
+  const moreBrandsBtn = document.getElementById('moreBrandsBtn');
+  const moreBrands = document.getElementById('moreBrands');
+  if (moreBrandsBtn && moreBrands) {
+    moreBrandsBtn.addEventListener('click', () => {
+      const expanded = moreBrandsBtn.getAttribute('aria-expanded') === 'true';
+      moreBrandsBtn.setAttribute('aria-expanded', String(!expanded));
+      moreBrands.hidden = expanded;
+      const label = moreBrandsBtn.querySelector('.more-brands-label');
+      if (label) label.textContent = expanded
+        ? `Ver más (${moreBrands.querySelectorAll('.f-brand').length})`
+        : 'Ver menos';
     });
   }
 
