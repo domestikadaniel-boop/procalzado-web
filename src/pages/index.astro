@@ -88,7 +88,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
       </div>
     </div>
     <div class="hero-badge">
-      <img src="/isotipo.png" width="220" height="220" class="hero-isotipo" alt="Procalzado" loading="eager"/>
+      <img src="/isotipo.png" class="hero-isotipo" alt="Procalzado" loading="eager"/>
     </div>
   </div>
 </section>
@@ -259,7 +259,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <style>
 /* Hero isotipo circular (sin resplandor) */
-.hero-isotipo{display:block}
+.hero-isotipo{display:block;width:clamp(220px,30vw,380px);height:auto}
 /* Bolitas de color en las tarjetas */
 .card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
 .card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}

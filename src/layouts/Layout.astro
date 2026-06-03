@@ -56,17 +56,17 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .cart-badge.show{display:flex}
 
 /* HERO */
-.hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,3rem);position:relative;overflow:hidden;min-height:calc(100vh - 64px);display:flex;align-items:center}
+.hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,3rem);position:relative;overflow:hidden;min-height:calc(88vh - 64px);display:flex;align-items:center}
 .hero::after{content:'';position:absolute;right:-80px;top:-60px;width:400px;height:400px;background:var(--red);clip-path:polygon(30% 0%,100% 0%,100% 100%,60% 100%);opacity:.1;pointer-events:none}
 .hero-inner{max-width:1280px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;position:relative;z-index:1}
-.hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:1rem}
-.hero h1{font-family:var(--fd);font-size:clamp(2.8rem,6.5vw,5rem);line-height:.95;letter-spacing:.03em;margin-bottom:1.1rem}
+.hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:1.4rem}
+.hero h1{font-family:var(--fd);font-size:clamp(2.8rem,6.5vw,5rem);line-height:.95;letter-spacing:.03em;margin-bottom:1.4rem}
 .hero h1 .accent{color:var(--red)}
-.hero-sub{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.88);max-width:400px;line-height:1.65}
-.hero-stats{display:flex;gap:1.8rem;margin-top:2.2rem}
-.stat{border-left:3px solid var(--red);padding-left:.9rem}
-.stat-num{font-family:var(--fd);font-size:2rem;line-height:1;color:var(--white)}
-.stat-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-top:.15rem}
+.hero-sub{font-size:1rem;font-weight:300;color:rgba(255,255,255,.88);max-width:420px;line-height:1.7}
+.hero-stats{display:flex;gap:2rem;margin-top:2.8rem}
+.stat{border-left:3px solid var(--red);padding-left:1rem}
+.stat-num{font-family:var(--fd);font-size:2.3rem;line-height:1;color:var(--white)}
+.stat-label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-top:.2rem}
 .hero-badge{flex-shrink:0;display:flex;align-items:center;justify-content:center}
 
 /* FILTER BAR */
