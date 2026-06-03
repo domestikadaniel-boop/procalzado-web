@@ -18,6 +18,7 @@
     "@astrojs/sitemap": "^3.7.2",
     "@supabase/supabase-js": "^2.105.1",
     "astro": "^6.1.10",
+    "dotenv": "^17.4.2",
     "wrangler": "^4.86.0"
   },
   "overrides": {

@@ -1,7 +1,8 @@
 // scripts/generate-sitemap.mjs
 // Genera public/sitemap.xml automáticamente con todos los productos
+import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -56,13 +57,11 @@ ${pages.map(p => `  <url>
   </url>`).join('\n')}
 </urlset>`;
 
-  const outputPath = './public/sitemap.xml';
-  writeFileSync(outputPath, xml, 'utf-8');
-  console.log(`✓ Escrito en ${outputPath} (${pages.length} URLs)`);
+  writeFileSync('./public/sitemap.xml', xml, 'utf-8');
+  console.log(`✓ Escrito en ./public/sitemap.xml (${pages.length} URLs)`);
 }
 
 generateSitemap().catch(err => {
   console.error('Error generando sitemap:', err);
-  // No fallar el build, solo loguear
   process.exit(0);
 });
