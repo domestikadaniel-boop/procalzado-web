@@ -277,7 +277,8 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 /* Hero isotipo circular (sin resplandor) */
 .hero-isotipo{display:block;width:clamp(220px,30vw,380px);height:auto}
 /* Bolitas de color en las tarjetas */
-.more-brands{display:flex;flex-direction:column;gap:inherit}
+.more-brands{flex-direction:column;gap:inherit}
+.more-brands:not([hidden]){display:flex}
 .more-brands-btn{display:inline-flex;align-items:center;gap:.3rem;background:none;border:none;color:var(--red);font-size:.8rem;font-weight:600;cursor:pointer;padding:.4rem 0 0;font-family:inherit}
 .more-brands-btn svg{width:15px;height:15px;transition:transform .2s}
 .more-brands-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
