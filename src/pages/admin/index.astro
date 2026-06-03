@@ -175,7 +175,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     </div>
     <div id="tab-brands" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las marcas (arrastra para reordenar)</span><button class="btn-add" id="addBrandBtn">+ Nueva marca</button></div>
-      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th>Dist. Autorizado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="brandTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th style="width:90px">Productos</th><th>Dist. Autorizado</th><th>En filtros</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="brandTableBody"></tbody></table></div>
     </div>
     <div id="tab-categories" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las categorías (arrastra para reordenar)</span><button class="btn-add" id="addCatBtn">+ Nueva categoría</button></div>
@@ -431,13 +431,19 @@ function setupDragAndDrop(tbodyId, items, table) {
 $('adminSearch').addEventListener('input',e=>renderProducts(e.target.value.toLowerCase()));
 
 function renderBrands(){
-  $('brandTableBody').innerHTML=brands.map(b=>`<tr draggable="true" data-id="${b.id}" class="draggable-row">
+  $('brandTableBody').innerHTML=brands.map(b=>{
+    const count=products.filter(p=>p.brand_id===b.id).length;
+    // show_in_filters: si es null/undefined se asume true (aparece por defecto)
+    const inFilters=b.show_in_filters!==false;
+    return `<tr draggable="true" data-id="${b.id}" class="draggable-row">
     <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
     <td><strong>${b.name}</strong></td><td><code style="font-size:.78rem;color:var(--muted)">${b.slug}</code></td>
+    <td style="text-align:center"><span class="badge ${count>0?'badge-active':'badge-inactive'}" style="min-width:32px;display:inline-block">${count}</span></td>
     <td><label class="toggle-switch"><input type="checkbox" ${b.is_authorized_distributor?'checked':''} onchange="window.toggleBrandAuth('${b.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
+    <td><label class="toggle-switch"><input type="checkbox" ${inFilters?'checked':''} onchange="window.toggleBrandFilter('${b.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
     <td><span class="badge ${b.active?'badge-active':'badge-inactive'}">${b.active?'Activa':'Off'}</span></td>
     <td class="actions-cell"><button class="action-btn edit" onclick="window.editBrand('${b.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteBrand('${b.id}',\`${b.name}\`)">🗑️</button></td>
-  </tr>`).join('');
+  </tr>`}).join('');
   setupDragAndDrop('brandTableBody', brands, 'brands');
 }
 function renderCategories(){
@@ -742,6 +748,7 @@ $('brandSaveBtn').addEventListener('click',async()=>{
 });
 window.editBrand=id=>{const b=brands.find(x=>x.id===id);if(!b)return;$('brandId').value=b.id;$('bName').value=b.name;$('bSlug').value=b.slug;$('bAuthorized').checked=b.is_authorized_distributor;$('brandFormTitle').textContent='Editar Marca';$('brandModal').classList.add('open')};
 window.toggleBrandAuth=async(id,checked)=>{await supabase.from('brands').update({is_authorized_distributor:checked}).eq('id',id);const b=brands.find(x=>x.id===id);if(b)b.is_authorized_distributor=checked;showToast(checked?'Autorizado ✓':'Desmarcado')};
+window.toggleBrandFilter=async(id,checked)=>{await supabase.from('brands').update({show_in_filters:checked}).eq('id',id);const b=brands.find(x=>x.id===id);if(b)b.show_in_filters=checked;showToast(checked?'Aparece en filtros ✓':'Oculta de filtros')};
 window.deleteBrand=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('brands').delete().eq('id',id);await loadData();loading(false)};
 
 // CATEGORIES

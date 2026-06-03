@@ -7,6 +7,8 @@ import type { Product, Category, Brand } from '../lib/supabase';
 const products: Product[] = await getProducts();
 const categories: Category[] = await getCategories();
 const brands: Brand[] = await getBrands();
+// Marcas que deben aparecer en el panel de filtros (show_in_filters != false)
+const filterBrands = brands.filter(b => (b as any).show_in_filters !== false);
 const homeIntro = await getSiteSetting('home_intro');
 
 // Categorías principales y subcategorías
@@ -131,11 +133,11 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
       )}
 
       <div class="filters-panel">
-        {brands.length > 0 && (
+        {filterBrands.length > 0 && (
           <div class="filter-group">
             <div class="filter-group-title">Marca</div>
             <div class="filter-options">
-              {brands.map(b => (
+              {filterBrands.map(b => (
                 <label class="filter-check"><input type="checkbox" class="f-brand" value={b.id}/> {b.name}</label>
               ))}
             </div>
