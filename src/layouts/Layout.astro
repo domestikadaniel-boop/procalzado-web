@@ -1,4 +1,7 @@
 ---
+import { getCategories } from '../lib/supabase';
+import type { Category } from '../lib/supabase';
+
 interface Props {
   title: string;
   description?: string;
@@ -8,6 +11,14 @@ interface Props {
 const { title, description = 'Compra botas de caucho, botas de lluvia, botas de moto, botas de trabajo, sandalias y zapatos industriales en Colombia. Procalzado: distribuidor autorizado.', canonical, ogImage } = Astro.props;
 const siteUrl = 'https://procalzado.com';
 const canonicalUrl = canonical || new URL(Astro.url.pathname, siteUrl).href;
+
+// Categorías para la barra de navegación
+const navCategories: Category[] = await getCategories();
+const navParents = navCategories.filter(c => !c.parent_id);
+const navSubsByParent: Record<string, Category[]> = {};
+navCategories.filter(c => c.parent_id).forEach(c => {
+  (navSubsByParent[c.parent_id!] ||= []).push(c);
+});
 ---
 <!DOCTYPE html>
 <html lang="es-CO">
@@ -45,6 +56,43 @@ a{color:inherit;text-decoration:none}
 header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
 .logo{display:flex;align-items:center;text-decoration:none}
 .logo-img{height:26px;width:auto;display:block}
+.header-left{display:flex;align-items:center;gap:.7rem}
+.nav-hamburger{display:none;background:none;border:none;color:var(--white);cursor:pointer;padding:.2rem;align-items:center;justify-content:center}
+.nav-hamburger svg{width:26px;height:26px;display:block}
+
+/* NAV CATEGORÍAS (desktop) */
+.cat-nav{position:sticky;top:64px;z-index:250;background:var(--white);border-bottom:1px solid var(--grey2);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.cat-nav-list{display:flex;align-items:center;gap:.3rem;max-width:1280px;margin:0 auto;padding:0 clamp(1rem,4vw,3rem);list-style:none;flex-wrap:wrap}
+.cat-nav-item{position:relative}
+.cat-nav-link{display:flex;align-items:center;gap:.25rem;padding:.85rem .9rem;font-family:var(--fb);font-size:.82rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--black);text-decoration:none;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap}
+.cat-nav-link:hover{color:var(--red);border-bottom-color:var(--red)}
+.cat-nav-link .caret{width:13px;height:13px;transition:transform .2s}
+.cat-nav-item:hover .caret{transform:rotate(180deg)}
+.cat-dropdown{position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--grey2);border-top:3px solid var(--red);box-shadow:0 12px 32px rgba(0,0,0,.14);padding:1rem;border-radius:0 0 10px 10px;opacity:0;visibility:hidden;transform:translateY(8px);transition:all .18s;z-index:260}
+.cat-nav-item:hover .cat-dropdown{opacity:1;visibility:visible;transform:translateY(0)}
+.cat-dropdown-inner{display:flex;gap:.8rem}
+.cat-card{display:flex;flex-direction:column;width:140px;text-decoration:none;border-radius:8px;overflow:hidden;background:var(--grey);transition:transform .15s,box-shadow .15s}
+.cat-card:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.cat-card-img{width:100%;height:170px;background:var(--grey2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.cat-card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.cat-card-noimg{font-family:var(--fd);font-size:3rem;color:var(--white)}
+.cat-card-title{padding:.6rem .5rem;font-family:var(--fb);font-size:.78rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--black);text-align:center;line-height:1.2}
+
+/* DRAWER CATEGORÍAS (móvil) */
+.navdrawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;opacity:0;visibility:hidden;transition:opacity .25s}
+.navdrawer-overlay.open{opacity:1;visibility:visible}
+.navdrawer{position:fixed;top:0;left:0;bottom:0;width:84%;max-width:340px;background:var(--white);z-index:4001;transform:translateX(-100%);transition:transform .28s ease;display:flex;flex-direction:column;overflow-y:auto}
+.navdrawer.open{transform:translateX(0)}
+.navdrawer-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.3rem;background:var(--black);color:var(--white);border-bottom:3px solid var(--red);position:sticky;top:0}
+.navdrawer-header span{font-family:var(--fd);font-size:1.2rem;letter-spacing:.04em}
+.navdrawer-close{background:none;border:1px solid rgba(255,255,255,.3);color:var(--white);width:32px;height:32px;border-radius:50%;font-size:1.4rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.navdrawer-body{padding:.8rem 0}
+.navdrawer-top-link{display:block;padding:.85rem 1.3rem;font-family:var(--fb);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.85rem;color:var(--red);text-decoration:none;border-bottom:1px solid var(--grey2)}
+.navdrawer-group{border-bottom:1px solid var(--grey2)}
+.navdrawer-parent{display:block;padding:.85rem 1.3rem;font-family:var(--fb);font-weight:700;font-size:.88rem;color:var(--black);text-decoration:none;text-transform:uppercase;letter-spacing:.03em}
+.navdrawer-subs{padding:0 0 .6rem}
+.navdrawer-sub{display:block;padding:.5rem 1.3rem .5rem 2.2rem;font-size:.85rem;color:var(--muted);text-decoration:none}
+.navdrawer-sub:hover,.navdrawer-parent:hover{color:var(--red);background:var(--grey)}
 .header-right{display:flex;align-items:center;gap:.6rem}
 .header-wa{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;height:40px;background:var(--wa);color:var(--white);padding:0 1.1rem;border-radius:8px;font-size:.82rem;font-weight:600;letter-spacing:.02em;transition:background .18s;white-space:nowrap}
 .header-wa:hover{background:var(--wa-dk)}
@@ -151,6 +199,13 @@ body.filters-open header{display:none}
   .filter-section-title{padding:0 1rem}
   .pills{padding:0 1rem}
   .filter-clear{margin:1rem 1rem 0!important;width:calc(100% - 2rem)}
+  .nav-hamburger{display:flex}
+  .cat-nav{display:none}
+}
+/* Tablet: la nav horizontal puede ser mucha; mostramos hamburguesa hasta 900px */
+@media(max-width:900px){
+  .cat-nav{display:none}
+  .nav-hamburger{display:flex}
 }
 
 /* PRODUCTS */
@@ -313,9 +368,14 @@ footer a{color:#FF4444;text-decoration:underline}
 
 <!-- HEADER -->
 <header role="banner">
-  <a href="/" class="logo">
-    <img src="/logotipo-rojo.png" class="logo-img" alt="Procalzado" width="180" height="28"/>
-  </a>
+  <div class="header-left">
+    <button class="nav-hamburger" id="navHamburger" type="button" aria-label="Abrir menú de categorías">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" class="logo">
+      <img src="/logotipo-rojo.png" class="logo-img" alt="Procalzado" width="180" height="28"/>
+    </a>
+  </div>
   <div class="header-right">
     <a href="https://wa.me/573213154654?text=Hola%2C+me+gustar%C3%ADa+conocer+su+cat%C3%A1logo." class="header-wa" target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -327,6 +387,66 @@ footer a{color:#FF4444;text-decoration:underline}
     </button>
   </div>
 </header>
+
+<!-- NAV CATEGORÍAS (desktop) -->
+{navParents.length > 0 && (
+  <nav class="cat-nav" aria-label="Categorías">
+    <ul class="cat-nav-list">
+      <li><a href="/" class="cat-nav-link">Todo</a></li>
+      {navParents.map(c => {
+        const subs = navSubsByParent[c.id] || [];
+        return (
+          <li class="cat-nav-item">
+            <a href={`/?cat=${c.slug}`} class="cat-nav-link">{c.name}{subs.length > 0 && <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>}</a>
+            {subs.length > 0 && (
+              <div class="cat-dropdown">
+                <div class="cat-dropdown-inner">
+                  {subs.map(s => (
+                    <a href={`/?cat=${s.slug}`} class="cat-card">
+                      <div class="cat-card-img">
+                        {s.image_url
+                          ? <img src={s.image_url} alt={s.name} loading="lazy"/>
+                          : <span class="cat-card-noimg">{s.name.charAt(0)}</span>}
+                      </div>
+                      <span class="cat-card-title">{s.display_title || s.name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+)}
+
+<!-- DRAWER CATEGORÍAS (móvil) -->
+<div class="navdrawer-overlay" id="navdrawerOverlay"></div>
+<aside class="navdrawer" id="navdrawer" aria-hidden="true">
+  <div class="navdrawer-header">
+    <span>Categorías</span>
+    <button class="navdrawer-close" id="navdrawerClose" type="button" aria-label="Cerrar">&times;</button>
+  </div>
+  <div class="navdrawer-body">
+    <a href="/" class="navdrawer-top-link">Todo el catálogo</a>
+    {navParents.map(c => {
+      const subs = navSubsByParent[c.id] || [];
+      return (
+        <div class="navdrawer-group">
+          <a href={`/?cat=${c.slug}`} class="navdrawer-parent">{c.name}</a>
+          {subs.length > 0 && (
+            <div class="navdrawer-subs">
+              {subs.map(s => (
+                <a href={`/?cat=${s.slug}`} class="navdrawer-sub">{s.display_title || s.name}</a>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+</aside>
 
 <slot />
 
@@ -483,6 +603,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cartBtn')?.addEventListener('click', openCart);
   document.getElementById('cartClose')?.addEventListener('click', closeCart);
   document.getElementById('cartOverlay')?.addEventListener('click', closeCart);
+  // Nav drawer (móvil)
+  const navdrawer = document.getElementById('navdrawer');
+  const navOverlay = document.getElementById('navdrawerOverlay');
+  const openNav = () => { navdrawer?.classList.add('open'); navOverlay?.classList.add('open'); document.body.style.overflow = 'hidden'; };
+  const closeNav = () => { navdrawer?.classList.remove('open'); navOverlay?.classList.remove('open'); document.body.style.overflow = ''; };
+  document.getElementById('navHamburger')?.addEventListener('click', openNav);
+  document.getElementById('navdrawerClose')?.addEventListener('click', closeNav);
+  navOverlay?.addEventListener('click', closeNav);
   document.getElementById('cartClearBtn')?.addEventListener('click', () => {
     if (confirm('¿Vaciar todo el carrito?')) { cart = []; saveCart(); updateCartBadge(); renderCart(); }
   });

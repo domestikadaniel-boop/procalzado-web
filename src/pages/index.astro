@@ -120,19 +120,6 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
         <button type="button" class="filters-close-btn" id="filtersCloseBtn" aria-label="Cerrar">&times;</button>
       </div>
 
-      {parentCats.length > 0 && (
-        <>
-          <div class="filter-section-title">Categorías</div>
-          <div class="pills" id="catPills">
-            <button type="button" class="pill active" data-cat="">Todas</button>
-            {parentCats.map(c => (
-              <button type="button" class="pill" data-cat={c.slug}>{c.name}</button>
-            ))}
-          </div>
-          <div class="subcats-wrapper pills" id="subcatPills" style="display:none"></div>
-        </>
-      )}
-
       <div class="filters-panel">
         {(filterBrands.length > 0 || moreBrands.length > 0) && (
           <div class="filter-group">
@@ -194,6 +181,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <!-- PRODUCTOS -->
 <main class="products-section" id="main-content">
+  <div class="active-cat-banner" id="activeCatBanner" style="display:none">
+    <span>Mostrando: <strong id="activeCatLabel"></strong></span>
+    <button type="button" id="activeCatClear" aria-label="Quitar filtro de categoría">Ver todo &times;</button>
+  </div>
   {introHtml && (
     <div style="margin-bottom:1.5rem;font-size:.92rem;line-height:1.6;color:var(--muted)" set:html={introHtml}></div>
   )}
@@ -274,6 +265,11 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 <script type="application/json" id="catsMeta" set:html={JSON.stringify(parentCats.map(c => ({ id: c.id, slug: c.slug, name: c.name })))}></script>
 
 <style>
+/* Banner de categoría activa */
+.active-cat-banner{align-items:center;justify-content:space-between;gap:1rem;background:#fff5f5;border:1px solid var(--red);border-radius:8px;padding:.7rem 1rem;margin-bottom:1.2rem;font-size:.9rem}
+.active-cat-banner strong{text-transform:uppercase;letter-spacing:.03em}
+.active-cat-banner button{background:var(--red);color:var(--white);border:none;border-radius:5px;padding:.4rem .8rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.active-cat-banner button:hover{background:#cc0000}
 /* Hero isotipo circular (sin resplandor) */
 .hero-isotipo{display:block;width:clamp(220px,30vw,380px);height:auto}
 /* Bolitas de color en las tarjetas */
@@ -420,47 +416,8 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
   if (closeBtn) closeBtn.addEventListener('click', closePanel);
   if (applyBtn) applyBtn.addEventListener('click', closePanel);
 
-  // ── CATEGORÍAS (pills) ──
-  const catPills = document.getElementById('catPills');
-  const subcatPills = document.getElementById('subcatPills');
-
-  function renderSubcats(catSlug) {
-    if (!subcatPills) return;
-    const parent = catsMeta.find(c => c.slug === catSlug);
-    const subs = parent ? (subcatsData[parent.id] || []) : [];
-    if (subs.length === 0) {
-      subcatPills.style.display = 'none';
-      subcatPills.innerHTML = '';
-      activeSubcat = '';
-      return;
-    }
-    subcatPills.style.display = 'flex';
-    subcatPills.innerHTML = subs.map(s =>
-      `<button type="button" class="pill subcat-pill" data-subcat="${s.slug}">${s.name}</button>`
-    ).join('');
-    subcatPills.querySelectorAll('[data-subcat]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const wasActive = btn.classList.contains('active');
-        subcatPills.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-        if (!wasActive) { btn.classList.add('active'); activeSubcat = btn.dataset.subcat; }
-        else { activeSubcat = ''; }
-        applyFilters();
-      });
-    });
-  }
-
-  if (catPills) {
-    catPills.querySelectorAll('[data-cat]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        catPills.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        activeCat = btn.dataset.cat;
-        activeSubcat = '';
-        renderSubcats(activeCat);
-        applyFilters();
-      });
-    });
-  }
+  // ── CATEGORÍAS: ahora vienen de la barra de navegación (?cat=slug) ──
+  // (Los pills se eliminaron del modal de filtros)
 
   // ── VER MÁS MARCAS ──
   const moreBrandsBtn = document.getElementById('moreBrandsBtn');
@@ -497,10 +454,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
   // ── LIMPIAR ──
   document.getElementById('filterClear')?.addEventListener('click', () => {
-    activeCat = ''; activeSubcat = '';
     selectedBrands.clear(); selectedGenders.clear();
-    catPills?.querySelectorAll('.pill').forEach((p, i) => p.classList.toggle('active', i === 0));
-    if (subcatPills) { subcatPills.style.display = 'none'; subcatPills.innerHTML = ''; }
     document.querySelectorAll('.f-brand, .f-gender').forEach(cb => cb.checked = false);
     if (priceMin) priceMin.value = '';
     if (priceMax) priceMax.value = '';
@@ -567,31 +521,41 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
   // ── Aplicar filtro de categoría desde URL (?cat=slug) ──
   const urlParams = new URLSearchParams(window.location.search);
   const urlCat = urlParams.get('cat');
-  if (urlCat && catPills) {
-    const btn = catPills.querySelector(`[data-cat="${urlCat}"]`);
-    if (btn) {
-      catPills.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
+  if (urlCat) {
+    // ¿Es categoría principal o subcategoría?
+    const parentMeta = catsMeta.find(c => c.slug === urlCat);
+    if (parentMeta) {
       activeCat = urlCat;
-      renderSubcats(activeCat);
     } else {
-      // Puede ser una subcategoría
-      const parentMeta = catsMeta.find(c => (subcatsData[c.id] || []).some(s => s.slug === urlCat));
-      if (parentMeta) {
-        const pbtn = catPills.querySelector(`[data-cat="${parentMeta.slug}"]`);
-        if (pbtn) {
-          catPills.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-          pbtn.classList.add('active');
-          activeCat = parentMeta.slug;
-          renderSubcats(activeCat);
-          setTimeout(() => {
-            const sbtn = subcatPills?.querySelector(`[data-subcat="${urlCat}"]`);
-            if (sbtn) { sbtn.classList.add('active'); activeSubcat = urlCat; applyFilters(); }
-          }, 0);
+      // buscar como subcategoría
+      const ownerParent = catsMeta.find(c => (subcatsData[c.id] || []).some(s => s.slug === urlCat));
+      if (ownerParent) { activeCat = ownerParent.slug; activeSubcat = urlCat; }
+    }
+    // Mostrar banner de categoría activa con opción de quitar
+    if (activeCat || activeSubcat) {
+      const slugShown = activeSubcat || activeCat;
+      let label = slugShown;
+      const pm = catsMeta.find(c => c.slug === slugShown);
+      if (pm) label = pm.name;
+      else {
+        for (const c of catsMeta) {
+          const s = (subcatsData[c.id] || []).find(x => x.slug === slugShown);
+          if (s) { label = s.name; break; }
         }
+      }
+      const banner = document.getElementById('activeCatBanner');
+      if (banner) {
+        banner.style.display = 'flex';
+        const lbl = document.getElementById('activeCatLabel');
+        if (lbl) lbl.textContent = label;
       }
     }
   }
+
+  // Quitar filtro de categoría
+  document.getElementById('activeCatClear')?.addEventListener('click', () => {
+    window.location.href = '/';
+  });
 
   applyFilters();
 })();
