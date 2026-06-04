@@ -175,3 +175,38 @@ export async function getSiteSetting(key: string): Promise<string | null> {
   if (error) { console.error('Error fetching setting:', error); return null; }
   return data?.value || null;
 }
+
+// ── FASE 1B: Tarjetas de categoría por página de género ──
+
+export interface GenderCategoryCard {
+  id: string;
+  gender: string;
+  category_id: string | null;
+  title: string | null;
+  image_url: string | null;
+  display_order: number;
+  active: boolean;
+  categories?: Category;
+}
+
+// Trae las tarjetas activas de un género, con su categoría
+export async function getGenderCards(gender: string): Promise<GenderCategoryCard[]> {
+  const { data, error } = await supabase
+    .from('gender_category_cards')
+    .select('*, categories ( id, slug, name )')
+    .eq('gender', gender)
+    .eq('active', true)
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching gender cards:', error); return []; }
+  return (data as GenderCategoryCard[]) || [];
+}
+
+// Trae TODAS las tarjetas (para el admin)
+export async function getAllGenderCards(): Promise<GenderCategoryCard[]> {
+  const { data, error } = await supabase
+    .from('gender_category_cards')
+    .select('*, categories ( id, slug, name )')
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching all gender cards:', error); return []; }
+  return (data as GenderCategoryCard[]) || [];
+}

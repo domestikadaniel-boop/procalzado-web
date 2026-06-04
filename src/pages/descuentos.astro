@@ -1,0 +1,114 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getProducts } from '../lib/supabase';
+import type { Product, Category } from '../lib/supabase';
+
+const allProducts: Product[] = await getProducts();
+// Por ahora: productos destacados. En la fase de descuentos se mostrarán los rebajados.
+const products = allProducts.filter(p => p.featured);
+
+function productData(p: Product) {
+  const brandName = p.brands?.name || '';
+  const cats = (p.product_categories && p.product_categories.length)
+    ? p.product_categories.map(pc => pc.categories).filter(Boolean) as Category[]
+    : (p.categories ? [p.categories as Category] : []);
+  const primaryCat = (p.product_categories?.find(pc => pc.is_primary)?.categories as Category) || cats[0] || null;
+  const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
+  const variants = (p.product_variants || []).filter(v => v.active);
+  const colors = [...new Set(variants.map(v => v.color))].map(cname => {
+    const v = variants.find(x => x.color === cname);
+    return { name: cname, hex: v?.color_hex || '#999', hex2: v?.color_hex_2 || null };
+  }).filter(c => c.name && c.name !== 'Único');
+  return {
+    slug: p.slug, name: p.name, brandName,
+    primaryImg, colors, featured: p.featured,
+    price: p.price, showPrice: p.show_price,
+    catName: primaryCat?.name || '',
+  };
+}
+const items = products.map(productData);
+
+const pageTitle = 'Descuentos y Destacados | Procalzado';
+const pageDesc = 'Productos destacados y ofertas en Procalzado. Distribuidor autorizado con envíos a todo Colombia.';
+---
+
+<Layout title={pageTitle} description={pageDesc}>
+
+<section class="gender-hero">
+  <div class="gender-hero-inner">
+    <span class="gender-hero-tag">Ofertas</span>
+    <h1>Descuentos y Destacados</h1>
+    <p>Nuestra selección de productos destacados del momento.</p>
+  </div>
+</section>
+
+<main class="products-section" id="main-content">
+  <div class="section-header">
+    <h2 class="section-title">Lo más <span class="red">destacado</span></h2>
+    <span class="section-count">{items.length} productos</span>
+  </div>
+
+  {items.length > 0 ? (
+    <div class="product-grid">
+      {items.map((it, i) => (
+        <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
+          <div class="card-top-bar"></div>
+          {it.featured && (
+            <span class="card-badge-featured">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Destacado
+            </span>
+          )}
+          <div class="card-img">
+            {it.primaryImg
+              ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'}/>
+              : <span>👢</span>}
+          </div>
+          <div class="card-body">
+            {it.brandName && <div class="card-brand">{it.brandName}</div>}
+            <div class="card-name">{it.name}</div>
+            {it.catName && <div class="card-cat-tag">{it.catName}</div>}
+            {it.colors.length > 0 && (
+              <div class="card-colors">
+                {it.colors.slice(0, 6).map(c => {
+                  const bg = c.hex2
+                    ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
+                    : c.hex;
+                  return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
+                })}
+                {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
+              </div>
+            )}
+            {it.showPrice && it.price ? (
+              <>
+                <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
+                <div class="card-price-note">Al por mayor consultar precio</div>
+              </>
+            ) : (
+              <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
+            )}
+            <div class="card-cta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Ver detalles
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div class="empty"><strong>Pronto</strong><p>Aún no hay productos destacados.</p></div>
+  )}
+</main>
+
+<style>
+.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
+.gender-hero-inner{max-width:1280px;margin:0 auto}
+.gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
+.gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
+.gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
+.card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
+.card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
+.card-color-more{font-size:.68rem;font-weight:600;color:var(--muted);margin-left:.1rem}
+</style>
+
+</Layout>

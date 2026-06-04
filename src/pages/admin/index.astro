@@ -166,6 +166,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab active" data-tab="products">Productos</button>
     <button class="tab" data-tab="brands">Marcas</button>
     <button class="tab" data-tab="categories">Categorías</button>
+    <button class="tab" data-tab="pages">Páginas</button>
     <button class="tab" data-tab="settings">Configuración</button>
   </div>
   <div class="admin-body">
@@ -180,6 +181,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div id="tab-categories" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las categorías (arrastra para reordenar)</span><button class="btn-add" id="addCatBtn">+ Nueva categoría</button></div>
       <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th style="width:130px">Menú (título/img)</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="catTableBody"></tbody></table></div>
+    </div>
+
+    <div id="tab-pages" style="display:none">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Configura las tarjetas de categoría que aparecen en cada página del menú (Hombre, Mujer, Niños). Cada tarjeta apunta a una categoría existente, con su propio título e imagen.</p>
+      <div id="genderSections"></div>
     </div>
 
     <div id="tab-settings" style="display:none">
@@ -317,6 +323,36 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 
 <input type="file" id="hiddenColorInput" accept="image/*" multiple style="display:none"/>
 <input type="file" id="hiddenCatImageInput" accept="image/*" style="display:none"/>
+<input type="file" id="hiddenGcardImageInput" accept="image/*" style="display:none"/>
+
+<!-- GENDER CARD MODAL -->
+<div class="modal-bg" id="gcardModal">
+  <div class="form-modal" style="max-width:480px">
+    <div class="form-header"><h3 id="gcardFormTitle">Nueva tarjeta</h3><button class="form-close" onclick="document.getElementById('gcardModal').classList.remove('open')">&times;</button></div>
+    <div class="form-body">
+      <input type="hidden" id="gcardId"/>
+      <input type="hidden" id="gcardGender"/>
+      <div class="field"><label>Categoría *</label>
+        <select id="gcardCategory"><option value="">Seleccionar categoría...</option></select>
+        <small style="color:var(--muted);font-size:.72rem">Al hacer clic en la tarjeta se mostrarán los productos de esta categoría.</small>
+      </div>
+      <div class="field"><label>Título aspiracional (opcional)</label>
+        <input type="text" id="gcardTitle" placeholder="Ej: Para el trabajo más rudo"/>
+        <small style="color:var(--muted);font-size:.72rem">Si lo dejas vacío se usa el nombre de la categoría.</small>
+      </div>
+      <div class="field"><label>Imagen *</label>
+        <div id="gcardImagePreview" style="margin-bottom:.5rem"></div>
+        <button type="button" class="upload-color-btn" id="gcardImageUploadBtn">📷 Subir imagen</button>
+        <input type="hidden" id="gcardImageUrl"/>
+        <small style="display:block;color:var(--muted);font-size:.72rem;margin-top:.4rem">Recomendado: <strong>800 × 1000 px</strong> (vertical), formato <strong>JPG o WebP</strong>, máx. 500 KB.</small>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="document.getElementById('gcardModal').classList.remove('open')">Cancelar</button>
+      <button class="btn-save" id="gcardSaveBtn">Guardar tarjeta</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -324,7 +360,7 @@ const supabase = createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON__)
 
 const SIZES_LIST = ['20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','Única'];
 
-let brands=[],categories=[],products=[],editingProduct=null;
+let brands=[],categories=[],products=[],genderCards=[],editingProduct=null;
 // Estructura interna: { colors: [{ name, hex, images: [{url,id?,existing}] }], sizes: ['38','39'] }
 let formColors=[];
 let activeColorIdx=null;
@@ -350,7 +386,7 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','pages','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
 }));
 
 // LOAD
@@ -363,6 +399,10 @@ async function loadData(){
   ]);
   brands=br.data||[];categories=ca.data||[];products=pr.data||[];
 
+  // Cargar tarjetas de género
+  const {data: gcData} = await supabase.from('gender_category_cards').select('*, categories(id,name,slug)').order('display_order',{ascending:true});
+  genderCards = gcData || [];
+
   // Cargar categorías múltiples aparte
   if(products.length>0){
     const pids = products.map(p=>p.id);
@@ -372,7 +412,7 @@ async function loadData(){
     }
   }
 
-  renderProducts();renderBrands();renderCategories();populateSelects();loading(false);
+  renderProducts();renderBrands();renderCategories();renderGenderCards();populateSelects();loading(false);
 }
 
 function renderProducts(filter=''){
@@ -485,6 +525,105 @@ function renderCategories(){
   }).join('');
   setupDragAndDrop('catTableBody', categories, 'categories');
 }
+
+// GENDER CARDS (Páginas)
+const GENDER_GROUPS = [{key:'hombre',label:'Hombre'},{key:'mujer',label:'Mujer'},{key:'ninos',label:'Niños'}];
+function renderGenderCards(){
+  const cont = $('genderSections');
+  if(!cont) return;
+  cont.innerHTML = GENDER_GROUPS.map(g => {
+    const cards = genderCards.filter(c => c.gender === g.key);
+    return `<div style="background:var(--white);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:1.2rem;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;background:var(--black);color:var(--white)">
+        <strong style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em">${g.label}</strong>
+        <button class="btn-add" style="padding:.4rem .9rem" onclick="window.newGcard('${g.key}')">+ Agregar tarjeta</button>
+      </div>
+      <div style="padding:1rem">
+        ${cards.length === 0
+          ? '<p style="color:var(--muted);font-size:.85rem">Sin tarjetas. Agrega la primera.</p>'
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem">${cards.map(c=>`
+            <div style="border:1px solid var(--grey2);border-radius:8px;overflow:hidden">
+              <div style="aspect-ratio:4/5;background:var(--grey);overflow:hidden;display:flex;align-items:center;justify-content:center">
+                ${c.image_url?`<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="color:var(--grey2);font-size:2rem">🖼️</span>'}
+              </div>
+              <div style="padding:.5rem .6rem">
+                <div style="font-size:.8rem;font-weight:700">${c.title||c.categories?.name||'—'}</div>
+                <div style="font-size:.7rem;color:var(--muted)">${c.categories?.name||'sin categoría'}</div>
+                <div style="display:flex;gap:.3rem;margin-top:.5rem">
+                  <button class="action-btn edit" style="flex:1;text-align:center" onclick="window.editGcard('${c.id}')">✏️</button>
+                  <button class="action-btn delete" onclick="window.deleteGcard('${c.id}')">🗑️</button>
+                </div>
+              </div>
+            </div>`).join('')}</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateGcardCategorySelect(){
+  $('gcardCategory').innerHTML='<option value="">Seleccionar categoría...</option>'+
+    categories.filter(c=>c.active).map(c=>{
+      const parent = c.parent_id ? categories.find(p=>p.id===c.parent_id) : null;
+      return `<option value="${c.id}">${parent?parent.name+' → ':''}${c.name}</option>`;
+    }).join('');
+}
+
+function renderGcardImagePreview(){
+  const url=$('gcardImageUrl').value;
+  $('gcardImagePreview').innerHTML = url
+    ? `<div class="color-img-thumb" style="width:90px;height:112px"><img src="${url}" style="width:90px;height:112px;object-fit:cover;display:block"/><button type="button" class="x" id="gcardImageRemove">×</button></div>`
+    : '';
+  const rm=$('gcardImageRemove');
+  if(rm) rm.addEventListener('click',()=>{$('gcardImageUrl').value='';renderGcardImagePreview()});
+}
+$('gcardImageUploadBtn').addEventListener('click',()=>$('hiddenGcardImageInput').click());
+$('hiddenGcardImageInput').addEventListener('change',async e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const path=`paginas/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
+  loading(true);
+  const{error}=await supabase.storage.from('product-images').upload(path,file);
+  loading(false);
+  if(error){alert('Error: '+error.message);return}
+  const{data:{publicUrl}}=supabase.storage.from('product-images').getPublicUrl(path);
+  $('gcardImageUrl').value=publicUrl;
+  renderGcardImagePreview();
+  e.target.value='';
+});
+
+window.newGcard=(gender)=>{
+  $('gcardId').value='';$('gcardGender').value=gender;
+  $('gcardCategory').value='';$('gcardTitle').value='';$('gcardImageUrl').value='';
+  populateGcardCategorySelect();renderGcardImagePreview();
+  $('gcardFormTitle').textContent='Nueva tarjeta · '+(GENDER_GROUPS.find(g=>g.key===gender)?.label||'');
+  $('gcardModal').classList.add('open');
+};
+window.editGcard=(id)=>{
+  const c=genderCards.find(x=>x.id===id);if(!c)return;
+  $('gcardId').value=c.id;$('gcardGender').value=c.gender;
+  populateGcardCategorySelect();
+  $('gcardCategory').value=c.category_id||'';$('gcardTitle').value=c.title||'';$('gcardImageUrl').value=c.image_url||'';
+  renderGcardImagePreview();
+  $('gcardFormTitle').textContent='Editar tarjeta';
+  $('gcardModal').classList.add('open');
+};
+window.deleteGcard=async(id)=>{
+  if(!confirm('¿Eliminar esta tarjeta?'))return;
+  loading(true);await supabase.from('gender_category_cards').delete().eq('id',id);await loadData();loading(false);showToast('Tarjeta eliminada');
+};
+$('gcardSaveBtn').addEventListener('click',async()=>{
+  const category_id=$('gcardCategory').value;
+  if(!category_id){alert('Selecciona una categoría');return}
+  if(!$('gcardImageUrl').value){alert('Sube una imagen');return}
+  const gender=$('gcardGender').value;
+  const existing=genderCards.filter(c=>c.gender===gender);
+  const d={gender,category_id,title:$('gcardTitle').value.trim()||null,image_url:$('gcardImageUrl').value,active:true};
+  loading(true);const id=$('gcardId').value;
+  if(id){await supabase.from('gender_category_cards').update(d).eq('id',id);}
+  else{d.display_order=existing.length;await supabase.from('gender_category_cards').insert(d);}
+  $('gcardModal').classList.remove('open');await loadData();loading(false);showToast('Tarjeta guardada ✓');
+};
+
 
 function populateSelects(){
   $('pBrand').innerHTML='<option value="">Seleccionar...</option>'+brands.filter(b=>b.active).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
