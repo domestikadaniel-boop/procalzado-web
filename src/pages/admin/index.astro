@@ -622,7 +622,7 @@ $('gcardSaveBtn').addEventListener('click',async()=>{
   if(id){await supabase.from('gender_category_cards').update(d).eq('id',id);}
   else{d.display_order=existing.length;await supabase.from('gender_category_cards').insert(d);}
   $('gcardModal').classList.remove('open');await loadData();loading(false);showToast('Tarjeta guardada ✓');
-};
+});
 
 
 function populateSelects(){
