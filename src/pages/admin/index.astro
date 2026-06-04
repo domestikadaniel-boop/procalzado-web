@@ -619,9 +619,12 @@ $('gcardSaveBtn').addEventListener('click',async()=>{
   const existing=genderCards.filter(c=>c.gender===gender);
   const d={gender,category_id,title:$('gcardTitle').value.trim()||null,image_url:$('gcardImageUrl').value,active:true};
   loading(true);const id=$('gcardId').value;
-  if(id){await supabase.from('gender_category_cards').update(d).eq('id',id);}
-  else{d.display_order=existing.length;await supabase.from('gender_category_cards').insert(d);}
-  $('gcardModal').classList.remove('open');await loadData();loading(false);showToast('Tarjeta guardada ✓');
+  let error;
+  if(id){({error}=await supabase.from('gender_category_cards').update(d).eq('id',id));}
+  else{d.display_order=existing.length;({error}=await supabase.from('gender_category_cards').insert(d));}
+  loading(false);
+  if(error){alert('No se pudo guardar la tarjeta:\n\n'+error.message+'\n\n(Código: '+(error.code||'?')+')');return}
+  $('gcardModal').classList.remove('open');await loadData();showToast('Tarjeta guardada ✓');
 });
 
 
