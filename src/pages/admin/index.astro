@@ -167,6 +167,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab" data-tab="brands">Marcas</button>
     <button class="tab" data-tab="categories">Categorías</button>
     <button class="tab" data-tab="pages">Páginas</button>
+    <button class="tab" data-tab="recommended">Recomendados</button>
     <button class="tab" data-tab="settings">Configuración</button>
   </div>
   <div class="admin-body">
@@ -186,6 +187,12 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div id="tab-pages" style="display:none">
       <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Configura las tarjetas de categoría que aparecen en cada página del menú (Hombre, Mujer, Niños). Cada tarjeta apunta a una categoría existente, con su propio título e imagen.</p>
       <div id="genderSections"></div>
+    </div>
+
+    <div id="tab-recommended" style="display:none">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Marca los productos que aparecerán en la página <strong>Recomendaciones</strong> del menú. Usa el buscador para encontrarlos.</p>
+      <div class="toolbar"><input type="text" id="recSearch" placeholder="Buscar producto para recomendar..."/></div>
+      <div class="product-table"><table><thead><tr><th style="width:60px">Img</th><th>Nombre</th><th>Marca</th><th style="width:120px">Recomendado</th></tr></thead><tbody id="recTableBody"></tbody></table></div>
     </div>
 
     <div id="tab-settings" style="display:none">
@@ -360,7 +367,7 @@ const supabase = createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON__)
 
 const SIZES_LIST = ['20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','Única'];
 
-let brands=[],categories=[],products=[],genderCards=[],editingProduct=null;
+let brands=[],categories=[],products=[],genderCards=[],recommendedIds=[],editingProduct=null;
 // Estructura interna: { colors: [{ name, hex, images: [{url,id?,existing}] }], sizes: ['38','39'] }
 let formColors=[];
 let activeColorIdx=null;
@@ -386,7 +393,7 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','pages','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','pages','recommended','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
 }));
 
 // LOAD
@@ -403,6 +410,10 @@ async function loadData(){
   const {data: gcData} = await supabase.from('gender_category_cards').select('*, categories(id,name,slug)').order('display_order',{ascending:true});
   genderCards = gcData || [];
 
+  // Cargar productos recomendados
+  const {data: recData} = await supabase.from('recommended_products').select('product_id, display_order').order('display_order',{ascending:true});
+  recommendedIds = (recData||[]).map(r=>r.product_id).filter(Boolean);
+
   // Cargar categorías múltiples aparte
   if(products.length>0){
     const pids = products.map(p=>p.id);
@@ -412,7 +423,7 @@ async function loadData(){
     }
   }
 
-  renderProducts();renderBrands();renderCategories();renderGenderCards();populateSelects();loading(false);
+  renderProducts();renderBrands();renderCategories();renderGenderCards();renderRecommended();populateSelects();loading(false);
 }
 
 function renderProducts(filter=''){
@@ -627,6 +638,41 @@ $('gcardSaveBtn').addEventListener('click',async()=>{
   $('gcardModal').classList.remove('open');await loadData();showToast('Tarjeta guardada ✓');
 });
 
+
+// RECOMENDADOS
+function renderRecommended(filter=''){
+  const f=products.filter(p=>!filter||p.name.toLowerCase().includes(filter)||(p.brands?.name||'').toLowerCase().includes(filter));
+  // Ordenar: primero los ya recomendados, luego el resto
+  f.sort((a,b)=>{
+    const ar=recommendedIds.includes(a.id)?0:1, br=recommendedIds.includes(b.id)?0:1;
+    return ar-br;
+  });
+  $('recTableBody').innerHTML=f.map(p=>{
+    const img=p.product_images?.find(i=>i.is_primary)||p.product_images?.[0];
+    const isRec=recommendedIds.includes(p.id);
+    return `<tr>
+      <td style="width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.brands?.name||'-'}</td>
+      <td><label class="toggle-switch"><input type="checkbox" ${isRec?'checked':''} onchange="window.toggleRecommended('${p.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos.</td></tr>';
+}
+$('recSearch')?.addEventListener('input',e=>renderRecommended(e.target.value.toLowerCase()));
+
+window.toggleRecommended=async(productId,checked)=>{
+  let error;
+  if(checked){
+    const order=recommendedIds.length;
+    ({error}=await supabase.from('recommended_products').insert({product_id:productId,display_order:order}));
+    if(!error)recommendedIds.push(productId);
+  }else{
+    ({error}=await supabase.from('recommended_products').delete().eq('product_id',productId));
+    if(!error)recommendedIds=recommendedIds.filter(id=>id!==productId);
+  }
+  if(error){alert('No se pudo actualizar:\n\n'+error.message);return}
+  showToast(checked?'Agregado a recomendados ✓':'Quitado de recomendados');
+};
 
 function populateSelects(){
   $('pBrand').innerHTML='<option value="">Seleccionar...</option>'+brands.filter(b=>b.active).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');

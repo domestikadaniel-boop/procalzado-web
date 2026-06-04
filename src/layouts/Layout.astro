@@ -9,12 +9,12 @@ const { title, description = 'Compra botas de caucho, botas de lluvia, botas de 
 const siteUrl = 'https://procalzado.com';
 const canonicalUrl = canonical || new URL(Astro.url.pathname, siteUrl).href;
 
-// Enlaces de navegación principal (género + descuentos)
+// Enlaces de navegación principal (género + recomendaciones)
 const navLinks = [
   { label: 'Hombre', href: '/hombre' },
   { label: 'Mujer', href: '/mujer' },
   { label: 'Niños', href: '/ninos' },
-  { label: 'Descuentos', href: '/descuentos', highlight: true },
+  { label: 'Recomendaciones', href: '/recomendaciones', highlight: true },
 ];
 const currentPath = Astro.url.pathname;
 ---

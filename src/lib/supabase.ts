@@ -210,3 +210,13 @@ export async function getAllGenderCards(): Promise<GenderCategoryCard[]> {
   if (error) { console.error('Error fetching all gender cards:', error); return []; }
   return (data as GenderCategoryCard[]) || [];
 }
+
+// ── Recomendaciones: productos seleccionados manualmente ──
+export async function getRecommendedProductIds(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('recommended_products')
+    .select('product_id, display_order')
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching recommended:', error); return []; }
+  return (data || []).map((r: any) => r.product_id).filter(Boolean);
+}
