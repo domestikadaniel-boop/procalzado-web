@@ -59,7 +59,7 @@ function productData(p: Product) {
     id: p.id, slug: p.slug, name: p.name, brandName,
     brandId: p.brand_id, catNames, catSlugs, primaryCat,
     primaryImg, colors, featured: p.featured,
-    price: p.price, showPrice: p.show_price,
+    price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     genders: productGenders,
     catName: primaryCat?.name || '',
   };
@@ -236,10 +236,17 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
             )}
 
             {it.showPrice && it.price ? (
-              <>
-                <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
-                <div class="card-price-note">Al por mayor consultar precio</div>
-              </>
+              it.salePrice ? (
+                <>
+                  <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
+                  <div class="card-price-note">Al por mayor consultar precio</div>
+                </>
+              ) : (
+                <>
+                  <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
+                  <div class="card-price-note">Al por mayor consultar precio</div>
+                </>
+              )
             ) : (
               <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
             )}
@@ -265,6 +272,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 <script type="application/json" id="catsMeta" set:html={JSON.stringify(parentCats.map(c => ({ id: c.id, slug: c.slug, name: c.name })))}></script>
 
 <style>
+/* Precio rebajado en tarjetas */
+.card-price-row{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+.card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
+.card-price-sale{color:var(--red)}
 /* Banner de categoría activa */
 .active-cat-banner{align-items:center;justify-content:space-between;gap:1rem;background:#fff5f5;border:1px solid var(--red);border-radius:8px;padding:.7rem 1rem;margin-bottom:1.2rem;font-size:.9rem}
 .active-cat-banner strong{text-transform:uppercase;letter-spacing:.03em}

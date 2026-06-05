@@ -1,34 +1,33 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getProducts, getRecommendedProductIds } from '../lib/supabase';
-import type { Product, Category } from '../lib/supabase';
+import { getRecommended } from '../lib/supabase';
+import type { Category } from '../lib/supabase';
 
-const allProducts: Product[] = await getProducts();
-const recIds = await getRecommendedProductIds();
+const recs = await getRecommended();
 
-const byId = new Map(allProducts.map(p => [p.id, p]));
-const products = recIds.map(id => byId.get(id)).filter(Boolean) as Product[];
-
-function productData(p: Product) {
+function build(rec: any) {
+  const p = rec.products;
+  if (!p) return null;
   const brandName = p.brands?.name || '';
   const cats = (p.product_categories && p.product_categories.length)
-    ? p.product_categories.map(pc => pc.categories).filter(Boolean) as Category[]
-    : (p.categories ? [p.categories as Category] : []);
-  const primaryCat = (p.product_categories?.find(pc => pc.is_primary)?.categories as Category) || cats[0] || null;
-  const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
-  const variants = (p.product_variants || []).filter(v => v.active);
-  const colors = [...new Set(variants.map(v => v.color))].map(cname => {
-    const v = variants.find(x => x.color === cname);
+    ? p.product_categories.map((pc: any) => pc.categories).filter(Boolean) as Category[]
+    : (p.categories ? [p.categories] : []);
+  const primaryCat = cats[0] || null;
+  const primaryImg = (p.product_images || []).find((i: any) => i.is_primary) || (p.product_images || [])[0];
+  const variants = (p.product_variants || []).filter((v: any) => v.active);
+  const colors = [...new Set(variants.map((v: any) => v.color))].map((cname: any) => {
+    const v = variants.find((x: any) => x.color === cname);
     return { name: cname, hex: v?.color_hex || '#999', hex2: v?.color_hex_2 || null };
-  }).filter(c => c.name && c.name !== 'Único');
+  }).filter((c: any) => c.name && c.name !== 'Único');
   return {
     slug: p.slug, name: p.name, brandName,
     primaryImg, colors, featured: p.featured,
-    price: p.price, showPrice: p.show_price,
+    price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     catName: primaryCat?.name || '',
+    reason: rec.reason || '',
   };
 }
-const items = products.map(productData);
+const items = recs.map(build).filter(Boolean);
 
 const pageTitle = 'Recomendaciones | Procalzado';
 const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Distribuidor autorizado con envíos a todo Colombia.';
@@ -40,61 +39,61 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
   <div class="gender-hero-inner">
     <span class="gender-hero-tag">Selección Procalzado</span>
     <h1>Recomendaciones</h1>
-    <p>Productos que recomendamos especialmente para ti.</p>
+    <p>Productos que recomendamos especialmente, y por qué.</p>
   </div>
 </section>
 
 <main class="products-section" id="main-content">
-  <div class="section-header">
-    <h2 class="section-title">Lo que <span class="red">recomendamos</span></h2>
-    <span class="section-count">{items.length} productos</span>
-  </div>
-
   {items.length > 0 ? (
-    <div class="product-grid">
-      {items.map((it, i) => (
-        <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
-          <div class="card-top-bar"></div>
-          {it.featured && (
-            <span class="card-badge-featured">
-              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              Destacado
-            </span>
-          )}
-          <div class="card-img">
+    <div class="rec-grid">
+      {items.map((it: any, i: number) => (
+        <div class="rec-card" style={`animation-delay:${Math.min(i * 0.04, 0.4)}s`}>
+          <a href={`/productos/${it.slug}`} class="rec-card-media">
             {it.primaryImg
-              ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'}/>
-              : <span>👢</span>}
-          </div>
-          <div class="card-body">
-            {it.brandName && <div class="card-brand">{it.brandName}</div>}
-            <div class="card-name">{it.name}</div>
-            {it.catName && <div class="card-cat-tag">{it.catName}</div>}
+              ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} loading={i < 6 ? 'eager' : 'lazy'}/>
+              : <span class="rec-noimg">👢</span>}
+            {it.salePrice && it.showPrice && it.price && (
+              <span class="rec-discount">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+            )}
+          </a>
+          <div class="rec-card-body">
+            {it.brandName && <div class="rec-brand">{it.brandName}</div>}
+            <a href={`/productos/${it.slug}`} class="rec-name">{it.name}</a>
+
+            {it.reason && (
+              <div class="rec-reason">
+                <span class="rec-reason-tag">Por qué lo recomendamos</span>
+                <p>{it.reason}</p>
+              </div>
+            )}
+
             {it.colors.length > 0 && (
               <div class="card-colors">
-                {it.colors.slice(0, 6).map(c => {
-                  const bg = c.hex2
-                    ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
-                    : c.hex;
+                {it.colors.slice(0, 6).map((c: any) => {
+                  const bg = c.hex2 ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)` : c.hex;
                   return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
                 })}
                 {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
               </div>
             )}
-            {it.showPrice && it.price ? (
-              <>
-                <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
-                <div class="card-price-note">Al por mayor consultar precio</div>
-              </>
-            ) : (
-              <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
-            )}
-            <div class="card-cta">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Ver detalles
+
+            <div class="rec-foot">
+              {it.showPrice && it.price ? (
+                it.salePrice ? (
+                  <div class="rec-price-wrap">
+                    <span class="rec-price-old">${Number(it.price).toLocaleString('es-CO')}</span>
+                    <span class="rec-price rec-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span>
+                  </div>
+                ) : (
+                  <div class="rec-price">${Number(it.price).toLocaleString('es-CO')}</div>
+                )
+              ) : (
+                <div class="rec-price-note">Precio a consultar</div>
+              )}
+              <a href={`/productos/${it.slug}`} class="rec-cta">Ver detalles</a>
             </div>
           </div>
-        </a>
+        </div>
       ))}
     </div>
   ) : (
@@ -108,9 +107,35 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
+
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.4rem}
+.rec-card{display:flex;background:var(--white);border:2px solid var(--grey2);border-radius:12px;overflow:hidden;animation:fadeUp .32s ease both;transition:border-color .2s,box-shadow .2s}
+.rec-card:hover{border-color:var(--red);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.rec-card-media{position:relative;width:42%;flex-shrink:0;background:var(--grey);display:flex;align-items:center;justify-content:center;text-decoration:none}
+.rec-card-media img{width:100%;height:100%;object-fit:cover;display:block}
+.rec-noimg{font-size:3rem}
+.rec-discount{position:absolute;top:.6rem;left:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.82rem;padding:.25rem .55rem;border-radius:5px}
+.rec-card-body{flex:1;padding:1rem 1.1rem;display:flex;flex-direction:column;min-width:0}
+.rec-brand{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:.15rem}
+.rec-name{font-family:var(--fb);font-size:1.05rem;font-weight:700;color:var(--black);text-decoration:none;line-height:1.15;margin-bottom:.5rem}
+.rec-name:hover{color:var(--red)}
+.rec-reason{background:var(--grey);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:.5rem .7rem;margin-bottom:.7rem}
+.rec-reason-tag{display:block;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+.rec-reason p{font-size:.82rem;line-height:1.4;color:var(--black)}
 .card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
 .card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
-.card-color-more{font-size:.68rem;font-weight:600;color:var(--muted);margin-left:.1rem}
+.card-color-more{font-size:.68rem;font-weight:600;color:var(--muted)}
+.rec-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+.rec-price-wrap{display:flex;flex-direction:column;line-height:1}
+.rec-price-old{font-size:.78rem;color:var(--muted);text-decoration:line-through}
+.rec-price{font-family:var(--fb);font-size:1.15rem;font-weight:700;color:var(--black)}
+.rec-price-sale{color:var(--red)}
+.rec-price-note{font-size:.78rem;color:var(--muted)}
+.rec-cta{background:var(--black);color:var(--white);font-size:.78rem;font-weight:600;padding:.5rem .9rem;border-radius:6px;text-decoration:none;white-space:nowrap;transition:background .2s}
+.rec-cta:hover{background:var(--red)}
+@media(max-width:520px){
+  .rec-grid{grid-template-columns:1fr}
+}
 </style>
 
 </Layout>

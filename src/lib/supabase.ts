@@ -36,6 +36,7 @@ export interface Product {
   short_description: string | null;
   description: string | null;
   price: number | null;
+  sale_price: number | null;
   show_price: boolean;
   price_note: string | null;
   specs: Record<string, string>;
@@ -219,4 +220,35 @@ export async function getRecommendedProductIds(): Promise<string[]> {
     .order('display_order', { ascending: true });
   if (error) { console.error('Error fetching recommended:', error); return []; }
   return (data || []).map((r: any) => r.product_id).filter(Boolean);
+}
+
+// ── FASE 2: Productos recomendados ──
+
+export interface RecommendedProduct {
+  id: string;
+  product_id: string | null;
+  reason: string | null;
+  display_order: number;
+  active: boolean;
+  products?: Product;
+}
+
+// Recomendados activos con su producto completo (para la página pública)
+export async function getRecommended(): Promise<RecommendedProduct[]> {
+  const { data, error } = await supabase
+    .from('recommended_products')
+    .select(`
+      *,
+      products (
+        *,
+        brands ( id, slug, name ),
+        categories!products_category_id_fkey ( id, slug, name ),
+        product_images ( id, color, url, alt_text, is_primary, display_order ),
+        product_variants ( id, size, color, color_hex, color_hex_2, stock, active )
+      )
+    `)
+    .eq('active', true)
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching recommended:', error); return []; }
+  return (data as RecommendedProduct[]) || [];
 }

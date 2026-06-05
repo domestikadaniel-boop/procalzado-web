@@ -116,8 +116,19 @@ const schemaProduct = {
 
       {product.show_price && product.price ? (
         <div style="margin-bottom:1rem">
-          <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${Number(product.price).toLocaleString('es-CO')}</span>
-          <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>
+          {(product as any).sale_price ? (
+            <>
+              <span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${Number(product.price).toLocaleString('es-CO')}</span>
+              <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${Number((product as any).sale_price).toLocaleString('es-CO')}</span>
+              <span style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-{Math.round((1 - (product as any).sale_price / product.price) * 100)}%</span>
+              <span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>
+            </>
+          ) : (
+            <>
+              <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${Number(product.price).toLocaleString('es-CO')}</span>
+              <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>
+            </>
+          )}
         </div>
       ) : (
         <div style="margin-bottom:1rem;font-style:italic;color:var(--muted)">Precio: consultar por WhatsApp</div>

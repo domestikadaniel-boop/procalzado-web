@@ -190,9 +190,8 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     </div>
 
     <div id="tab-recommended" style="display:none">
-      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Marca los productos que aparecerán en la página <strong>Recomendaciones</strong> del menú. Usa el buscador para encontrarlos.</p>
-      <div class="toolbar"><input type="text" id="recSearch" placeholder="Buscar producto para recomendar..."/></div>
-      <div class="product-table"><table><thead><tr><th style="width:60px">Img</th><th>Nombre</th><th>Marca</th><th style="width:120px">Recomendado</th></tr></thead><tbody id="recTableBody"></tbody></table></div>
+      <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Productos de la página <strong>Recomendaciones</strong>, cada uno con su motivo (arrastra para reordenar)</span><button class="btn-add" id="addRecBtn">+ Agregar recomendado</button></div>
+      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th style="width:60px">Img</th><th>Producto</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody id="recTableBody"></tbody></table></div>
     </div>
 
     <div id="tab-settings" style="display:none">
@@ -240,6 +239,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
           <div class="cats-checkbox-grid" id="pCategoriesGrid"></div>
         </div>
         <div class="field"><label>Precio (COP)</label><input type="number" id="pPrice" placeholder="0"/></div>
+        <div class="field"><label>Precio rebajado (oferta)</label><input type="number" id="pSalePrice" placeholder="Opcional"/><small style="color:var(--muted);font-size:.72rem">Si lo llenas, el precio normal se muestra tachado.</small></div>
         <div class="field"><label><input type="checkbox" id="pShowPrice"/> Mostrar precio en el sitio</label></div>
         <div class="field"><label><input type="checkbox" id="pFeatured"/> Producto destacado</label></div>
         <div class="field full"><label>Descripción corta (SEO)</label><textarea id="pShortDesc" rows="2" maxlength="160"></textarea></div>
@@ -332,6 +332,27 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 <input type="file" id="hiddenCatImageInput" accept="image/*" style="display:none"/>
 <input type="file" id="hiddenGcardImageInput" accept="image/*" style="display:none"/>
 
+<!-- RECOMMENDED MODAL -->
+<div class="modal-bg" id="recModal">
+  <div class="form-modal" style="max-width:480px">
+    <div class="form-header"><h3 id="recFormTitle">Agregar recomendado</h3><button class="form-close" onclick="document.getElementById('recModal').classList.remove('open')">&times;</button></div>
+    <div class="form-body">
+      <input type="hidden" id="recId"/>
+      <div class="field"><label>Producto *</label>
+        <select id="recProduct"><option value="">Seleccionar producto...</option></select>
+      </div>
+      <div class="field"><label>Motivo (por qué lo recomiendas)</label>
+        <textarea id="recReason" rows="3" maxlength="200" placeholder="Ej: El más vendido para trabajo pesado, suela reforzada y precio especial este mes."></textarea>
+        <small style="color:var(--muted);font-size:.72rem">Aparece en la tarjeta de la página Recomendaciones. Máx. 200 caracteres.</small>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="document.getElementById('recModal').classList.remove('open')">Cancelar</button>
+      <button class="btn-save" id="recSaveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- GENDER CARD MODAL -->
 <div class="modal-bg" id="gcardModal">
   <div class="form-modal" style="max-width:480px">
@@ -367,7 +388,7 @@ const supabase = createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON__)
 
 const SIZES_LIST = ['20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','Única'];
 
-let brands=[],categories=[],products=[],genderCards=[],recommendedIds=[],editingProduct=null;
+let brands=[],categories=[],products=[],genderCards=[],recommended=[],editingProduct=null;
 // Estructura interna: { colors: [{ name, hex, images: [{url,id?,existing}] }], sizes: ['38','39'] }
 let formColors=[];
 let activeColorIdx=null;
@@ -410,9 +431,9 @@ async function loadData(){
   const {data: gcData} = await supabase.from('gender_category_cards').select('*, categories(id,name,slug)').order('display_order',{ascending:true});
   genderCards = gcData || [];
 
-  // Cargar productos recomendados
-  const {data: recData} = await supabase.from('recommended_products').select('product_id, display_order').order('display_order',{ascending:true});
-  recommendedIds = (recData||[]).map(r=>r.product_id).filter(Boolean);
+  // Cargar productos recomendados (con motivo)
+  const {data: recData} = await supabase.from('recommended_products').select('*').order('display_order',{ascending:true});
+  recommended = recData || [];
 
   // Cargar categorías múltiples aparte
   if(products.length>0){
@@ -485,6 +506,7 @@ function setupDragAndDrop(tbodyId, items, table) {
       if (table === 'products') renderProducts();
       else if (table === 'brands') renderBrands();
       else if (table === 'categories') renderCategories();
+      else if (table === 'recommended_products') renderRecommended();
       loading(false);
       showToast('Orden actualizado ✓');
     });
@@ -640,39 +662,60 @@ $('gcardSaveBtn').addEventListener('click',async()=>{
 
 
 // RECOMENDADOS
-function renderRecommended(filter=''){
-  const f=products.filter(p=>!filter||p.name.toLowerCase().includes(filter)||(p.brands?.name||'').toLowerCase().includes(filter));
-  // Ordenar: primero los ya recomendados, luego el resto
-  f.sort((a,b)=>{
-    const ar=recommendedIds.includes(a.id)?0:1, br=recommendedIds.includes(b.id)?0:1;
-    return ar-br;
-  });
-  $('recTableBody').innerHTML=f.map(p=>{
-    const img=p.product_images?.find(i=>i.is_primary)||p.product_images?.[0];
-    const isRec=recommendedIds.includes(p.id);
-    return `<tr>
-      <td style="width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
-      <td><strong>${p.name}</strong></td>
-      <td>${p.brands?.name||'-'}</td>
-      <td><label class="toggle-switch"><input type="checkbox" ${isRec?'checked':''} onchange="window.toggleRecommended('${p.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos.</td></tr>';
-}
-$('recSearch')?.addEventListener('input',e=>renderRecommended(e.target.value.toLowerCase()));
-
-window.toggleRecommended=async(productId,checked)=>{
-  let error;
-  if(checked){
-    const order=recommendedIds.length;
-    ({error}=await supabase.from('recommended_products').insert({product_id:productId,display_order:order}));
-    if(!error)recommendedIds.push(productId);
-  }else{
-    ({error}=await supabase.from('recommended_products').delete().eq('product_id',productId));
-    if(!error)recommendedIds=recommendedIds.filter(id=>id!==productId);
+function renderRecommended(){
+  const tbody=$('recTableBody');
+  if(!tbody)return;
+  if(recommended.length===0){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Sin recomendados. Click "+ Agregar recomendado".</td></tr>';
+    return;
   }
-  if(error){alert('No se pudo actualizar:\n\n'+error.message);return}
-  showToast(checked?'Agregado a recomendados ✓':'Quitado de recomendados');
+  tbody.innerHTML=recommended.map(r=>{
+    const p=products.find(x=>x.id===r.product_id);
+    const img=p?.product_images?.find(i=>i.is_primary)||p?.product_images?.[0];
+    return `<tr draggable="true" data-id="${r.id}" class="draggable-row">
+      <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
+      <td style="width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
+      <td><strong>${p?.name||'(producto eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name||''}</span></td>
+      <td style="font-size:.82rem;color:var(--muted);max-width:320px">${r.reason||'<em style="color:var(--grey2)">sin motivo</em>'}</td>
+      <td class="actions-cell"><button class="action-btn edit" onclick="window.editRec('${r.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteRec('${r.id}')">🗑️</button></td>
+    </tr>`;
+  }).join('');
+  setupDragAndDrop('recTableBody', recommended, 'recommended_products');
+}
+
+function populateRecProductSelect(){
+  $('recProduct').innerHTML='<option value="">Seleccionar producto...</option>'+
+    products.map(p=>`<option value="${p.id}">${p.name}${p.brands?.name?' — '+p.brands.name:''}</option>`).join('');
+}
+$('addRecBtn')?.addEventListener('click',()=>{
+  $('recId').value='';$('recProduct').value='';$('recReason').value='';
+  populateRecProductSelect();
+  $('recFormTitle').textContent='Agregar recomendado';
+  $('recModal').classList.add('open');
+});
+window.editRec=(id)=>{
+  const r=recommended.find(x=>x.id===id);if(!r)return;
+  populateRecProductSelect();
+  $('recId').value=r.id;$('recProduct').value=r.product_id||'';$('recReason').value=r.reason||'';
+  $('recFormTitle').textContent='Editar recomendado';
+  $('recModal').classList.add('open');
 };
+window.deleteRec=async(id)=>{
+  if(!confirm('¿Quitar de recomendados?'))return;
+  loading(true);await supabase.from('recommended_products').delete().eq('id',id);await loadData();loading(false);showToast('Quitado de recomendados');
+};
+$('recSaveBtn')?.addEventListener('click',async()=>{
+  const product_id=$('recProduct').value;
+  if(!product_id){alert('Selecciona un producto');return}
+  const d={product_id,reason:$('recReason').value.trim()||null,active:true};
+  loading(true);const id=$('recId').value;
+  let error;
+  if(id){({error}=await supabase.from('recommended_products').update(d).eq('id',id));}
+  else{d.display_order=recommended.length;({error}=await supabase.from('recommended_products').insert(d));}
+  loading(false);
+  if(error){alert('No se pudo guardar:\n\n'+error.message);return}
+  $('recModal').classList.remove('open');await loadData();showToast('Recomendado guardado ✓');
+});
 
 function populateSelects(){
   $('pBrand').innerHTML='<option value="">Seleccionar...</option>'+brands.filter(b=>b.active).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
@@ -804,7 +847,7 @@ function openProductForm(p=null){
   document.querySelectorAll('[data-gender]').forEach(inp => {
     inp.checked = productGenders.includes(inp.value);
   });
-  $('pPrice').value=p?.price||'';$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;
+  $('pPrice').value=p?.price||'';$('pSalePrice').value=p?.sale_price||'';$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;
   $('pShortDesc').value=p?.short_description||'';$('pDesc').value=p?.description||'';
   $('pNotice').value=p?.notice||'';$('pNoticeType').value=p?.notice_type||'info';
 
@@ -866,7 +909,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const primaryCatId = selectedCatIds[0] || null; // primera = principal
 
   const selectedGenders = Array.from(document.querySelectorAll('[data-gender]:checked')).map(i=>i.value);
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,active:true};
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:$('pSalePrice').value?parseFloat($('pSalePrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}
