@@ -252,3 +252,27 @@ export async function getRecommended(): Promise<RecommendedProduct[]> {
   if (error) { console.error('Error fetching recommended:', error); return []; }
   return (data as RecommendedProduct[]) || [];
 }
+
+// ── FASE 3: Bloques promocionales ──
+
+export interface PromoBlock {
+  id: string;
+  slot: string;
+  active: boolean;
+  eyebrow: string | null;
+  title: string | null;
+  subtitle: string | null;
+  cta_label: string | null;
+  cta_href: string | null;
+  image_url: string | null;
+  text_color: string | null;
+  overlay: number | null;
+}
+
+export async function getPromoBlocks(): Promise<Record<string, PromoBlock>> {
+  const { data, error } = await supabase.from('promo_blocks').select('*');
+  if (error) { console.error('Error fetching promo blocks:', error); return {}; }
+  const map: Record<string, PromoBlock> = {};
+  (data || []).forEach((b: any) => { map[b.slot] = b; });
+  return map;
+}

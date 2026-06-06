@@ -168,6 +168,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab" data-tab="categories">Categorías</button>
     <button class="tab" data-tab="pages">Páginas</button>
     <button class="tab" data-tab="recommended">Recomendados</button>
+    <button class="tab" data-tab="promos">Promos</button>
     <button class="tab" data-tab="settings">Configuración</button>
   </div>
   <div class="admin-body">
@@ -192,6 +193,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div id="tab-recommended" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Productos de la página <strong>Recomendaciones</strong>, cada uno con su motivo (arrastra para reordenar)</span><button class="btn-add" id="addRecBtn">+ Agregar recomendado</button></div>
       <div class="product-table"><table><thead><tr><th style="width:24px"></th><th style="width:60px">Img</th><th>Producto</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody id="recTableBody"></tbody></table></div>
+    </div>
+
+    <div id="tab-promos" style="display:none">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Banners promocionales de la página principal. El primero va debajo del inicio (productos destacados/ofertas) y el segundo en medio del catálogo (temporada: Día del Padre, Navidad, etc.). Puedes activarlos o desactivarlos para que no se muestren.</p>
+      <div id="promosContainer"></div>
     </div>
 
     <div id="tab-settings" style="display:none">
@@ -331,6 +337,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 <input type="file" id="hiddenColorInput" accept="image/*" multiple style="display:none"/>
 <input type="file" id="hiddenCatImageInput" accept="image/*" style="display:none"/>
 <input type="file" id="hiddenGcardImageInput" accept="image/*" style="display:none"/>
+<input type="file" id="hiddenPromoImageInput" accept="image/*" style="display:none"/>
 
 <!-- RECOMMENDED MODAL -->
 <div class="modal-bg" id="recModal">
@@ -388,7 +395,7 @@ const supabase = createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON__)
 
 const SIZES_LIST = ['20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','Única'];
 
-let brands=[],categories=[],products=[],genderCards=[],recommended=[],editingProduct=null;
+let brands=[],categories=[],products=[],genderCards=[],recommended=[],promos={},editingProduct=null;
 // Estructura interna: { colors: [{ name, hex, images: [{url,id?,existing}] }], sizes: ['38','39'] }
 let formColors=[];
 let activeColorIdx=null;
@@ -414,7 +421,7 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','pages','recommended','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','pages','recommended','promos','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
 }));
 
 // LOAD
@@ -444,7 +451,7 @@ async function loadData(){
     }
   }
 
-  renderProducts();renderBrands();renderCategories();renderGenderCards();renderRecommended();populateSelects();loading(false);
+  renderProducts();renderBrands();renderCategories();renderGenderCards();renderRecommended();await loadPromos();populateSelects();loading(false);
 }
 
 function renderProducts(filter=''){
@@ -1053,6 +1060,90 @@ window.editCategory=id=>{
   $('catFormTitle').textContent='Editar Categoría';$('categoryModal').classList.add('open');
 };
 window.deleteCategory=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('categories').delete().eq('id',id);await loadData();loading(false)};
+
+// PROMOS
+const PROMO_SLOTS = [
+  {slot:'hero', label:'Banner debajo del inicio', hint:'Ideal para productos destacados, ofertas o lanzamientos.'},
+  {slot:'mid', label:'Banner en medio del catálogo', hint:'Ideal para promos de temporada (Día del Padre, Navidad, etc.).'}
+];
+let activePromoUpload = null;
+async function loadPromos(){
+  const {data} = await supabase.from('promo_blocks').select('*');
+  promos = {};
+  (data||[]).forEach(b => { promos[b.slot] = b; });
+  // Asegurar que existan ambos slots en memoria
+  PROMO_SLOTS.forEach(s => { if(!promos[s.slot]) promos[s.slot] = {slot:s.slot, active:false, overlay:35, text_color:'#FFFFFF'}; });
+  renderPromos();
+}
+function renderPromos(){
+  const cont = $('promosContainer');
+  if(!cont) return;
+  cont.innerHTML = PROMO_SLOTS.map(s => {
+    const b = promos[s.slot] || {};
+    return `<div style="background:var(--white);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:1.4rem;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;background:var(--black);color:var(--white)">
+        <div><strong style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em">${s.label}</strong><div style="font-size:.72rem;opacity:.7">${s.hint}</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="promoActive-${s.slot}" ${b.active?'checked':''}/><span class="toggle-slider"></span></label>
+      </div>
+      <div style="padding:1.2rem;display:grid;grid-template-columns:1fr 1fr;gap:.9rem">
+        <div class="field"><label>Texto pequeño (arriba)</label><input type="text" id="promoEyebrow-${s.slot}" value="${(b.eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Ej: NUEVA TEMPORADA"/></div>
+        <div class="field"><label>Título grande</label><input type="text" id="promoTitle-${s.slot}" value="${(b.title||'').replace(/"/g,'&quot;')}" placeholder="Ej: Especial Día del Padre"/></div>
+        <div class="field full" style="grid-column:1/-1"><label>Subtítulo</label><input type="text" id="promoSubtitle-${s.slot}" value="${(b.subtitle||'').replace(/"/g,'&quot;')}" placeholder="Texto secundario"/></div>
+        <div class="field"><label>Texto del botón</label><input type="text" id="promoCtaLabel-${s.slot}" value="${(b.cta_label||'').replace(/"/g,'&quot;')}" placeholder="Ej: Ver colección"/></div>
+        <div class="field"><label>Enlace del botón</label><input type="text" id="promoCtaHref-${s.slot}" value="${(b.cta_href||'').replace(/"/g,'&quot;')}" placeholder="Ej: /recomendaciones"/></div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Imagen de fondo</label>
+          <div id="promoImgPreview-${s.slot}" style="margin-bottom:.5rem">${b.image_url?`<div style="position:relative;width:100%;max-width:380px"><img src="${b.image_url}" style="width:100%;border-radius:8px;display:block"/><button type="button" class="x" data-rmpromo="${s.slot}" style="position:absolute;top:6px;right:6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer">×</button></div>`:''}</div>
+          <button type="button" class="upload-color-btn" data-uppromo="${s.slot}">📷 Subir imagen</button>
+          <input type="hidden" id="promoImageUrl-${s.slot}" value="${b.image_url||''}"/>
+          <small style="display:block;color:var(--muted);font-size:.72rem;margin-top:.4rem">Recomendado: <strong>1600 × 500 px</strong> (horizontal), formato <strong>JPG o WebP</strong>, máx. 800 KB.</small>
+        </div>
+        <div class="field"><label>Color del texto</label><input type="color" id="promoTextColor-${s.slot}" value="${b.text_color||'#FFFFFF'}" style="width:60px;height:38px;padding:2px"/></div>
+        <div class="field"><label>Oscurecer imagen (${b.overlay??35}%)</label><input type="range" min="0" max="80" id="promoOverlay-${s.slot}" value="${b.overlay??35}" style="width:100%"/><small style="color:var(--muted);font-size:.72rem">Más oscuro = texto más legible.</small></div>
+        <div style="grid-column:1/-1"><button class="btn-save" data-savepromo="${s.slot}">Guardar este banner</button></div>
+      </div>
+    </div>`;
+  }).join('');
+  // Listeners
+  cont.querySelectorAll('[data-uppromo]').forEach(el=>el.addEventListener('click',()=>{activePromoUpload=el.dataset.uppromo;$('hiddenPromoImageInput').click()}));
+  cont.querySelectorAll('[data-rmpromo]').forEach(el=>el.addEventListener('click',()=>{const s=el.dataset.rmpromo;$(`promoImageUrl-${s}`).value='';$(`promoImgPreview-${s}`).innerHTML=''}));
+  cont.querySelectorAll('[data-savepromo]').forEach(el=>el.addEventListener('click',()=>savePromo(el.dataset.savepromo)));
+}
+$('hiddenPromoImageInput').addEventListener('change',async e=>{
+  const file=e.target.files[0]; if(!file||!activePromoUpload)return;
+  const s=activePromoUpload;
+  const path=`promos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
+  loading(true);
+  const{error}=await supabase.storage.from('product-images').upload(path,file);
+  loading(false);
+  if(error){alert('Error: '+error.message);return}
+  const{data:{publicUrl}}=supabase.storage.from('product-images').getPublicUrl(path);
+  $(`promoImageUrl-${s}`).value=publicUrl;
+  $(`promoImgPreview-${s}`).innerHTML=`<div style="position:relative;width:100%;max-width:380px"><img src="${publicUrl}" style="width:100%;border-radius:8px;display:block"/><button type="button" class="x" data-rmpromo="${s}" style="position:absolute;top:6px;right:6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer">×</button></div>`;
+  $(`promoImgPreview-${s}`).querySelector('[data-rmpromo]').addEventListener('click',()=>{$(`promoImageUrl-${s}`).value='';$(`promoImgPreview-${s}`).innerHTML=''});
+  e.target.value=''; activePromoUpload=null;
+});
+async function savePromo(slot){
+  const d={
+    slot,
+    active:$(`promoActive-${slot}`).checked,
+    eyebrow:$(`promoEyebrow-${slot}`).value.trim()||null,
+    title:$(`promoTitle-${slot}`).value.trim()||null,
+    subtitle:$(`promoSubtitle-${slot}`).value.trim()||null,
+    cta_label:$(`promoCtaLabel-${slot}`).value.trim()||null,
+    cta_href:$(`promoCtaHref-${slot}`).value.trim()||null,
+    image_url:$(`promoImageUrl-${slot}`).value||null,
+    text_color:$(`promoTextColor-${slot}`).value||'#FFFFFF',
+    overlay:parseInt($(`promoOverlay-${slot}`).value)||0,
+    updated_at:new Date().toISOString()
+  };
+  loading(true);
+  const {error}=await supabase.from('promo_blocks').upsert(d,{onConflict:'slot'});
+  loading(false);
+  if(error){alert('No se pudo guardar:\n\n'+error.message);return}
+  promos[slot]=d;
+  showToast('Banner guardado ✓');
+}
 
 // SETTINGS
 async function loadSettings() {

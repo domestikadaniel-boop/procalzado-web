@@ -1,10 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getProducts, getCategories, getBrands, getSiteSetting } from '../lib/supabase';
+import PromoBanner from '../components/PromoBanner.astro';
+import { getProducts, getCategories, getBrands, getSiteSetting, getPromoBlocks } from '../lib/supabase';
 import type { Product, Category, Brand } from '../lib/supabase';
 
 // Datos en build time
 const products: Product[] = await getProducts();
+const promos = await getPromoBlocks();
 const categories: Category[] = await getCategories();
 const brands: Brand[] = await getBrands();
 // Marcas destacadas en filtros (show_in_filters != false) y el resto bajo "Ver más"
@@ -95,6 +97,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
     </div>
   </div>
 </section>
+
+{promos.hero && promos.hero.active && (
+  <div class="promo-wrap"><PromoBanner block={promos.hero} /></div>
+)}
 
 <!-- BARRA DE FILTROS -->
 <div class="filter-bar">
@@ -261,6 +267,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
     })}
   </div>
 
+  {promos.mid && promos.mid.active && (
+    <div class="promo-wrap promo-wrap-mid"><PromoBanner block={promos.mid} /></div>
+  )}
+
   <div class="empty" id="emptyState" style="display:none">
     <strong>Sin resultados</strong>
     <p>No encontramos productos con esos filtros. Prueba con otros.</p>
@@ -273,6 +283,8 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <style>
 /* Precio rebajado en tarjetas */
+.promo-wrap{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
+.promo-wrap-mid{padding:2.5rem clamp(1rem,4vw,3rem) .5rem}
 .card-price-row{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
 .card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .card-price-sale{color:var(--red)}
