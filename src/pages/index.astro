@@ -67,6 +67,7 @@ function productData(p: Product) {
   };
 }
 const items = products.map(productData);
+const midIndex = items.length >= 4 ? Math.floor(items.length / 2) - 1 : -1;
 
 // Intro con **negrita** -> <strong>
 const introHtml = homeIntro
@@ -106,12 +107,6 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 <div class="filter-bar">
   <div class="filter-inner">
     <div class="filter-top-row">
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="searchInput" placeholder="Buscar producto o marca..." autocomplete="off"/>
-        <button type="button" class="search-clear" id="searchClear" style="display:none" aria-label="Limpiar">&times;</button>
-        <div class="search-suggestions" id="searchSuggestions"></div>
-      </div>
       <button type="button" class="toggle-cats-btn" id="toggleFilters">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         <span class="toggle-label">Filtros</span>
@@ -211,6 +206,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
         'data-featured': it.featured ? '1' : '0',
       };
       return (
+        <>
         <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`} {...dataAttrs}>
           <div class="card-top-bar"></div>
           {it.featured && (
@@ -263,13 +259,13 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
             </div>
           </div>
         </a>
+        {i === midIndex && promos.mid && promos.mid.active && (
+          <div class="promo-grid-full"><PromoBanner block={promos.mid} /></div>
+        )}
+        </>
       );
     })}
   </div>
-
-  {promos.mid && promos.mid.active && (
-    <div class="promo-wrap promo-wrap-mid"><PromoBanner block={promos.mid} /></div>
-  )}
 
   <div class="empty" id="emptyState" style="display:none">
     <strong>Sin resultados</strong>
@@ -283,6 +279,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <style>
 /* Precio rebajado en tarjetas */
+.promo-grid-full{grid-column:1/-1;margin:1rem 0}
 .promo-wrap{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-wrap-mid{padding:2.5rem clamp(1rem,4vw,3rem) .5rem}
 .card-price-row{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}

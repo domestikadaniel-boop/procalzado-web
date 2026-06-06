@@ -1,4 +1,6 @@
 ---
+import { getSearchIndex } from '../lib/supabase';
+
 interface Props {
   title: string;
   description?: string;
@@ -17,6 +19,7 @@ const navLinks = [
   { label: 'Recomendaciones', href: '/recomendaciones', highlight: true },
 ];
 const currentPath = Astro.url.pathname;
+const searchIndex = await getSearchIndex();
 ---
 <!DOCTYPE html>
 <html lang="es-CO">
@@ -79,15 +82,34 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .navdrawer-parent{display:block;padding:.95rem 1.3rem;font-family:var(--fb);font-weight:700;font-size:.95rem;color:var(--black);text-decoration:none;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--grey2)}
 .navdrawer-parent.highlight{color:var(--red)}
 .navdrawer-parent:hover,.navdrawer-top-link:hover{color:var(--red);background:var(--grey)}
-.header-right{display:flex;align-items:center;gap:.6rem}
-.header-wa{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;height:40px;background:var(--wa);color:var(--white);padding:0 1.1rem;border-radius:8px;font-size:.82rem;font-weight:600;letter-spacing:.02em;transition:background .18s;white-space:nowrap}
-.header-wa:hover{background:var(--wa-dk)}
-.header-wa svg{width:17px;height:17px;flex-shrink:0}
-.cart-btn{position:relative;background:var(--red);border:none;color:var(--white);height:40px;width:40px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .18s;flex-shrink:0}
-.cart-btn:hover{background:#cc0000}
-.cart-btn svg{width:21px;height:21px;display:block}
-.cart-badge{position:absolute;top:-6px;right:-6px;background:var(--white);color:var(--red);font-size:.66rem;font-weight:700;min-width:19px;height:19px;padding:0 4px;border-radius:10px;display:none;align-items:center;justify-content:center;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.header-right{display:flex;align-items:center;gap:.4rem}
+.header-icon-btn{position:relative;background:none;border:none;color:var(--white);cursor:pointer;width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;transition:background .15s,opacity .15s;flex-shrink:0}
+.header-icon-btn:hover{background:rgba(255,255,255,.12)}
+.header-icon-btn svg{width:23px;height:23px;display:block}
+.cart-badge{position:absolute;top:-2px;right:-2px;background:var(--red);color:var(--white);font-size:.66rem;font-weight:700;min-width:18px;height:18px;padding:0 4px;border-radius:10px;display:none;align-items:center;justify-content:center;line-height:1;border:2px solid var(--black)}
 .cart-badge.show{display:flex}
+
+/* BUSCADOR DESPLEGABLE DEL HEADER */
+.header-search{position:fixed;top:0;left:0;right:0;background:var(--white);z-index:3200;transform:translateY(-100%);transition:transform .26s ease;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+.header-search.open{transform:translateY(0)}
+.header-search-inner{display:flex;align-items:center;gap:.7rem;max-width:760px;margin:0 auto;padding:1rem clamp(1rem,4vw,2rem)}
+.header-search .hs-icon{width:22px;height:22px;color:var(--muted);flex-shrink:0}
+.header-search input{flex:1;border:none;outline:none;font-family:var(--fb);font-size:1.05rem;color:var(--black);background:none}
+.header-search .hs-close{background:none;border:none;font-size:1.8rem;line-height:1;color:var(--muted);cursor:pointer;padding:0 .3rem}
+.header-search .hs-close:hover{color:var(--red)}
+.header-search-suggestions{max-width:760px;margin:0 auto;padding:0 clamp(1rem,4vw,2rem);max-height:60vh;overflow-y:auto}
+.header-search-suggestions:not(:empty){padding-bottom:1rem}
+.hs-item{display:flex;align-items:center;gap:.8rem;padding:.6rem .4rem;border-radius:8px;text-decoration:none;color:var(--black);border-bottom:1px solid var(--grey2)}
+.hs-item:hover{background:var(--grey)}
+.hs-item img{width:46px;height:46px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--grey)}
+.hs-item-noimg{width:46px;height:46px;border-radius:6px;background:var(--grey);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.hs-brand{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+.hs-name{font-size:.92rem;font-weight:600;line-height:1.15}
+.hs-name mark{background:#fff3b0;color:inherit;padding:0 1px;border-radius:2px}
+.hs-price{margin-left:auto;font-family:var(--fb);font-weight:700;font-size:.9rem;white-space:nowrap}
+.hs-empty{padding:1.2rem .4rem;color:var(--muted);font-size:.9rem;text-align:center}
+.header-search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:3100;opacity:0;visibility:hidden;transition:opacity .26s}
+.header-search-overlay.open{opacity:1;visibility:visible}
 
 /* HERO */
 .hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,3rem);position:relative;overflow:hidden;min-height:calc(88vh - 64px);display:flex;align-items:center}
@@ -370,16 +392,29 @@ footer a{color:#FF4444;text-decoration:underline}
   </nav>
 
   <div class="header-right">
-    <a href="https://wa.me/573213154654?text=Hola%2C+me+gustar%C3%ADa+conocer+su+cat%C3%A1logo." class="header-wa" target="_blank" rel="noopener noreferrer">
+    <button class="header-icon-btn" id="headerSearchBtn" type="button" aria-label="Buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <a href="https://wa.me/573213154654?text=Hola%2C+me+gustar%C3%ADa+conocer+su+cat%C3%A1logo." class="header-icon-btn" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      <span>WhatsApp</span>
     </a>
-    <button class="cart-btn" id="cartBtn" type="button" aria-label="Abrir carrito">
+    <button class="header-icon-btn cart-icon-btn" id="cartBtn" type="button" aria-label="Abrir carrito">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
       <span class="cart-badge" id="cartBadge">0</span>
     </button>
   </div>
 </header>
+
+<!-- BUSCADOR DESPLEGABLE DEL HEADER -->
+<div class="header-search" id="headerSearch" aria-hidden="true">
+  <div class="header-search-inner">
+    <svg class="hs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="headerSearchInput" placeholder="Buscar producto o marca..." autocomplete="off"/>
+    <button type="button" class="hs-close" id="headerSearchClose" aria-label="Cerrar">&times;</button>
+  </div>
+  <div class="header-search-suggestions" id="headerSearchSuggestions"></div>
+</div>
+<div class="header-search-overlay" id="headerSearchOverlay"></div>
 
 <!-- DRAWER NAVEGACIÓN (móvil) -->
 <div class="navdrawer-overlay" id="navdrawerOverlay"></div>
@@ -434,6 +469,7 @@ footer a{color:#FF4444;text-decoration:underline}
 
 <div class="toast" id="toast" role="alert"></div>
 
+<script type="application/json" id="headerSearchData" set:html={JSON.stringify(searchIndex)}></script>
 <script is:inline>
 // ═══ CARRITO ═══
 const WA_PHONE = '573213154654';
@@ -559,6 +595,37 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('navHamburger')?.addEventListener('click', openNav);
   document.getElementById('navdrawerClose')?.addEventListener('click', closeNav);
   navOverlay?.addEventListener('click', closeNav);
+
+  // ── BUSCADOR DEL HEADER ──
+  const hsData = JSON.parse(document.getElementById('headerSearchData')?.textContent || '[]');
+  const hsWrap = document.getElementById('headerSearch');
+  const hsOverlay = document.getElementById('headerSearchOverlay');
+  const hsInput = document.getElementById('headerSearchInput');
+  const hsSug = document.getElementById('headerSearchSuggestions');
+  function openSearch(){ hsWrap?.classList.add('open'); hsOverlay?.classList.add('open'); setTimeout(()=>hsInput?.focus(),80); }
+  function closeSearch(){ hsWrap?.classList.remove('open'); hsOverlay?.classList.remove('open'); if(hsSug) hsSug.innerHTML=''; if(hsInput) hsInput.value=''; }
+  function fmt(n){ return '$' + Number(n).toLocaleString('es-CO'); }
+  function hl(text, q){ const i=text.toLowerCase().indexOf(q.toLowerCase()); if(i<0||!q) return text; return text.slice(0,i)+'<mark>'+text.slice(i,i+q.length)+'</mark>'+text.slice(i+q.length); }
+  function renderHs(q){
+    if(!hsSug) return;
+    if(!q){ hsSug.innerHTML=''; return; }
+    const ql=q.toLowerCase();
+    const matches=hsData.filter(it=>it.name.toLowerCase().includes(ql)||it.brand.toLowerCase().includes(ql)).slice(0,8);
+    if(matches.length===0){ hsSug.innerHTML='<div class="hs-empty">Sin coincidencias para “'+q+'”</div>'; return; }
+    hsSug.innerHTML=matches.map(m=>{
+      const price = m.sale ? fmt(m.sale) : (m.price ? fmt(m.price) : '');
+      return '<a class="hs-item" href="/productos/'+m.slug+'">'+
+        (m.img?'<img src="'+m.img+'" alt=""/>':'<div class="hs-item-noimg">👢</div>')+
+        '<div><div class="hs-brand">'+m.brand+'</div><div class="hs-name">'+hl(m.name,q)+'</div></div>'+
+        (price?'<div class="hs-price">'+price+'</div>':'')+
+      '</a>';
+    }).join('');
+  }
+  document.getElementById('headerSearchBtn')?.addEventListener('click', openSearch);
+  document.getElementById('headerSearchClose')?.addEventListener('click', closeSearch);
+  hsOverlay?.addEventListener('click', closeSearch);
+  hsInput?.addEventListener('input', e=>renderHs(e.target.value.trim()));
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSearch(); });
   document.getElementById('cartClearBtn')?.addEventListener('click', () => {
     if (confirm('¿Vaciar todo el carrito?')) { cart = []; saveCart(); updateCartBadge(); renderCart(); }
   });

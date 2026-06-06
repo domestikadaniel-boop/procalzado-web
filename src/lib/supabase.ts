@@ -276,3 +276,25 @@ export async function getPromoBlocks(): Promise<Record<string, PromoBlock>> {
   (data || []).forEach((b: any) => { map[b.slot] = b; });
   return map;
 }
+
+// ── Índice ligero para el buscador del header (todas las páginas) ──
+export interface SearchItem { slug: string; name: string; brand: string; img: string | null; price: number | null; sale: number | null; }
+export async function getSearchIndex(): Promise<SearchItem[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('slug, name, price, sale_price, show_price, brands(name), product_images(url,is_primary,display_order)')
+    .eq('active', true)
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching search index:', error); return []; }
+  return (data || []).map((p: any) => {
+    const imgs = p.product_images || [];
+    const primary = imgs.find((i: any) => i.is_primary) || imgs[0];
+    return {
+      slug: p.slug, name: p.name,
+      brand: p.brands?.name || '',
+      img: primary?.url || null,
+      price: p.show_price ? p.price : null,
+      sale: p.show_price ? p.sale_price : null,
+    };
+  });
+}
