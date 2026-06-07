@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getProducts, getGenderCards } from '../lib/supabase';
+import PromoBanner from '../components/PromoBanner.astro';
+import { getProducts, getGenderCards, getPromoBlocks } from '../lib/supabase';
 import type { Product, Category } from '../lib/supabase';
 
 // Páginas estáticas: hombre, mujer, ninos
@@ -41,6 +42,7 @@ const config = GENDER_CONFIG[genero!] || GENDER_CONFIG.hombre;
 // Datos
 const allProducts: Product[] = await getProducts();
 const cards = await getGenderCards(genero!);
+const promos = await getPromoBlocks();
 
 // Filtrar productos por género
 function productGenders(p: Product): string[] {
@@ -88,6 +90,10 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     <p>{config.sub}</p>
   </div>
 </section>
+
+{promos.hero && promos.hero.active && (
+  <div class="promo-wrap-page"><PromoBanner block={promos.hero} /></div>
+)}
 
 <!-- TARJETAS DE CATEGORÍA -->
 {cards.length > 0 && (
@@ -176,13 +182,16 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 <style>
 .gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
 .gender-hero-inner{max-width:1280px;margin:0 auto}
+.promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
 
 .gcards-section{max-width:1280px;margin:0 auto;padding:1.8rem clamp(1rem,4vw,3rem) 0}
-.gcards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
-.gcard{display:flex;flex-direction:column;border:none;background:var(--grey);border-radius:10px;overflow:hidden;cursor:pointer;padding:0;text-align:left;transition:transform .15s,box-shadow .15s;font-family:inherit}
+.gcards-grid{display:flex;gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:.6rem;scrollbar-width:thin}
+.gcards-grid::-webkit-scrollbar{height:6px}
+.gcards-grid::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:3px}
+.gcard{display:flex;flex-direction:column;flex:0 0 auto;width:180px;scroll-snap-align:start;border:none;background:var(--grey);border-radius:10px;overflow:hidden;cursor:pointer;padding:0;text-align:left;transition:transform .15s,box-shadow .15s;font-family:inherit}
 .gcard:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.12)}
 .gcard.active{outline:3px solid var(--red);outline-offset:0}
 .gcard-img{width:100%;aspect-ratio:4/5;background:var(--grey2);overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -202,7 +211,8 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .card-price-sale{color:var(--red)}
 @media(max-width:640px){
-  .gcards-grid{grid-template-columns:repeat(2,1fr);gap:.7rem}
+  .gcards-grid{gap:.7rem}
+  .gcard{width:150px}
   .card-color-dot{width:14px;height:14px}
 }
 </style>

@@ -1,6 +1,5 @@
 ---
-import { getSearchIndex, getPromoBlocks } from '../lib/supabase';
-import PromoBanner from '../components/PromoBanner.astro';
+import { getSearchIndex } from '../lib/supabase';
 
 interface Props {
   title: string;
@@ -21,7 +20,6 @@ const navLinks = [
 ];
 const currentPath = Astro.url.pathname;
 const searchIndex = await getSearchIndex();
-const promos = await getPromoBlocks();
 ---
 <!DOCTYPE html>
 <html lang="es-CO">
@@ -433,10 +431,6 @@ footer a{color:#FF4444;text-decoration:underline}
     ))}
   </div>
 </aside>
-
-{currentPath !== '/' && promos.hero && promos.hero.active && (
-  <div class="promo-wrap-global"><PromoBanner block={promos.hero} /></div>
-)}
 
 <slot />
 
