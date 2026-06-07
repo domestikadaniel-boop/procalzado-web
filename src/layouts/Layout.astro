@@ -1,5 +1,6 @@
 ---
-import { getSearchIndex } from '../lib/supabase';
+import { getSearchIndex, getPromoBlocks } from '../lib/supabase';
+import PromoBanner from '../components/PromoBanner.astro';
 
 interface Props {
   title: string;
@@ -20,6 +21,7 @@ const navLinks = [
 ];
 const currentPath = Astro.url.pathname;
 const searchIndex = await getSearchIndex();
+const promos = await getPromoBlocks();
 ---
 <!DOCTYPE html>
 <html lang="es-CO">
@@ -81,6 +83,7 @@ header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;dis
 .navdrawer-top-link{display:block;padding:.95rem 1.3rem;font-family:var(--fb);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.85rem;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--grey2)}
 .navdrawer-parent{display:block;padding:.95rem 1.3rem;font-family:var(--fb);font-weight:700;font-size:.95rem;color:var(--black);text-decoration:none;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--grey2)}
 .navdrawer-parent.highlight{color:var(--red)}
+.promo-wrap-global{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .navdrawer-parent:hover,.navdrawer-top-link:hover{color:var(--red);background:var(--grey)}
 .header-right{display:flex;align-items:center;gap:.4rem}
 .header-icon-btn{position:relative;background:none;border:none;color:var(--white);cursor:pointer;width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;transition:background .15s,opacity .15s;flex-shrink:0}
@@ -430,6 +433,10 @@ footer a{color:#FF4444;text-decoration:underline}
     ))}
   </div>
 </aside>
+
+{currentPath !== '/' && promos.hero && promos.hero.active && (
+  <div class="promo-wrap-global"><PromoBanner block={promos.hero} /></div>
+)}
 
 <slot />
 

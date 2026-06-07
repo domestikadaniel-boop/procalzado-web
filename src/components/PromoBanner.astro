@@ -5,11 +5,13 @@ const { block } = Astro.props;
 const show = block && block.active && (block.image_url || block.title);
 const overlay = Math.min(Math.max(block?.overlay ?? 35, 0), 80) / 100;
 const textColor = block?.text_color || '#FFFFFF';
+// El banner 'hero' (banner 1) lleva por defecto a la página de promoción
+const href = block?.cta_href || (block?.slot === 'hero' ? '/promocion' : '#');
 ---
 {show && (
   <a
     class="promo-banner"
-    href={block.cta_href || '#'}
+    href={href}
     style={`--promo-text:${textColor}; ${block.image_url ? `background-image:linear-gradient(rgba(0,0,0,${overlay}),rgba(0,0,0,${overlay})),url('${block.image_url}')` : 'background:#111'}`}
   >
     <div class="promo-inner">

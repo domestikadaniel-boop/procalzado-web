@@ -158,24 +158,13 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
             {it.showPrice && it.price ? (
               it.salePrice ? (
-                <>
-                  <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
-                  <div class="card-price-note">Al por mayor consultar precio</div>
-                </>
+                <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
               ) : (
-                <>
-                  <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
-                  <div class="card-price-note">Al por mayor consultar precio</div>
-                </>
+                <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
               )
             ) : (
               <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
             )}
-
-            <div class="card-cta">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Ver detalles
-            </div>
           </div>
         </a>
         {i === midIndex && promos.mid && promos.mid.active && (

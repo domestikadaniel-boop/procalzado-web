@@ -298,3 +298,31 @@ export async function getSearchIndex(): Promise<SearchItem[]> {
     };
   });
 }
+
+// ── Página de Promoción (asociada al banner 1) ──
+export async function getPromoProducts(): Promise<RecommendedProduct[]> {
+  const { data, error } = await supabase
+    .from('promo_products')
+    .select(`
+      *,
+      products (
+        *,
+        brands ( id, slug, name ),
+        categories!products_category_id_fkey ( id, slug, name ),
+        product_images ( id, color, url, alt_text, is_primary, display_order ),
+        product_variants ( id, size, color, color_hex, color_hex_2, stock, active )
+      )
+    `)
+    .eq('active', true)
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching promo products:', error); return []; }
+  return (data as RecommendedProduct[]) || [];
+}
+
+export async function getSettings(keys: string[]): Promise<Record<string,string>> {
+  const { data, error } = await supabase.from('site_settings').select('key,value').in('key', keys);
+  if (error) { console.error('Error fetching settings:', error); return {}; }
+  const map: Record<string,string> = {};
+  (data || []).forEach((s: any) => { map[s.key] = s.value; });
+  return map;
+}
