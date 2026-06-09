@@ -137,6 +137,15 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .loading-overlay.show{display:flex}
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--black);color:var(--white);padding:.65rem 1.3rem;border-radius:8px;font-size:.85rem;z-index:700;opacity:0;transition:all .3s;pointer-events:none;border-left:4px solid var(--green)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.search-select{position:relative}
+.search-select-input{width:100%;padding:.55rem .7rem;border:1px solid var(--grey2);border-radius:6px;font-size:.88rem;font-family:inherit;box-sizing:border-box}
+.search-select-input:focus{outline:none;border-color:var(--red)}
+.search-select-list{position:absolute;top:100%;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--white);border:1px solid var(--grey2);border-top:none;border-radius:0 0 6px 6px;z-index:50;display:none;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.search-select.open .search-select-list{display:block}
+.search-select-item{padding:.5rem .7rem;cursor:pointer;font-size:.85rem;border-bottom:1px solid #f2f2f2}
+.search-select-item:hover,.search-select-item.highlighted{background:#fff5f5}
+.search-select-item .ss-brand{font-size:.72rem;color:var(--muted)}
+.search-select-empty{padding:.5rem .7rem;font-size:.82rem;color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -362,7 +371,13 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="form-header"><h3 id="promoProdFormTitle">Agregar producto</h3><button class="form-close" onclick="document.getElementById('promoProdModal').classList.remove('open')">&times;</button></div>
     <div class="form-body">
       <input type="hidden" id="promoProdId"/>
-      <div class="field"><label>Producto *</label><select id="promoProdProduct"><option value="">Seleccionar producto...</option></select></div>
+      <div class="field"><label>Producto *</label>
+        <div class="search-select" id="promoProdSearchWrap">
+          <input type="text" class="search-select-input" id="promoProdSearch" placeholder="Buscar producto..." autocomplete="off"/>
+          <input type="hidden" id="promoProdProduct"/>
+          <div class="search-select-list" id="promoProdList"></div>
+        </div>
+      </div>
       <div class="field"><label>Motivo (por qué está en promoción)</label><textarea id="promoProdReason" rows="3" maxlength="200" placeholder="Ej: Precio especial este mes, ideal para regalar."></textarea><small style="color:var(--muted);font-size:.72rem">Aparece en la tarjeta. Máx. 200 caracteres.</small></div>
     </div>
     <div class="form-actions">
@@ -379,7 +394,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="form-body">
       <input type="hidden" id="recId"/>
       <div class="field"><label>Producto *</label>
-        <select id="recProduct"><option value="">Seleccionar producto...</option></select>
+        <div class="search-select" id="recSearchWrap">
+          <input type="text" class="search-select-input" id="recSearch" placeholder="Buscar producto..." autocomplete="off"/>
+          <input type="hidden" id="recProduct"/>
+          <div class="search-select-list" id="recList"></div>
+        </div>
       </div>
       <div class="field"><label>Motivo (por qué lo recomiendas)</label>
         <textarea id="recReason" rows="3" maxlength="200" placeholder="Ej: El más vendido para trabajo pesado, suela reforzada y precio especial este mes."></textarea>
@@ -438,6 +457,42 @@ function showToast(m){const t=$('toast');t.textContent=m;t.classList.add('show')
 function loading(s){$('loadingOverlay').classList.toggle('show',s)}
 function slugify(t){return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
 
+// Searchable select helper
+function initSearchSelect(inputId, listId, wrapId, hiddenId, items){
+  const input=$(inputId), list=$(listId), wrap=$(wrapId), hidden=$(hiddenId);
+  if(!input||!list||!wrap||!hidden) return;
+  let highlighted=-1;
+  function render(filter){
+    const q=filter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const filtered=q?items.filter(i=>i.label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q)):items;
+    if(!filtered.length){list.innerHTML='<div class="search-select-empty">Sin resultados</div>';wrap.classList.add('open');return}
+    list.innerHTML=filtered.map((it,i)=>`<div class="search-select-item" data-val="${it.value}" data-idx="${i}">${it.label}${it.brand?'<br><span class="ss-brand">'+it.brand+'</span>':''}</div>`).join('');
+    wrap.classList.add('open');highlighted=-1;
+  }
+  input.addEventListener('focus',()=>render(input.value));
+  input.addEventListener('input',()=>{hidden.value='';render(input.value)});
+  input.addEventListener('keydown',(e)=>{
+    const vis=list.querySelectorAll('.search-select-item');
+    if(e.key==='ArrowDown'){e.preventDefault();highlighted=Math.min(highlighted+1,vis.length-1);vis.forEach((el,i)=>el.classList.toggle('highlighted',i===highlighted))}
+    else if(e.key==='ArrowUp'){e.preventDefault();highlighted=Math.max(highlighted-1,0);vis.forEach((el,i)=>el.classList.toggle('highlighted',i===highlighted))}
+    else if(e.key==='Enter'&&highlighted>=0){e.preventDefault();vis[highlighted]?.click()}
+  });
+  list.addEventListener('click',(e)=>{
+    const item=e.target.closest('.search-select-item');if(!item)return;
+    hidden.value=item.dataset.val;
+    input.value=item.textContent.trim();
+    wrap.classList.remove('open');
+  });
+  document.addEventListener('click',(e)=>{if(!wrap.contains(e.target))wrap.classList.remove('open')});
+  return{
+    setValue(id){
+      const it=items.find(x=>x.value===id);
+      if(it){hidden.value=id;input.value=it.label+(it.brand?' — '+it.brand:'');}
+      else{hidden.value='';input.value='';}
+    },
+    clear(){hidden.value='';input.value=''}
+  };
+}
 // AUTH
 async function checkAuth(){const{data:{session}}=await supabase.auth.getSession();if(session)showAdmin(session.user.email)}
 $('loginBtn').addEventListener('click',async()=>{
@@ -727,20 +782,21 @@ function renderRecommended(){
   setupDragAndDrop('recTableBody', recommended, 'recommended_products');
 }
 
+let recSS=null;
 function populateRecProductSelect(){
-  $('recProduct').innerHTML='<option value="">Seleccionar producto...</option>'+
-    products.map(p=>`<option value="${p.id}">${p.name}${p.brands?.name?' — '+p.brands.name:''}</option>`).join('');
+  const items=products.map(p=>({value:p.id,label:p.name,brand:p.brands?.name||''}));
+  recSS=initSearchSelect('recSearch','recList','recSearchWrap','recProduct',items);
 }
 $('addRecBtn')?.addEventListener('click',()=>{
-  $('recId').value='';$('recProduct').value='';$('recReason').value='';
-  populateRecProductSelect();
+  $('recId').value='';$('recReason').value='';
+  populateRecProductSelect();recSS?.clear();
   $('recFormTitle').textContent='Agregar recomendado';
   $('recModal').classList.add('open');
 });
 window.editRec=(id)=>{
   const r=recommended.find(x=>x.id===id);if(!r)return;
   populateRecProductSelect();
-  $('recId').value=r.id;$('recProduct').value=r.product_id||'';$('recReason').value=r.reason||'';
+  $('recId').value=r.id;recSS?.setValue(r.product_id||'');$('recReason').value=r.reason||'';
   $('recFormTitle').textContent='Editar recomendado';
   $('recModal').classList.add('open');
 };
@@ -1134,17 +1190,19 @@ function renderPromoProducts(){
   }).join('');
   setupDragAndDrop('promoProdTableBody', promoProducts, 'promo_products');
 }
+let promoProdSS=null;
 function populatePromoProdSelect(){
-  $('promoProdProduct').innerHTML='<option value="">Seleccionar producto...</option>'+products.map(p=>`<option value="${p.id}">${p.name}${p.brands?.name?' — '+p.brands.name:''}</option>`).join('');
+  const items=products.map(p=>({value:p.id,label:p.name,brand:p.brands?.name||''}));
+  promoProdSS=initSearchSelect('promoProdSearch','promoProdList','promoProdSearchWrap','promoProdProduct',items);
 }
 $('addPromoProdBtn')?.addEventListener('click',()=>{
-  $('promoProdId').value='';$('promoProdProduct').value='';$('promoProdReason').value='';
-  populatePromoProdSelect();$('promoProdFormTitle').textContent='Agregar producto';$('promoProdModal').classList.add('open');
+  $('promoProdId').value='';$('promoProdReason').value='';
+  populatePromoProdSelect();promoProdSS?.clear();$('promoProdFormTitle').textContent='Agregar producto';$('promoProdModal').classList.add('open');
 });
 window.editPromoProd=(id)=>{
   const r=promoProducts.find(x=>x.id===id);if(!r)return;
   populatePromoProdSelect();
-  $('promoProdId').value=r.id;$('promoProdProduct').value=r.product_id||'';$('promoProdReason').value=r.reason||'';
+  $('promoProdId').value=r.id;promoProdSS?.setValue(r.product_id||'');$('promoProdReason').value=r.reason||'';
   $('promoProdFormTitle').textContent='Editar producto';$('promoProdModal').classList.add('open');
 };
 window.deletePromoProd=async(id)=>{
