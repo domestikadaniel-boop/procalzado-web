@@ -1,11 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import PromoBanner from '../components/PromoBanner.astro';
-import { getRecommended, getPromoBlocks } from '../lib/supabase';
+import { getPromoProducts, getSettings } from '../lib/supabase';
 import type { Category } from '../lib/supabase';
 
-const recs = await getRecommended();
-const promos = await getPromoBlocks();
+const recs = await getPromoProducts();
+const cfg = await getSettings(['promo_page_title','promo_page_desc','promo_page_eyebrow']);
+const promoTitle = cfg.promo_page_title || 'Promoción Especial';
+const promoDesc = cfg.promo_page_desc || 'Aprovecha nuestra selección por tiempo limitado.';
+const promoEyebrow = cfg.promo_page_eyebrow || 'Ofertas';
 
 function build(rec: any) {
   const p = rec.products;
@@ -31,23 +33,19 @@ function build(rec: any) {
 }
 const items = recs.map(build).filter(Boolean);
 
-const pageTitle = 'Recomendaciones | Procalzado';
-const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Distribuidor autorizado con envíos a todo Colombia.';
+const pageTitle = `${promoTitle} | Procalzado`;
+const pageDesc = promoDesc;
 ---
 
 <Layout title={pageTitle} description={pageDesc}>
 
 <section class="gender-hero">
   <div class="gender-hero-inner">
-    <span class="gender-hero-tag">Selección Procalzado</span>
-    <h1>Recomendaciones</h1>
-    <p>Productos que recomendamos especialmente, y por qué.</p>
+    <span class="gender-hero-tag">{promoEyebrow}</span>
+    <h1>{promoTitle}</h1>
+    <p>{promoDesc}</p>
   </div>
 </section>
-
-{promos.hero && promos.hero.active && (
-  <div class="promo-wrap-page"><PromoBanner block={promos.hero} /></div>
-)}
 
 <main class="products-section" id="main-content">
   {items.length > 0 ? (
@@ -110,7 +108,6 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 <style>
 .gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
 .gender-hero-inner{max-width:1280px;margin:0 auto}
-.promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
