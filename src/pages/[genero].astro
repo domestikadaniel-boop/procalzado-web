@@ -98,21 +98,25 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 <!-- TARJETAS DE CATEGORÍA -->
 {cards.length > 0 && (
   <section class="gcards-section">
-    <div class="gcards-grid">
-      {cards.map(card => {
-        const slug = card.categories?.slug || '';
-        const title = card.title || card.categories?.name || 'Categoría';
-        return (
-          <button type="button" class="gcard" data-cat={slug}>
-            <div class="gcard-img">
-              {card.image_url
-                ? <img src={card.image_url} alt={title} loading="lazy"/>
-                : <span class="gcard-noimg">{title.charAt(0)}</span>}
-            </div>
-            <span class="gcard-title">{title}</span>
-          </button>
-        );
-      })}
+    <div class="gcards-carousel">
+      <button type="button" class="gcards-arrow gcards-arrow-left" id="gcardsLeft" aria-label="Anterior">&#8249;</button>
+      <div class="gcards-grid" id="gcardsGrid">
+        {cards.map(card => {
+          const slug = card.categories?.slug || '';
+          const title = card.title || card.categories?.name || 'Categoría';
+          return (
+            <button type="button" class="gcard" data-cat={slug}>
+              <div class="gcard-img">
+                {card.image_url
+                  ? <img src={card.image_url} alt={title} loading="lazy"/>
+                  : <span class="gcard-noimg">{title.charAt(0)}</span>}
+              </div>
+              <span class="gcard-title">{title}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button type="button" class="gcards-arrow gcards-arrow-right" id="gcardsRight" aria-label="Siguiente">&#8250;</button>
     </div>
   </section>
 )}
@@ -188,7 +192,13 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
 
 .gcards-section{max-width:1280px;margin:0 auto;padding:1.8rem clamp(1rem,4vw,3rem) 0}
-.gcards-grid{display:flex;gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:.6rem;scrollbar-width:thin}
+.gcards-carousel{position:relative}
+.gcards-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;border:none;background:var(--white);color:var(--black);font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:opacity .2s,background .15s}
+.gcards-arrow:hover{background:var(--red);color:var(--white)}
+.gcards-arrow-left{left:-6px}
+.gcards-arrow-right{right:-6px}
+.gcards-arrow.hidden{opacity:0;pointer-events:none}
+.gcards-grid{display:flex;gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:.6rem;scrollbar-width:thin;scroll-behavior:smooth}
 .gcards-grid::-webkit-scrollbar{height:6px}
 .gcards-grid::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:3px}
 .gcard{display:flex;flex-direction:column;flex:0 0 auto;width:180px;scroll-snap-align:start;border:none;background:var(--grey);border-radius:10px;overflow:hidden;cursor:pointer;padding:0;text-align:left;transition:transform .15s,box-shadow .15s;font-family:inherit}
@@ -213,6 +223,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 @media(max-width:640px){
   .gcards-grid{gap:.7rem}
   .gcard{width:150px}
+  .gcards-arrow{display:none}
   .card-color-dot{width:14px;height:14px}
 }
 </style>
@@ -270,6 +281,23 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
   });
 
   apply();
+
+  // Flechas del carrusel de categorías
+  const gGrid = document.getElementById('gcardsGrid');
+  const gLeft = document.getElementById('gcardsLeft');
+  const gRight = document.getElementById('gcardsRight');
+  if (gGrid && gLeft && gRight) {
+    const scrollAmt = 200;
+    function updateArrows() {
+      gLeft.classList.toggle('hidden', gGrid.scrollLeft <= 4);
+      gRight.classList.toggle('hidden', gGrid.scrollLeft + gGrid.clientWidth >= gGrid.scrollWidth - 4);
+    }
+    gLeft.addEventListener('click', function(e) { e.stopPropagation(); gGrid.scrollBy({ left: -scrollAmt, behavior: 'smooth' }); });
+    gRight.addEventListener('click', function(e) { e.stopPropagation(); gGrid.scrollBy({ left: scrollAmt, behavior: 'smooth' }); });
+    gGrid.addEventListener('scroll', updateArrows);
+    updateArrows();
+    window.addEventListener('resize', updateArrows);
+  }
 })();
 </script>
 
