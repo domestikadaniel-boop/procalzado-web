@@ -52,55 +52,64 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 <main class="products-section" id="main-content">
   {items.length > 0 ? (
     <div class="rec-grid">
-      {items.map((it: any, i: number) => (
-        <div class="rec-card" style={`animation-delay:${Math.min(i * 0.04, 0.4)}s`}>
-          <a href={`/productos/${it.slug}`} class="rec-card-media">
-            {it.primaryImg
-              ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} loading={i < 6 ? 'eager' : 'lazy'}/>
-              : <span class="rec-noimg">👢</span>}
-            {it.salePrice && it.showPrice && it.price && (
-              <span class="rec-discount">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+      {items.map((it: any, i: number) => {
+        const half = Math.ceil(items.length / 2);
+        const showMid = i === half && promos.mid && promos.mid.active;
+        return (
+          <>
+            {showMid && (
+              <div class="promo-grid-full"><PromoBanner block={promos.mid} /></div>
             )}
-          </a>
-          <div class="rec-card-body">
-            {it.brandName && <div class="rec-brand">{it.brandName}</div>}
-            <a href={`/productos/${it.slug}`} class="rec-name">{it.name}</a>
+            <div class="rec-card" style={`animation-delay:${Math.min(i * 0.04, 0.4)}s`}>
+              <a href={`/productos/${it.slug}`} class="rec-card-media">
+                {it.primaryImg
+                  ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} loading={i < 6 ? 'eager' : 'lazy'}/>
+                  : <span class="rec-noimg">👢</span>}
+                {it.salePrice && it.showPrice && it.price && (
+                  <span class="rec-discount">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+                )}
+              </a>
+              <div class="rec-card-body">
+                {it.brandName && <div class="rec-brand">{it.brandName}</div>}
+                <a href={`/productos/${it.slug}`} class="rec-name">{it.name}</a>
 
-            {it.reason && (
-              <div class="rec-reason">
-                <span class="rec-reason-tag">Por qué lo recomendamos</span>
-                <p>{it.reason}</p>
-              </div>
-            )}
-
-            {it.colors.length > 0 && (
-              <div class="card-colors">
-                {it.colors.slice(0, 6).map((c: any) => {
-                  const bg = c.hex2 ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)` : c.hex;
-                  return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
-                })}
-                {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
-              </div>
-            )}
-
-            <div class="rec-foot">
-              {it.showPrice && it.price ? (
-                it.salePrice ? (
-                  <div class="rec-price-wrap">
-                    <span class="rec-price-old">${Number(it.price).toLocaleString('es-CO')}</span>
-                    <span class="rec-price rec-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span>
+                {it.reason && (
+                  <div class="rec-reason">
+                    <span class="rec-reason-tag">Por qué lo recomendamos</span>
+                    <p>{it.reason}</p>
                   </div>
-                ) : (
-                  <div class="rec-price">${Number(it.price).toLocaleString('es-CO')}</div>
-                )
-              ) : (
-                <div class="rec-price-note">Precio a consultar</div>
-              )}
-              <a href={`/productos/${it.slug}`} class="rec-cta">Ver detalles</a>
+                )}
+
+                {it.colors.length > 0 && (
+                  <div class="card-colors">
+                    {it.colors.slice(0, 6).map((c: any) => {
+                      const bg = c.hex2 ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)` : c.hex;
+                      return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
+                    })}
+                    {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
+                  </div>
+                )}
+
+                <div class="rec-foot">
+                  {it.showPrice && it.price ? (
+                    it.salePrice ? (
+                      <div class="rec-price-wrap">
+                        <span class="rec-price-old">${Number(it.price).toLocaleString('es-CO')}</span>
+                        <span class="rec-price rec-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span>
+                      </div>
+                    ) : (
+                      <div class="rec-price">${Number(it.price).toLocaleString('es-CO')}</div>
+                    )
+                  ) : (
+                    <div class="rec-price-note">Precio a consultar</div>
+                  )}
+                  <a href={`/productos/${it.slug}`} class="rec-cta">Ver detalles</a>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      ))}
+          </>
+        );
+      })}
     </div>
   ) : (
     <div class="empty"><strong>Pronto</strong><p>Aún no hay productos recomendados. Agrégalos desde el panel de administración.</p></div>
@@ -111,6 +120,7 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 .gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
 .gender-hero-inner{max-width:1280px;margin:0 auto}
 .promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
+.promo-grid-full{grid-column:1/-1;margin:1rem 0}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}

@@ -134,47 +134,56 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
   </div>
 
   <div class="product-grid" id="productGrid">
-    {items.map((it, i) => (
-      <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
-        <div class="card-top-bar"></div>
-        {it.featured && (
-          <span class="card-badge-featured">
-            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Destacado
-          </span>
-        )}
-        <div class="card-img">
-          {it.primaryImg
-            ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'}/>
-            : <span>👢</span>}
-        </div>
-        <div class="card-body">
-          {it.brandName && <div class="card-brand">{it.brandName}</div>}
-          <div class="card-name">{it.name}</div>
-          {it.catName && <div class="card-cat-tag">{it.catName}</div>}
-          {it.colors.length > 0 && (
-            <div class="card-colors">
-              {it.colors.slice(0, 6).map(c => {
-                const bg = c.hex2
-                  ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
-                  : c.hex;
-                return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
-              })}
-              {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
+    {items.map((it, i) => {
+      const half = Math.ceil(items.length / 2);
+      const showMid = i === half && promos.mid && promos.mid.active;
+      return (
+        <>
+          {showMid && (
+            <div class="promo-grid-full"><PromoBanner block={promos.mid} /></div>
+          )}
+          <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
+            <div class="card-top-bar"></div>
+            {it.featured && (
+              <span class="card-badge-featured">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Destacado
+              </span>
+            )}
+            <div class="card-img">
+              {it.primaryImg
+                ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'}/>
+                : <span>👢</span>}
             </div>
-          )}
-          {it.showPrice && it.price ? (
-            it.salePrice ? (
-              <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
-            ) : (
-              <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
-            )
-          ) : (
-            <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
-          )}
-        </div>
-      </a>
-    ))}
+            <div class="card-body">
+              {it.brandName && <div class="card-brand">{it.brandName}</div>}
+              <div class="card-name">{it.name}</div>
+              {it.catName && <div class="card-cat-tag">{it.catName}</div>}
+              {it.colors.length > 0 && (
+                <div class="card-colors">
+                  {it.colors.slice(0, 6).map(c => {
+                    const bg = c.hex2
+                      ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
+                      : c.hex;
+                    return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
+                  })}
+                  {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
+                </div>
+              )}
+              {it.showPrice && it.price ? (
+                it.salePrice ? (
+                  <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
+                ) : (
+                  <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
+                )
+              ) : (
+                <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
+              )}
+            </div>
+          </a>
+        </>
+      );
+    })}
   </div>
 
   <div class="empty" id="emptyState" style="display:none">
@@ -187,6 +196,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
 .gender-hero-inner{max-width:1280px;margin:0 auto}
 .promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
+.promo-grid-full{grid-column:1/-1;margin:1rem 0}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
