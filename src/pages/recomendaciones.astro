@@ -16,17 +16,14 @@ function build(rec: any) {
     : (p.categories ? [p.categories] : []);
   const primaryCat = cats[0] || null;
   const primaryImg = (p.product_images || []).find((i: any) => i.is_primary) || (p.product_images || [])[0];
-  const variants = (p.product_variants || []).filter((v: any) => v.active);
-  const colors = [...new Set(variants.map((v: any) => v.color))].map((cname: any) => {
-    const v = variants.find((x: any) => x.color === cname);
-    return { name: cname, hex: v?.color_hex || '#999', hex2: v?.color_hex_2 || null };
-  }).filter((c: any) => c.name && c.name !== 'Único');
+  const secondImg = (p.product_images || []).filter((i: any) => i !== primaryImg)?.[0] || null;
   return {
     slug: p.slug, name: p.name, brandName,
-    primaryImg, colors, featured: p.featured,
+    primaryImg, secondImg, featured: p.featured,
     price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     catName: primaryCat?.name || '',
     reason: rec.reason || '',
+    shortDesc: p.short_description || '',
   };
 }
 const items = recs.map(build).filter(Boolean);
@@ -63,7 +60,10 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
             <div class="rec-card" style={`animation-delay:${Math.min(i * 0.04, 0.4)}s`}>
               <a href={`/productos/${it.slug}`} class="rec-card-media">
                 {it.primaryImg
-                  ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} loading={i < 6 ? 'eager' : 'lazy'}/>
+                  ? <>
+                      <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} loading={i < 6 ? 'eager' : 'lazy'} class={it.secondImg ? 'rec-img-main' : ''}/>
+                      {it.secondImg && <img src={it.secondImg.url} alt={`${it.brandName} ${it.name}`} loading="lazy" class="rec-img-hover"/>}
+                    </>
                   : <span class="rec-noimg">👢</span>}
                 {it.salePrice && it.showPrice && it.price && (
                   <span class="rec-discount">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
@@ -80,16 +80,6 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
                   </div>
                 )}
 
-                {it.colors.length > 0 && (
-                  <div class="card-colors">
-                    {it.colors.slice(0, 6).map((c: any) => {
-                      const bg = c.hex2 ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)` : c.hex;
-                      return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
-                    })}
-                    {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
-                  </div>
-                )}
-
                 <div class="rec-foot">
                   {it.showPrice && it.price ? (
                     it.salePrice ? (
@@ -103,7 +93,6 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
                   ) : (
                     <div class="rec-price-note">Precio a consultar</div>
                   )}
-                  <a href={`/productos/${it.slug}`} class="rec-cta">Ver detalles</a>
                 </div>
               </div>
             </div>
@@ -117,7 +106,7 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 </main>
 
 <style>
-.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
+.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem)}
 .gender-hero-inner{max-width:1280px;margin:0 auto}
 .promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-grid-full{grid-column:1/-1;margin:1rem 0}
@@ -126,10 +115,12 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
 
 .rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:1.6rem}
-.rec-card{display:flex;background:var(--white);border:2px solid var(--grey2);border-radius:12px;overflow:hidden;animation:fadeUp .32s ease both;transition:border-color .2s,box-shadow .2s;min-height:280px}
-.rec-card:hover{border-color:var(--red);box-shadow:0 8px 24px rgba(0,0,0,.1)}
-.rec-card-media{position:relative;width:44%;flex-shrink:0;background:var(--white);display:flex;align-items:center;justify-content:center;text-decoration:none}
+.rec-card{display:flex;background:var(--white);border-radius:12px;overflow:hidden;animation:fadeUp .32s ease both;transition:box-shadow .2s;min-height:280px}
+.rec-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.rec-card-media{position:relative;width:44%;flex-shrink:0;background:var(--grey);display:flex;align-items:center;justify-content:center;text-decoration:none;overflow:hidden;border-radius:12px}
 .rec-card-media img{width:100%;height:100%;object-fit:contain;display:block}
+.rec-card-media .rec-img-hover{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s ease}
+.rec-card:hover .rec-img-hover{opacity:1}
 .rec-noimg{font-size:3rem}
 .rec-discount{position:absolute;top:.6rem;left:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.82rem;padding:.25rem .55rem;border-radius:5px}
 .rec-card-body{flex:1;padding:1rem 1.1rem;display:flex;flex-direction:column;min-width:0}
@@ -139,17 +130,12 @@ const pageDesc = 'Nuestra selección de productos recomendados en Procalzado. Di
 .rec-reason{background:var(--grey);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:.5rem .7rem;margin-bottom:.7rem}
 .rec-reason-tag{display:block;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
 .rec-reason p{font-size:.82rem;line-height:1.4;color:var(--black)}
-.card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
-.card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
-.card-color-more{font-size:.68rem;font-weight:600;color:var(--muted)}
-.rec-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+.rec-foot{margin-top:auto;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .rec-price-wrap{display:flex;flex-direction:column;line-height:1}
 .rec-price-old{font-size:.78rem;color:var(--muted);text-decoration:line-through}
 .rec-price{font-family:var(--fb);font-size:1.15rem;font-weight:700;color:var(--black)}
 .rec-price-sale{color:var(--red)}
 .rec-price-note{font-size:.78rem;color:var(--muted)}
-.rec-cta{background:var(--black);color:var(--white);font-size:.78rem;font-weight:600;padding:.5rem .9rem;border-radius:6px;text-decoration:none;white-space:nowrap;transition:background .2s}
-.rec-cta:hover{background:var(--red)}
 @media(max-width:640px){
   .rec-grid{grid-template-columns:1fr}
   .rec-card{flex-direction:column;min-height:auto}

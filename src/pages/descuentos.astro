@@ -4,7 +4,6 @@ import { getProducts } from '../lib/supabase';
 import type { Product, Category } from '../lib/supabase';
 
 const allProducts: Product[] = await getProducts();
-// Por ahora: productos destacados. En la fase de descuentos se mostrarán los rebajados.
 const products = allProducts.filter(p => p.featured);
 
 function productData(p: Product) {
@@ -14,16 +13,13 @@ function productData(p: Product) {
     : (p.categories ? [p.categories as Category] : []);
   const primaryCat = (p.product_categories?.find(pc => pc.is_primary)?.categories as Category) || cats[0] || null;
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
-  const variants = (p.product_variants || []).filter(v => v.active);
-  const colors = [...new Set(variants.map(v => v.color))].map(cname => {
-    const v = variants.find(x => x.color === cname);
-    return { name: cname, hex: v?.color_hex || '#999', hex2: v?.color_hex_2 || null };
-  }).filter(c => c.name && c.name !== 'Único');
+  const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
   return {
     slug: p.slug, name: p.name, brandName,
-    primaryImg, colors, featured: p.featured,
-    price: p.price, showPrice: p.show_price,
+    primaryImg, secondImg, featured: p.featured,
+    price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     catName: primaryCat?.name || '',
+    shortDesc: p.short_description || '',
   };
 }
 const items = products.map(productData);
@@ -52,45 +48,36 @@ const pageDesc = 'Productos destacados y ofertas en Procalzado. Distribuidor aut
     <div class="product-grid">
       {items.map((it, i) => (
         <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
-          <div class="card-top-bar"></div>
           {it.featured && (
             <span class="card-badge-featured">
               <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               Destacado
             </span>
           )}
+          {it.salePrice && it.showPrice && it.price && (
+            <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+          )}
           <div class="card-img">
             {it.primaryImg
-              ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'}/>
+              ? <>
+                  <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'} class={it.secondImg ? 'card-img-main' : ''}/>
+                  {it.secondImg && <img src={it.secondImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading="lazy" class="card-img-hover"/>}
+                </>
               : <span>👢</span>}
           </div>
           <div class="card-body">
             {it.brandName && <div class="card-brand">{it.brandName}</div>}
             <div class="card-name">{it.name}</div>
-            {it.catName && <div class="card-cat-tag">{it.catName}</div>}
-            {it.colors.length > 0 && (
-              <div class="card-colors">
-                {it.colors.slice(0, 6).map(c => {
-                  const bg = c.hex2
-                    ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
-                    : c.hex;
-                  return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
-                })}
-                {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
-              </div>
-            )}
+            {it.shortDesc && <div class="card-desc">{it.shortDesc.length > 60 ? it.shortDesc.slice(0, 60) + '...' : it.shortDesc}</div>}
             {it.showPrice && it.price ? (
-              <>
+              it.salePrice ? (
+                <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
+              ) : (
                 <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
-                <div class="card-price-note">Al por mayor consultar precio</div>
-              </>
+              )
             ) : (
               <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
             )}
-            <div class="card-cta">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Ver detalles
-            </div>
           </div>
         </a>
       ))}
@@ -101,14 +88,16 @@ const pageDesc = 'Productos destacados y ofertas en Procalzado. Distribuidor aut
 </main>
 
 <style>
-.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);border-bottom:3px solid var(--red)}
+.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem)}
 .gender-hero-inner{max-width:1280px;margin:0 auto}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
-.card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
-.card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
-.card-color-more{font-size:.68rem;font-weight:600;color:var(--muted);margin-left:.1rem}
+.card-badge-sale{position:absolute;top:.6rem;right:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.75rem;padding:.22rem .5rem;border-radius:4px;z-index:5}
+.card-desc{font-size:.75rem;color:var(--muted);line-height:1.35;margin-bottom:.4rem}
+.card-price-row{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+.card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
+.card-price-sale{color:var(--red)}
 </style>
 
 </Layout>

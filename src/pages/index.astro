@@ -46,24 +46,20 @@ function productData(p: Product) {
   const catSlugs = cats.map(c => c.slug);
 
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
+  const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
 
   const variants = (p.product_variants || []).filter(v => v.active);
-
-  // Colores únicos para las bolitas (diferenciando por nombre de color)
-  const colors = [...new Set(variants.map(v => v.color))].map(cname => {
-    const v = variants.find(x => x.color === cname);
-    return { name: cname, hex: v?.color_hex || '#999', hex2: v?.color_hex_2 || null };
-  }).filter(c => c.name && c.name !== 'Único');
 
   const productGenders = (p.genders && p.genders.length) ? p.genders : (p.gender ? [p.gender] : []);
 
   return {
     id: p.id, slug: p.slug, name: p.name, brandName,
     brandId: p.brand_id, catNames, catSlugs, primaryCat,
-    primaryImg, colors, featured: p.featured,
+    primaryImg, secondImg, featured: p.featured,
     price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     genders: productGenders,
     catName: primaryCat?.name || '',
+    shortDesc: p.short_description || '',
   };
 }
 const items = products.map(productData);
@@ -80,23 +76,9 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <Layout title={pageTitle} description={pageDesc}>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-inner">
-    <div>
-      <span class="hero-tag">Catálogo Oficial 2026</span>
-      <h1>Calzado de <span class="accent">calidad</span> garantizada</h1>
-      <p class="hero-sub">Botas de caucho, de lluvia, de moto y de trabajo, calzado industrial, sandalias y mucho más. Distribuidores autorizados de las principales marcas en Colombia.</p>
-      <div class="hero-stats">
-        <div class="stat"><div class="stat-num" data-count={parentCats.length}>0</div><div class="stat-label">Categorías</div></div>
-        <div class="stat"><div class="stat-num" data-count={products.length}>0</div><div class="stat-label">Productos</div></div>
-        <div class="stat"><div class="stat-num" data-count={brands.length} data-suffix="+">0+</div><div class="stat-label">Marcas</div></div>
-      </div>
-    </div>
-    <div class="hero-badge">
-      <img src="/isotipo.png" class="hero-isotipo" alt="Procalzado" loading="eager"/>
-    </div>
-  </div>
+<!-- HERO BANNER -->
+<section class="hero-banner">
+  <img src="/pag_principal.jpg" alt="Procalzado — Calidad Garantizada" class="hero-banner-img" loading="eager"/>
 </section>
 
 {promos.hero && promos.hero.active && (
@@ -127,34 +109,27 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
       return (
         <>
         <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`} {...dataAttrs}>
-          <div class="card-top-bar"></div>
           {it.featured && (
             <span class="card-badge-featured">
               <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               Destacado
             </span>
           )}
+          {it.salePrice && it.showPrice && it.price && (
+            <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+          )}
           <div class="card-img">
             {it.primaryImg
-              ? <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'}/>
+              ? <>
+                  <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'} class={it.secondImg ? 'card-img-main' : ''}/>
+                  {it.secondImg && <img src={it.secondImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading="lazy" class="card-img-hover"/>}
+                </>
               : <span>👢</span>}
           </div>
           <div class="card-body">
             {it.brandName && <div class="card-brand">{it.brandName}</div>}
             <div class="card-name">{it.name}</div>
-            {it.catName && <div class="card-cat-tag">{it.catName}</div>}
-
-            {it.colors.length > 0 && (
-              <div class="card-colors">
-                {it.colors.slice(0, 6).map(c => {
-                  const bg = c.hex2
-                    ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
-                    : c.hex;
-                  return <span class="card-color-dot" style={`background:${bg}`} title={c.name}></span>;
-                })}
-                {it.colors.length > 6 && <span class="card-color-more">+{it.colors.length - 6}</span>}
-              </div>
-            )}
+            {it.shortDesc && <div class="card-desc">{it.shortDesc.length > 60 ? it.shortDesc.slice(0, 60) + '...' : it.shortDesc}</div>}
 
             {it.showPrice && it.price ? (
               it.salePrice ? (
@@ -182,6 +157,9 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 </main>
 
 <style>
+/* Hero banner */
+.hero-banner{width:100%;overflow:hidden;background:var(--red)}
+.hero-banner-img{width:100%;height:auto;display:block;object-fit:cover}
 /* Precio rebajado en tarjetas */
 .promo-grid-full{grid-column:1/-1;margin:1rem 0}
 .promo-wrap{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
@@ -194,41 +172,18 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .active-cat-banner strong{text-transform:uppercase;letter-spacing:.03em}
 .active-cat-banner button{background:var(--red);color:var(--white);border:none;border-radius:5px;padding:.4rem .8rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .active-cat-banner button:hover{background:#cc0000}
-/* Hero isotipo circular (sin resplandor) */
 .hero-isotipo{display:block;width:clamp(220px,30vw,380px);height:auto}
-/* Bolitas de color en las tarjetas */
 .more-brands{flex-direction:column;gap:inherit}
 .more-brands:not([hidden]){display:flex}
 .more-brands-btn{display:inline-flex;align-items:center;gap:.3rem;background:none;border:none;color:var(--red);font-size:.8rem;font-weight:600;cursor:pointer;padding:.4rem 0 0;font-family:inherit}
 .more-brands-btn svg{width:15px;height:15px;transition:transform .2s}
 .more-brands-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
-.card-colors{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap;margin-bottom:.7rem}
-.card-color-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--white);box-shadow:0 0 0 1px var(--grey2);flex-shrink:0}
-.card-color-more{font-size:.68rem;font-weight:600;color:var(--muted);margin-left:.1rem}
-@media(max-width:640px){
-  .card-color-dot{width:14px;height:14px}
-}
+/* Sale badge on card */
+.card-badge-sale{position:absolute;top:.6rem;right:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.75rem;padding:.22rem .5rem;border-radius:4px;z-index:5}
+/* Short description */
+.card-desc{font-size:.75rem;color:var(--muted);line-height:1.35;margin-bottom:.5rem}
 </style>
 
-<script is:inline>
-(function () {
-  // Contadores animados del hero
-  const counters = document.querySelectorAll('.stat-num[data-count]');
-  counters.forEach(el => {
-    const target = parseInt(el.dataset.count) || 0;
-    const suffix = el.dataset.suffix || '';
-    if (target === 0) { el.textContent = '0' + suffix; return; }
-    const duration = 1200;
-    const start = performance.now();
-    function tick(now) {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.round(eased * target) + suffix;
-      if (progress < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  });
-})();
-</script>
+
 
 </Layout>
