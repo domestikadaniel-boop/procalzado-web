@@ -132,13 +132,8 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 
   <div class="product-grid" id="productGrid">
     {items.map((it, i) => {
-      const half = Math.ceil(items.length / 2);
-      const showMid = i === half && promos.mid && promos.mid.active;
       return (
         <>
-          {showMid && (
-            <div class="promo-grid-full"><PromoBanner block={promos.mid} /></div>
-          )}
           <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
             {it.featured && (
               <span class="card-badge-featured">
@@ -177,6 +172,10 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     })}
   </div>
 
+  {promos.mid && promos.mid.active && (
+    <div class="promo-bottom"><PromoBanner block={promos.mid} /></div>
+  )}
+
   <div class="empty" id="emptyState" style="display:none">
     <strong>Sin productos</strong>
     <p>Aún no hay productos en esta categoría.</p>
@@ -188,6 +187,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .gender-hero::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);pointer-events:none}
 .gender-hero-inner{max-width:1280px;margin:0 auto;position:relative;z-index:1}
 .promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
+.promo-bottom{margin:2rem 0 0}
 .promo-grid-full{grid-column:1/-1;margin:1rem 0}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
