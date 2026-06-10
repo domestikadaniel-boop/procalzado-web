@@ -78,7 +78,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <!-- HERO BANNER -->
 <section class="hero-banner">
-  <img src="/pag_principal.jpg" alt="Procalzado — Calidad Garantizada" class="hero-banner-img" loading="eager"/>
+  <picture>
+    <source media="(max-width: 768px)" srcset="/portada_vertical.jpg"/>
+    <img src="/portada_horizontal.jpg" alt="Procalzado — Calidad Garantizada" class="hero-banner-img" loading="eager"/>
+  </picture>
 </section>
 
 {promos.hero && promos.hero.active && (

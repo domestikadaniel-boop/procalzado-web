@@ -80,7 +80,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 <Layout title={pageTitle} description={pageDesc}>
 
 <!-- ENCABEZADO DE GÉNERO -->
-<section class="gender-hero">
+<section class="gender-hero" style={`background-image:url(/portada_${genero}.jpg)`}>
   <div class="gender-hero-inner">
     <span class="gender-hero-tag">{config.label}</span>
     <h1>{config.title}</h1>
@@ -184,8 +184,9 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 </main>
 
 <style>
-.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem)}
-.gender-hero-inner{max-width:1280px;margin:0 auto}
+.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);background-size:cover;background-position:center;background-repeat:no-repeat;position:relative}
+.gender-hero::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);pointer-events:none}
+.gender-hero-inner{max-width:1280px;margin:0 auto;position:relative;z-index:1}
 .promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-grid-full{grid-column:1/-1;margin:1rem 0}
 .gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
