@@ -54,9 +54,20 @@ body{font-family:var(--fb);background:var(--white);color:var(--black);overflow-x
 a{color:inherit;text-decoration:none}
 
 /* HEADER */
-header{position:sticky;top:0;z-index:300;background:var(--black);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1rem,4vw,3rem)}
+header{position:fixed;top:0;left:0;right:0;z-index:300;background:transparent;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1rem,4vw,3rem);transition:background .3s,box-shadow .3s}
+header.header-solid{background:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+header.header-solid .header-nav-link{color:var(--black)}
+header.header-solid .header-nav-link:hover{color:var(--red);background:var(--grey)}
+header.header-solid .header-nav-link.active{color:var(--red)}
+header.header-solid .header-nav-link.highlight{color:var(--red)}
+header.header-solid .header-nav-link.highlight:hover{color:var(--white);background:var(--red)}
+header.header-solid .header-icon-btn{color:var(--black)}
+header.header-solid .header-icon-btn:hover{background:var(--grey)}
+header.header-solid .nav-hamburger{color:var(--black)}
+header.header-solid .cart-badge{border-color:var(--white)}
 .logo{display:flex;align-items:center;text-decoration:none}
 .logo-img{height:26px;width:auto;display:block}
+.header-spacer{height:64px}
 .header-left{display:flex;align-items:center;gap:.7rem}
 .nav-hamburger{display:none;background:none;border:none;color:var(--white);cursor:pointer;padding:.2rem;align-items:center;justify-content:center}
 .nav-hamburger svg{width:26px;height:26px;display:block}
@@ -431,6 +442,7 @@ footer a{color:#FF4444;text-decoration:underline}
   </div>
 </aside>
 
+<div class="header-spacer"></div>
 <slot />
 
 <!-- CART DRAWER -->
@@ -642,6 +654,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     window.open(`https://wa.me/${WA_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
   });
+
+  // ── HEADER TRANSPARENTE → SÓLIDO AL SCROLL ──
+  const hdr = document.querySelector('header');
+  const hasHero = document.querySelector('.hero-banner, .gender-hero');
+  function checkScroll() {
+    if (!hdr) return;
+    if (!hasHero || window.scrollY > 10) {
+      hdr.classList.add('header-solid');
+    } else {
+      hdr.classList.remove('header-solid');
+    }
+  }
+  window.addEventListener('scroll', checkScroll, { passive: true });
+  checkScroll();
 });
 </script>
 </body>
