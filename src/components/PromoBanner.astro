@@ -1,0 +1,35 @@
+---
+import type { PromoBlock } from '../lib/supabase';
+interface Props { block?: PromoBlock | null; }
+const { block } = Astro.props;
+const show = block && block.active && (block.image_url || block.title);
+const overlay = Math.min(Math.max(block?.overlay ?? 35, 0), 80) / 100;
+const textColor = block?.text_color || '#FFFFFF';
+// El banner 'hero' (banner 1) siempre lleva a /promocion
+const href = block?.slot === 'hero' ? '/promocion' : (block?.cta_href || '#');
+---
+{show && (
+  <a
+    class="promo-banner"
+    href={href}
+    style={`--promo-text:${textColor}; ${block.image_url ? `background-image:linear-gradient(rgba(0,0,0,${overlay}),rgba(0,0,0,${overlay})),url('${block.image_url}')` : 'background:#111'}`}
+  >
+    <div class="promo-inner">
+      {block.eyebrow && <span class="promo-eyebrow">{block.eyebrow}</span>}
+      {block.title && <h2 class="promo-title">{block.title}</h2>}
+      {block.subtitle && <p class="promo-subtitle">{block.subtitle}</p>}
+      {block.cta_label && <span class="promo-cta">{block.cta_label} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>}
+    </div>
+  </a>
+)}
+
+<style>
+.promo-banner{display:block;position:relative;width:100%;min-height:clamp(220px,32vw,360px);background-size:cover;background-position:center;text-decoration:none;border-radius:14px;overflow:hidden;color:var(--promo-text);display:flex;align-items:center}
+.promo-inner{max-width:1280px;margin:0 auto;width:100%;padding:clamp(1.5rem,4vw,3rem)}
+.promo-eyebrow{display:inline-block;font-family:var(--fb);font-size:.74rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.6rem;opacity:.92}
+.promo-title{font-family:var(--fd);font-size:clamp(1.8rem,5vw,3.4rem);line-height:.98;letter-spacing:.03em;margin:0;max-width:18ch}
+.promo-subtitle{font-size:clamp(.9rem,2vw,1.05rem);font-weight:300;margin:.6rem 0 0;max-width:38ch;opacity:.95}
+.promo-cta{display:inline-flex;align-items:center;gap:.5rem;margin-top:1.2rem;background:var(--promo-text);color:#000;font-family:var(--fb);font-weight:700;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;padding:.7rem 1.3rem;border-radius:6px;transition:transform .15s}
+.promo-banner:hover .promo-cta{transform:translateX(4px)}
+.promo-cta svg{width:16px;height:16px}
+</style>

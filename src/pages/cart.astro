@@ -1,0 +1,178 @@
+---
+import Layout from '../layouts/Layout.astro';
+const pageTitle = 'Tu Carrito | Procalzado';
+---
+
+<Layout title={pageTitle}>
+
+<section class="cart-page-hero">
+  <div class="cart-page-hero-inner">
+    <h1>Tu Carrito</h1>
+  </div>
+</section>
+
+<main class="cart-page" id="cartPage">
+  <div class="cart-empty" id="cartEmpty">
+    <div class="cart-empty-icon">🛒</div>
+    <h2>Tu carrito está vacío</h2>
+    <p>Agregá productos desde el catálogo para verlos acá.</p>
+    <a href="/" class="cart-back-btn">Ver productos</a>
+  </div>
+
+  <div class="cart-content" id="cartContent" style="display:none">
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-summary" id="cartSummary">
+      <div class="cart-summary-row" id="cartTotalRow" style="display:none">
+        <span>Total</span>
+        <strong id="cartPageTotal">$0</strong>
+      </div>
+      <p class="cart-note">Precios sujetos a disponibilidad. Para pedidos al por mayor, escríbenos por WhatsApp.</p>
+      <div class="cart-actions">
+        <button class="cart-wa-btn" id="cartPageWa">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Pedir por WhatsApp
+        </button>
+        <button class="cart-clear-btn" id="cartPageClear">Vaciar carrito</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<style>
+.cart-page-hero{background:var(--black);color:var(--white);padding:clamp(1.5rem,4vw,2.5rem) clamp(1rem,4vw,3rem);padding-top:calc(64px + clamp(1.5rem,4vw,2.5rem));margin-top:-64px}
+.cart-page-hero-inner{max-width:1280px;margin:0 auto}
+.cart-page-hero h1{font-family:var(--fd);font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:.03em}
+.cart-page{max-width:1280px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 5rem;min-height:50vh}
+
+.cart-empty{text-align:center;padding:4rem 1rem}
+.cart-empty-icon{font-size:3.5rem;margin-bottom:1rem}
+.cart-empty h2{font-family:var(--fd);font-size:1.6rem;margin-bottom:.4rem}
+.cart-empty p{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem}
+.cart-back-btn{display:inline-block;background:var(--black);color:var(--white);padding:.7rem 1.5rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none;transition:background .15s}
+.cart-back-btn:hover{background:var(--red)}
+
+.cart-content{display:grid;grid-template-columns:1fr 360px;gap:2rem;align-items:start}
+.cart-items{display:flex;flex-direction:column;gap:1rem}
+.cart-item{display:flex;gap:1rem;padding:1rem;background:var(--grey);border-radius:10px;align-items:center}
+.cart-item-img{width:80px;height:80px;border-radius:8px;object-fit:cover;background:var(--white);flex-shrink:0}
+.cart-item-img-empty{width:80px;height:80px;border-radius:8px;background:var(--white);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-brand{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.cart-item-name{font-family:var(--fd);font-size:1rem;letter-spacing:.02em;margin-bottom:.15rem}
+.cart-item-name a{color:var(--black);text-decoration:none}
+.cart-item-name a:hover{color:var(--red)}
+.cart-item-meta{font-size:.75rem;color:var(--muted)}
+.cart-item-price{font-weight:700;font-size:.95rem;white-space:nowrap;margin-left:.5rem}
+.cart-item-qty{display:flex;align-items:center;gap:0;border:2px solid var(--grey2);border-radius:6px;background:var(--white);overflow:hidden;margin-top:.4rem;width:fit-content}
+.cart-item-qty button{background:var(--white);border:none;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:600;color:var(--black);transition:background .15s;font-family:inherit}
+.cart-item-qty button:hover{background:var(--red);color:var(--white)}
+.cart-item-qty span{width:36px;text-align:center;font-size:.85rem;font-weight:600;border-left:1px solid var(--grey2);border-right:1px solid var(--grey2);line-height:30px}
+.cart-item-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;margin-top:.3rem;padding:0;font-family:inherit;transition:color .15s}
+.cart-item-remove:hover{color:var(--red)}
+
+.cart-summary{background:var(--grey);border-radius:12px;padding:1.5rem;position:sticky;top:80px}
+.cart-summary-row{display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-bottom:2px solid var(--grey2);margin-bottom:1rem}
+.cart-summary-row span{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.cart-summary-row strong{font-family:var(--fd);font-size:1.4rem}
+.cart-note{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1.2rem}
+.cart-actions{display:flex;flex-direction:column;gap:.6rem}
+.cart-wa-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;background:#25D366;color:var(--white);padding:.85rem;border:none;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .15s}
+.cart-wa-btn:hover{background:#1BA44F}
+.cart-wa-btn svg{width:18px;height:18px}
+.cart-clear-btn{background:none;border:1px dashed var(--grey2);border-radius:8px;padding:.6rem;font-size:.78rem;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s}
+.cart-clear-btn:hover{border-color:var(--red);color:var(--red)}
+
+@media(max-width:768px){
+  .cart-content{grid-template-columns:1fr}
+  .cart-summary{position:static}
+}
+</style>
+
+<script is:inline>
+(function(){
+  const WA_PHONE = '573213154654';
+  const cartKey = 'procalzado_cart';
+  let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+  const save = () => localStorage.setItem(cartKey, JSON.stringify(cart));
+
+  function render() {
+    const empty = document.getElementById('cartEmpty');
+    const content = document.getElementById('cartContent');
+    const items = document.getElementById('cartItems');
+    const totalRow = document.getElementById('cartTotalRow');
+    const totalEl = document.getElementById('cartPageTotal');
+
+    if (cart.length === 0) {
+      empty.style.display = '';
+      content.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    content.style.display = '';
+
+    items.innerHTML = cart.map((it, i) => `
+      <div class="cart-item">
+        ${it.img ? `<img src="${it.img}" class="cart-item-img" alt=""/>` : `<div class="cart-item-img-empty">👢</div>`}
+        <div class="cart-item-info">
+          <div class="cart-item-brand">${it.brand || ''}</div>
+          <div class="cart-item-name"><a href="/productos/${it.slug}">${it.name}</a></div>
+          <div class="cart-item-meta">${it.color ? 'Color: ' + it.color : ''}${it.color && it.size ? ' · ' : ''}${it.size ? 'Talla: ' + it.size : ''}</div>
+          <div class="cart-item-qty">
+            <button data-action="dec" data-idx="${i}">−</button>
+            <span>${it.qty}</span>
+            <button data-action="inc" data-idx="${i}">+</button>
+          </div>
+          <button class="cart-item-remove" data-action="rm" data-idx="${i}">Eliminar</button>
+        </div>
+        ${it.price ? `<div class="cart-item-price">$${(it.price * it.qty).toLocaleString('es-CO')}</div>` : ''}
+      </div>
+    `).join('');
+
+    const withPrice = cart.filter(i => i.price);
+    if (withPrice.length === cart.length && cart.length > 0) {
+      const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+      totalEl.textContent = '$' + total.toLocaleString('es-CO');
+      totalRow.style.display = '';
+    } else {
+      totalRow.style.display = 'none';
+    }
+
+    items.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', e => {
+      const idx = parseInt(e.currentTarget.dataset.idx);
+      const action = e.currentTarget.dataset.action;
+      if (action === 'inc') cart[idx].qty++;
+      if (action === 'dec') { cart[idx].qty--; if (cart[idx].qty < 1) cart.splice(idx, 1); }
+      if (action === 'rm') cart.splice(idx, 1);
+      save(); render(); updateBadge();
+    }));
+  }
+
+  function updateBadge() {
+    const total = cart.reduce((s, i) => s + i.qty, 0);
+    const badge = document.getElementById('cartBadge');
+    if (badge) { badge.textContent = total; badge.classList.toggle('show', total > 0); }
+  }
+
+  document.getElementById('cartPageClear')?.addEventListener('click', () => {
+    if (confirm('¿Vaciar todo el carrito?')) { cart = []; save(); render(); updateBadge(); }
+  });
+
+  document.getElementById('cartPageWa')?.addEventListener('click', () => {
+    if (cart.length === 0) return;
+    let msg = '*Hola Procalzado, me interesan estos productos:*\n\n';
+    cart.forEach((it, i) => {
+      msg += `${i + 1}. *${it.brand ? it.brand + ' ' : ''}${it.name}*\n`;
+      if (it.color) msg += `   Color: ${it.color}\n`;
+      if (it.size) msg += `   Talla: ${it.size}\n`;
+      msg += `   Cantidad: ${it.qty}\n`;
+      if (it.price) msg += `   Precio: $${Number(it.price).toLocaleString('es-CO')}\n`;
+      msg += `   Link: https://procalzado.com/productos/${it.slug}\n\n`;
+    });
+    window.open(`https://wa.me/${WA_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
+  });
+
+  render();
+})();
+</script>
+
+</Layout>

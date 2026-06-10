@@ -1,0 +1,304 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PromoBanner from '../components/PromoBanner.astro';
+import { getProducts, getGenderCards, getPromoBlocks } from '../lib/supabase';
+import type { Product, Category } from '../lib/supabase';
+
+// Páginas estáticas: hombre, mujer, ninos
+export function getStaticPaths() {
+  return [
+    { params: { genero: 'hombre' } },
+    { params: { genero: 'mujer' } },
+    { params: { genero: 'ninos' } },
+  ];
+}
+
+const { genero } = Astro.params;
+
+// Config por género
+const GENDER_CONFIG: Record<string, { label: string; matches: string[]; title: string; sub: string }> = {
+  hombre: {
+    label: 'Hombre',
+    matches: ['hombre', 'unisex'],
+    title: 'Calzado para Hombre',
+    sub: 'Botas, calzado de trabajo, zapatos y más para el día a día.',
+  },
+  mujer: {
+    label: 'Mujer',
+    matches: ['mujer', 'unisex'],
+    title: 'Calzado para Mujer',
+    sub: 'Botas, sandalias, zapatos y más con estilo y resistencia.',
+  },
+  ninos: {
+    label: 'Niños',
+    matches: ['nino', 'nina'],
+    title: 'Calzado para Niños',
+    sub: 'Resistente, cómodo y para toda ocasión.',
+  },
+};
+
+const config = GENDER_CONFIG[genero!] || GENDER_CONFIG.hombre;
+
+// Datos
+const allProducts: Product[] = await getProducts();
+const cards = await getGenderCards(genero!);
+const promos = await getPromoBlocks();
+
+// Filtrar productos por género
+function productGenders(p: Product): string[] {
+  return (p.genders && p.genders.length) ? p.genders : (p.gender ? [p.gender] : []);
+}
+const products = allProducts.filter(p => {
+  const g = productGenders(p);
+  return g.some(x => config.matches.includes(x));
+});
+
+// Datos de cada producto para render + filtrado por tarjeta
+function productData(p: Product) {
+  const brandName = p.brands?.name || '';
+  const cats = (p.product_categories && p.product_categories.length)
+    ? p.product_categories.map(pc => pc.categories).filter(Boolean) as Category[]
+    : (p.categories ? [p.categories as Category] : []);
+  const primaryCat = (p.product_categories?.find(pc => pc.is_primary)?.categories as Category) || cats[0] || null;
+  const catSlugs = cats.map(c => c.slug);
+  const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
+  const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
+  return {
+    slug: p.slug, name: p.name, brandName, catSlugs,
+    primaryImg, secondImg, featured: p.featured,
+    price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
+    catName: primaryCat?.name || '',
+    shortDesc: p.short_description || '',
+  };
+}
+const items = products.map(productData);
+
+const pageTitle = `${config.title} | Procalzado`;
+const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos a todo Colombia.`;
+---
+
+<Layout title={pageTitle} description={pageDesc}>
+
+<!-- ENCABEZADO DE GÉNERO -->
+<section class="gender-hero" style={`background-image:url(/portada_${genero}.jpg)`}>
+  <div class="gender-hero-inner">
+    <span class="gender-hero-tag">{config.label}</span>
+    <h1>{config.title}</h1>
+    <p>{config.sub}</p>
+  </div>
+</section>
+
+{promos.hero && promos.hero.active && (
+  <div class="promo-wrap-page"><PromoBanner block={promos.hero} /></div>
+)}
+
+<!-- TARJETAS DE CATEGORÍA -->
+{cards.length > 0 && (
+  <section class="gcards-section">
+    <div class="gcards-carousel">
+      <button type="button" class="gcards-arrow gcards-arrow-left" id="gcardsLeft" aria-label="Anterior">&#8249;</button>
+      <div class="gcards-grid" id="gcardsGrid">
+        {cards.map(card => {
+          const slug = card.categories?.slug || '';
+          const title = card.title || card.categories?.name || 'Categoría';
+          return (
+            <button type="button" class="gcard" data-cat={slug}>
+              <div class="gcard-img">
+                {card.image_url
+                  ? <img src={card.image_url} alt={title} loading="lazy"/>
+                  : <span class="gcard-noimg">{title.charAt(0)}</span>}
+              </div>
+              <span class="gcard-title">{title}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button type="button" class="gcards-arrow gcards-arrow-right" id="gcardsRight" aria-label="Siguiente">&#8250;</button>
+    </div>
+  </section>
+)}
+
+<!-- PRODUCTOS DEL GÉNERO -->
+<main class="products-section" id="main-content">
+  <div class="section-header">
+    <h2 class="section-title">Productos <span class="red">{config.label}</span></h2>
+    <span class="section-count" id="resultCount">{items.length} productos</span>
+  </div>
+
+  <div class="active-cat-banner" id="gActiveBanner" style="display:none">
+    <span>Mostrando: <strong id="gActiveLabel"></strong></span>
+    <button type="button" id="gActiveClear">Ver todo &times;</button>
+  </div>
+
+  <div class="product-grid" id="productGrid">
+    {items.map((it, i) => {
+      return (
+        <>
+          <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
+            {it.featured && (
+              <span class="card-badge-featured">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Destacado
+              </span>
+            )}
+            {it.salePrice && it.showPrice && it.price && (
+              <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+            )}
+            <div class="card-img">
+              {it.primaryImg
+                ? <>
+                    <img src={it.primaryImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading={i < 8 ? 'eager' : 'lazy'} class={it.secondImg ? 'card-img-main' : ''}/>
+                    {it.secondImg && <img src={it.secondImg.url} alt={`${it.brandName} ${it.name}`} width="240" height="240" loading="lazy" class="card-img-hover"/>}
+                  </>
+                : <span>👢</span>}
+            </div>
+            <div class="card-body">
+              {it.brandName && <div class="card-brand">{it.brandName}</div>}
+              <div class="card-name">{it.name}</div>
+              {it.shortDesc && <div class="card-desc">{it.shortDesc.length > 60 ? it.shortDesc.slice(0, 60) + '...' : it.shortDesc}</div>}
+              {it.showPrice && it.price ? (
+                it.salePrice ? (
+                  <div class="card-price-row"><span class="card-price-old">${Number(it.price).toLocaleString('es-CO')}</span><span class="card-price card-price-sale">${Number(it.salePrice).toLocaleString('es-CO')}</span></div>
+                ) : (
+                  <div class="card-price">${Number(it.price).toLocaleString('es-CO')}</div>
+                )
+              ) : (
+                <div class="card-price-note" style="margin-top:auto">Precio a consultar</div>
+              )}
+            </div>
+          </a>
+        </>
+      );
+    })}
+  </div>
+
+  {promos.mid && promos.mid.active && (
+    <div class="promo-bottom"><PromoBanner block={promos.mid} /></div>
+  )}
+
+  <div class="empty" id="emptyState" style="display:none">
+    <strong>Sin productos</strong>
+    <p>Aún no hay productos en esta categoría.</p>
+  </div>
+</main>
+
+<style>
+.gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);padding-top:calc(64px + clamp(2rem,5vw,3.5rem));margin-top:-64px;background-size:cover;background-position:center;background-repeat:no-repeat;position:relative}
+.gender-hero::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);pointer-events:none}
+.gender-hero-inner{max-width:1280px;margin:0 auto;position:relative;z-index:1}
+.promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
+.promo-bottom{margin:2rem 0 0}
+.promo-grid-full{grid-column:1/-1;margin:1rem 0}
+.gender-hero-tag{display:inline-block;background:var(--red);color:var(--white);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .7rem;border-radius:2px;margin-bottom:.8rem}
+.gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
+.gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
+
+.gcards-section{max-width:1280px;margin:0 auto;padding:1.8rem clamp(1rem,4vw,3rem) 0}
+.gcards-carousel{position:relative}
+.gcards-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;border:none;background:var(--white);color:var(--black);font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:opacity .2s,background .15s}
+.gcards-arrow:hover{background:var(--red);color:var(--white)}
+.gcards-arrow-left{left:-6px}
+.gcards-arrow-right{right:-6px}
+.gcards-arrow.hidden{opacity:0;pointer-events:none}
+.gcards-grid{display:flex;gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:.6rem;scrollbar-width:thin;scroll-behavior:smooth}
+.gcards-grid::-webkit-scrollbar{height:6px}
+.gcards-grid::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:3px}
+.gcard{display:flex;flex-direction:column;flex:0 0 auto;width:180px;scroll-snap-align:start;border:none;background:var(--grey);border-radius:10px;overflow:hidden;cursor:pointer;padding:0;text-align:left;transition:transform .15s,box-shadow .15s;font-family:inherit}
+.gcard:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.gcard.active{outline:3px solid var(--red);outline-offset:0}
+.gcard-img{width:100%;aspect-ratio:4/5;background:var(--grey2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.gcard-img img{width:100%;height:100%;object-fit:cover;display:block}
+.gcard-noimg{font-family:var(--fd);font-size:3rem;color:var(--white)}
+.gcard-title{padding:.7rem .6rem;font-family:var(--fb);font-size:.82rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--black);text-align:center;line-height:1.2}
+
+.active-cat-banner{align-items:center;justify-content:space-between;gap:1rem;background:#fff5f5;border:1px solid var(--red);border-radius:8px;padding:.7rem 1rem;margin-bottom:1.2rem;font-size:.9rem}
+.active-cat-banner strong{text-transform:uppercase;letter-spacing:.03em}
+.active-cat-banner button{background:var(--red);color:var(--white);border:none;border-radius:5px;padding:.4rem .8rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.active-cat-banner button:hover{background:#cc0000}
+
+.card-badge-sale{position:absolute;top:.6rem;right:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.75rem;padding:.22rem .5rem;border-radius:4px;z-index:5}
+.card-desc{font-size:.75rem;color:var(--muted);line-height:1.35;margin-bottom:.4rem}
+.card-price-row{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+.card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
+.card-price-sale{color:var(--red)}
+@media(max-width:640px){
+  .gcards-grid{gap:.7rem}
+  .gcard{width:150px}
+  .gcards-arrow{display:none}
+}
+</style>
+
+<script is:inline>
+(function () {
+  const grid = document.getElementById('productGrid');
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll('.card'));
+  const gcards = Array.from(document.querySelectorAll('.gcard'));
+  const resultCount = document.getElementById('resultCount');
+  const emptyState = document.getElementById('emptyState');
+  const banner = document.getElementById('gActiveBanner');
+  const bannerLabel = document.getElementById('gActiveLabel');
+  let activeCat = '';
+
+  function apply() {
+    let visible = 0;
+    cards.forEach(card => {
+      const cats = (card.dataset.cats || '').split('|').filter(Boolean);
+      const show = !activeCat || cats.includes(activeCat);
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (resultCount) resultCount.textContent = visible + (visible === 1 ? ' producto' : ' productos');
+    if (emptyState) emptyState.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  gcards.forEach(gc => {
+    gc.addEventListener('click', () => {
+      const slug = gc.dataset.cat;
+      if (activeCat === slug) {
+        // deseleccionar
+        activeCat = '';
+        gcards.forEach(x => x.classList.remove('active'));
+        if (banner) banner.style.display = 'none';
+      } else {
+        activeCat = slug;
+        gcards.forEach(x => x.classList.toggle('active', x === gc));
+        if (banner) {
+          banner.style.display = 'flex';
+          if (bannerLabel) bannerLabel.textContent = gc.querySelector('.gcard-title')?.textContent || '';
+        }
+      }
+      apply();
+      document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  document.getElementById('gActiveClear')?.addEventListener('click', () => {
+    activeCat = '';
+    gcards.forEach(x => x.classList.remove('active'));
+    if (banner) banner.style.display = 'none';
+    apply();
+  });
+
+  apply();
+
+  // Flechas del carrusel de categorías
+  const gGrid = document.getElementById('gcardsGrid');
+  const gLeft = document.getElementById('gcardsLeft');
+  const gRight = document.getElementById('gcardsRight');
+  if (gGrid && gLeft && gRight) {
+    const scrollAmt = 200;
+    function updateArrows() {
+      gLeft.classList.toggle('hidden', gGrid.scrollLeft <= 4);
+      gRight.classList.toggle('hidden', gGrid.scrollLeft + gGrid.clientWidth >= gGrid.scrollWidth - 4);
+    }
+    gLeft.addEventListener('click', function(e) { e.stopPropagation(); gGrid.scrollBy({ left: -scrollAmt, behavior: 'smooth' }); });
+    gRight.addEventListener('click', function(e) { e.stopPropagation(); gGrid.scrollBy({ left: scrollAmt, behavior: 'smooth' }); });
+    gGrid.addEventListener('scroll', updateArrows);
+    updateArrows();
+    window.addEventListener('resize', updateArrows);
+  }
+})();
+</script>
+
+</Layout>

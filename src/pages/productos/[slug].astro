@@ -1,0 +1,393 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getProducts, getProductBySlug } from '../../lib/supabase';
+import type { Product } from '../../lib/supabase';
+
+// Generar todas las páginas de producto en build time
+export async function getStaticPaths() {
+  const products = await getProducts();
+  return products.map((p: Product) => ({
+    params: { slug: p.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const product = await getProductBySlug(slug!);
+
+if (!product) {
+  return Astro.redirect('/404');
+}
+
+const brandName = product.brands?.name || '';
+const catName = product.categories?.name || '';
+const catSlug = product.categories?.slug || '';
+const primaryImg = product.product_images?.find(img => img.is_primary) || product.product_images?.[0];
+const images = product.product_images?.sort((a, b) => a.display_order - b.display_order) || [];
+const variants = product.product_variants?.filter(v => v.active) || [];
+
+// Extraer tallas y colores únicos de las variantes
+const sizes = [...new Set(variants.map(v => v.size))];
+const colors = [...new Set(variants.map(v => v.color))].map(colorName => {
+  const variant = variants.find(v => v.color === colorName);
+  return { 
+    name: colorName, 
+    hex: variant?.color_hex || '#999',
+    hex2: (variant as any)?.color_hex_2 || null
+  };
+});
+
+// Specs
+const specs = product.specs && typeof product.specs === 'object' ? Object.entries(product.specs) : [];
+
+// SEO
+const pageTitle = product.meta_title || `${brandName} ${product.name} | Procalzado`;
+const pageDesc = product.meta_description || product.short_description || `${brandName} ${product.name} - ${catName}. Compra en Procalzado, distribuidores autorizados en Colombia.`;
+const pageImg = primaryImg?.url || '';
+
+// WhatsApp link
+const waMsg = encodeURIComponent(`Hola, me interesa el producto: *${brandName} - ${product.name}*. ¿Me pueden dar más información?`);
+const waLink = `https://wa.me/573213154654?text=${waMsg}`;
+
+// Schema.org Product
+const schemaProduct = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": `${brandName} ${product.name}`,
+  "description": product.short_description || '',
+  "brand": { "@type": "Brand", "name": brandName },
+  "category": catName,
+  "image": images.map(img => img.url),
+  "url": `https://procalzado.com/productos/${product.slug}`,
+  ...(product.show_price && product.price ? {
+    "offers": {
+      "@type": "Offer",
+      "price": product.price,
+      "priceCurrency": "COP",
+      "availability": "https://schema.org/InStock",
+      "seller": { "@type": "Organization", "name": "Procalzado" }
+    }
+  } : {})
+};
+---
+
+<Layout title={pageTitle} description={pageDesc} ogImage={pageImg}>
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaProduct)} />
+
+<div class="product-page">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Inicio</a> <span>/</span>
+    {catSlug && <><a href={`/?cat=${catSlug}`}>{catName}</a> <span>/</span></>}
+    <span>{brandName} {product.name}</span>
+  </nav>
+
+  <div class="product-layout">
+    <!-- GALERÍA -->
+    <div class="product-gallery-wrap">
+      <div class="product-gallery" id="gallery">
+        {primaryImg ? (
+          <img src={primaryImg.url} alt={`${brandName} ${product.name}`} id="mainImg" width="600" height="600"/>
+        ) : (
+          <span>👢</span>
+        )}
+        {primaryImg && (
+          <>
+            <button type="button" class="gallery-nav prev" id="galPrev" aria-label="Imagen anterior">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="gallery-nav next" id="galNext" aria-label="Imagen siguiente">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <div class="gallery-counter"><span id="galCurrent">1</span> / {images.length || 1}</div>
+          </>
+        )}
+      </div>
+      {images.length > 0 && (
+        <script type="application/json" id="galleryData" set:html={JSON.stringify(images.map(i => ({ url: i.url, color: i.color, alt: i.alt_text })))}></script>
+      )}
+    </div>
+
+    <!-- INFO -->
+    <div class="product-info">
+      <div class="product-brand-tag">{brandName}</div>
+      <h1>{product.name}</h1>
+      {catName && <p class="card-cat-tag" style="margin-bottom:1rem">{catName}</p>}
+
+      {product.show_price && product.price ? (
+        <div style="margin-bottom:1rem">
+          {(product as any).sale_price ? (
+            <>
+              <span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${Number(product.price).toLocaleString('es-CO')}</span>
+              <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${Number((product as any).sale_price).toLocaleString('es-CO')}</span>
+              <span style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-{Math.round((1 - (product as any).sale_price / product.price) * 100)}%</span>
+              <span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>
+            </>
+          ) : (
+            <>
+              <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${Number(product.price).toLocaleString('es-CO')}</span>
+              <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>
+            </>
+          )}
+        </div>
+      ) : (
+        <div style="margin-bottom:1rem;font-style:italic;color:var(--muted)">Precio: consultar por WhatsApp</div>
+      )}
+
+      {(product as any).notice && (
+        <div class={`product-notice notice-${(product as any).notice_type || 'info'}`}>
+          <span>{(product as any).notice}</span>
+        </div>
+      )}
+
+      {(product.short_description || product.description) && (
+        <p class="product-description">{product.description || product.short_description}</p>
+      )}
+
+      <!-- SPECS -->
+      {specs.length > 0 && (
+        <table class="specs-table">
+          <tbody>
+            {specs.map(([key, val]) => (
+              <tr>
+                <th>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>
+                <td>{String(val)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <!-- TALLAS -->
+      {sizes.length > 0 && (
+        <div class="product-variants">
+          <div class="variant-title">Tallas disponibles</div>
+          <div class="size-list" id="sizeList">
+            {sizes.map((s, i) => <button type="button" class={`size-tag-btn ${i === 0 ? 'selected' : ''}`} data-size={s}>{s}</button>)}
+          </div>
+        </div>
+      )}
+
+      <!-- COLORES -->
+      {colors.length > 0 && (
+        <div class="product-variants">
+          <div class="variant-title">Colores disponibles <span id="selectedColorName" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:.85rem"></span></div>
+          <div class="color-list" id="colorList">
+            {colors.map((c, i) => {
+              const bg = c.hex2 
+                ? `linear-gradient(135deg, ${c.hex} 0%, ${c.hex} 50%, ${c.hex2} 50%, ${c.hex2} 100%)`
+                : c.hex;
+              return (
+                <button type="button" class={`color-dot-btn ${i === 0 ? 'selected' : ''}`} style={`background:${bg}`} data-color={c.name} title={c.name}></button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <!-- ACCIONES -->
+      <div class="product-actions" style="flex-direction:column;gap:.6rem">
+        <div class="qty-selector">
+          <label>Cantidad de pares:</label>
+          <div class="qty-input-group">
+            <button type="button" class="qty-btn" id="qtyMinus" aria-label="Disminuir">−</button>
+            <input type="number" id="qtyInput" value="1" min="1" max="999"/>
+            <button type="button" class="qty-btn" id="qtyPlus" aria-label="Aumentar">+</button>
+          </div>
+        </div>
+        <button type="button" class="btn-add-cart" id="btnAddCart"
+          data-product-id={product.id}
+          data-slug={product.slug}
+          data-name={product.name}
+          data-brand={brandName}
+          data-price={product.show_price && product.price ? product.price : ''}
+          data-img={primaryImg?.url || ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          AGREGAR AL CARRITO
+        </button>
+        <button type="button" class="btn-wa" id="btnWa">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Consultar por WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+(function() {
+  let selectedSize = '';
+  let selectedColor = '';
+  let currentImgIdx = 0;
+  let visibleImages = [];
+
+  // Cargar datos de imágenes
+  const dataEl = document.getElementById('galleryData');
+  const allImages = dataEl ? JSON.parse(dataEl.textContent) : [];
+  visibleImages = allImages.slice();
+
+  // Precargar TODAS las imágenes al inicio para que el cambio sea instantáneo
+  allImages.forEach(imgData => {
+    const preload = new Image();
+    preload.src = imgData.url;
+  });
+
+  // Inicializar tallas
+  const sizeBtns = document.querySelectorAll('.size-tag-btn');
+  if (sizeBtns.length > 0) {
+    selectedSize = sizeBtns[0].dataset.size;
+    sizeBtns.forEach(btn => btn.addEventListener('click', () => {
+      sizeBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedSize = btn.dataset.size;
+    }));
+  }
+
+  // Inicializar colores
+  const colorBtns = document.querySelectorAll('.color-dot-btn');
+  const colorNameSpan = document.getElementById('selectedColorName');
+  if (colorBtns.length > 0) {
+    selectedColor = colorBtns[0].dataset.color;
+    if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
+
+    colorBtns.forEach(btn => btn.addEventListener('click', () => {
+      colorBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedColor = btn.dataset.color;
+      if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
+
+      // Saltar a la primera imagen de ese color (sin filtrar la galería)
+      const firstImgIdx = visibleImages.findIndex(img => img.color === selectedColor);
+      if (firstImgIdx >= 0) {
+        currentImgIdx = firstImgIdx;
+        updateGallery();
+      }
+    }));
+  }
+
+  // Inicializar galería con TODAS las imágenes
+  updateGallery();
+
+  function updateGallery() {
+    const mainImg = document.getElementById('mainImg');
+    if (visibleImages.length === 0 || !mainImg) return;
+    mainImg.src = visibleImages[currentImgIdx].url;
+
+    // Las flechas siempre se muestran si hay al menos 1 imagen
+    const prevBtn = document.getElementById('galPrev');
+    const nextBtn = document.getElementById('galNext');
+    const counter = document.querySelector('.gallery-counter');
+    const onlyOne = visibleImages.length <= 1;
+    if (prevBtn) {
+      prevBtn.style.display = 'flex';
+      prevBtn.style.opacity = onlyOne ? '0.4' : '1';
+      prevBtn.style.cursor = onlyOne ? 'default' : 'pointer';
+    }
+    if (nextBtn) {
+      nextBtn.style.display = 'flex';
+      nextBtn.style.opacity = onlyOne ? '0.4' : '1';
+      nextBtn.style.cursor = onlyOne ? 'default' : 'pointer';
+    }
+    if (counter) {
+      counter.style.display = 'block';
+      counter.innerHTML = `<span id="galCurrent">${currentImgIdx + 1}</span> / ${visibleImages.length}`;
+    }
+  }
+
+  // Botones prev/next
+  const prevBtn = document.getElementById('galPrev');
+  const nextBtn = document.getElementById('galNext');
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    currentImgIdx = (currentImgIdx - 1 + visibleImages.length) % visibleImages.length;
+    updateGallery();
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    currentImgIdx = (currentImgIdx + 1) % visibleImages.length;
+    updateGallery();
+  });
+
+  // Soporte teclado
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
+    if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
+  });
+
+  // Soporte touch (swipe)
+  const gallery = document.getElementById('gallery');
+  if (gallery && visibleImages.length > 1) {
+    let startX = 0;
+    gallery.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+    gallery.addEventListener('touchend', e => {
+      const diff = startX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0 && nextBtn) nextBtn.click();
+        else if (prevBtn) prevBtn.click();
+      }
+    });
+  }
+
+  // Selector de cantidad
+  const qtyInput = document.getElementById('qtyInput');
+  const qtyMinus = document.getElementById('qtyMinus');
+  const qtyPlus = document.getElementById('qtyPlus');
+  if (qtyMinus) qtyMinus.addEventListener('click', () => {
+    const val = parseInt(qtyInput.value) || 1;
+    if (val > 1) qtyInput.value = val - 1;
+  });
+  if (qtyPlus) qtyPlus.addEventListener('click', () => {
+    const val = parseInt(qtyInput.value) || 1;
+    qtyInput.value = val + 1;
+  });
+  if (qtyInput) qtyInput.addEventListener('change', () => {
+    let val = parseInt(qtyInput.value) || 1;
+    if (val < 1) val = 1;
+    if (val > 999) val = 999;
+    qtyInput.value = val;
+  });
+
+  // Botón Agregar al Carrito
+  const btnAdd = document.getElementById('btnAddCart');
+  if (btnAdd) {
+    btnAdd.addEventListener('click', () => {
+      const qty = parseInt(qtyInput?.value) || 1;
+      const item = {
+        productId: btnAdd.dataset.productId,
+        slug: btnAdd.dataset.slug,
+        name: btnAdd.dataset.name,
+        brand: btnAdd.dataset.brand,
+        color: selectedColor,
+        size: selectedSize,
+        price: btnAdd.dataset.price ? parseFloat(btnAdd.dataset.price) : null,
+        img: visibleImages[currentImgIdx]?.url || btnAdd.dataset.img
+      };
+      // Agregar todos los pares en una sola llamada
+      if (window.addToCart) window.addToCart(item, qty);
+      // Reset cantidad a 1
+      if (qtyInput) qtyInput.value = 1;
+    });
+  }
+
+  // Botón "Consultar por WhatsApp" — incluye talla, color y cantidad
+  const btnWa = document.getElementById('btnWa');
+  if (btnWa) {
+    btnWa.addEventListener('click', () => {
+      const qty = parseInt(qtyInput?.value) || 1;
+      const productName = btnAdd?.dataset.name || '';
+      const brand = btnAdd?.dataset.brand || '';
+      const price = btnAdd?.dataset.price;
+      const slug = btnAdd?.dataset.slug || '';
+
+      let msg = `*Hola Procalzado, me interesa este producto:*\n\n`;
+      msg += `*${brand ? brand + ' ' : ''}${productName}*\n`;
+      if (selectedColor) msg += `Color: ${selectedColor}\n`;
+      if (selectedSize) msg += `Talla: ${selectedSize}\n`;
+      msg += `Cantidad: ${qty}\n`;
+      if (price) msg += `Precio: $${Number(price).toLocaleString('es-CO')}\n`;
+      msg += `Link: https://procalzado.com/productos/${slug}`;
+
+      window.open(`https://wa.me/573213154654?text=${encodeURIComponent(msg)}`, '_blank');
+    });
+  }
+})();
+</script>
+</Layout>
