@@ -1,13 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PromoBanner from '../components/PromoBanner.astro';
-import { getProducts, getCategories, getPromoBlocks, getSiteSetting } from '../lib/supabase';
+import { getProducts, getCategories, getPromoBlocks } from '../lib/supabase';
 import type { Product, Category } from '../lib/supabase';
 
 const products: Product[] = await getProducts();
 const promos = await getPromoBlocks();
 const categories: Category[] = await getCategories();
-const homeIntro = await getSiteSetting('home_intro');
 
 const parentCats = categories.filter(c => !c.parent_id);
 const subcatsByParent: Record<string, Category[]> = {};
@@ -54,8 +53,6 @@ const catSections = displayCats.map(cat => {
   return { cat, products: catProducts };
 }).filter(s => s.products.length > 0);
 
-const introHtml = homeIntro ? homeIntro.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') : '';
-
 const pageTitle = 'Procalzado | Botas de Caucho, Trabajo, Moto y más en Colombia';
 const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas de trabajo, sandalias, zapatos industriales y mucho más en Colombia. Procalzado: distribuidor autorizado.';
 ---
@@ -74,15 +71,19 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 )}
 
 <main class="catalog-section">
-  {introHtml && (
-    <div class="intro-text" set:html={introHtml}></div>
-  )}
 
   {catSections.map((section, si) => (
     <section class="cat-section" id={`cat-${section.cat.slug}`}>
       <div class="cat-section-header">
         <h2 class="cat-section-title">{section.cat.name}</h2>
-        <span class="cat-section-count">{section.products.length} productos</span>
+        <div class="cat-section-right">
+          {section.products.length > 4 && (
+            <button type="button" class="ver-mas-btn" data-cat={section.cat.slug}>
+              Ver todos ({section.products.length})
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          )}
+        </div>
       </div>
       <div class="product-grid">
         {section.products.map((it, i) => (
@@ -121,12 +122,6 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
           </a>
         ))}
       </div>
-      {section.products.length > 4 && (
-        <button type="button" class="ver-mas-btn" data-cat={section.cat.slug}>
-          Ver todos ({section.products.length})
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-      )}
     </section>
   ))}
 
@@ -141,17 +136,16 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .hero-banner picture{display:block;width:100%}
 .promo-wrap{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-bottom{margin:2rem 0 0}
-.intro-text{margin-bottom:1.5rem;font-size:.92rem;line-height:1.6;color:var(--muted)}
 .catalog-section{max-width:1280px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 3rem}
 .cat-section{margin-bottom:2.5rem}
-.cat-section-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
+.cat-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
 .cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em}
-.cat-section-count{font-size:.78rem;color:var(--muted)}
+.cat-section-right{display:flex;align-items:center;gap:.8rem}
 .card-hidden{display:none}
 .cat-section.expanded .card-hidden{display:flex}
-.ver-mas-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;margin:1rem auto 0;background:var(--white);border:1.5px solid var(--grey2);padding:.6rem 1.5rem;border-radius:8px;font-family:var(--fb);font-size:.85rem;font-weight:600;color:var(--black);cursor:pointer;transition:all .18s}
-.ver-mas-btn:hover{border-color:var(--black)}
-.ver-mas-btn svg{width:16px;height:16px;transition:transform .2s}
+.ver-mas-btn{display:flex;align-items:center;gap:.3rem;background:none;border:none;padding:.3rem 0;font-family:var(--fb);font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:color .18s;white-space:nowrap}
+.ver-mas-btn:hover{color:var(--black)}
+.ver-mas-btn svg{width:14px;height:14px;transition:transform .2s}
 .cat-section.expanded .ver-mas-btn svg{transform:rotate(180deg)}
 .card-noimg{font-size:2rem;color:var(--grey2)}
 .card-badge-sale{position:absolute;top:.6rem;right:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.75rem;padding:.22rem .5rem;border-radius:4px;z-index:5}
