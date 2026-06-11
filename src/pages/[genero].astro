@@ -356,9 +356,14 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .color-swatch{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
 
 @media(max-width:640px){
-  .filter-bar-row{flex-wrap:wrap}
+  .filter-section{padding:.8rem .8rem 0}
+  .filter-bar-row{flex-direction:column;align-items:stretch;gap:.5rem}
+  .filter-dropdowns{justify-content:space-between}
+  .filter-btn{font-size:.8rem;padding:.35rem .5rem}
+  .filter-sort{justify-content:space-between;padding-top:.3rem;border-top:1px solid var(--grey2)}
   .cat-pill{font-size:.78rem;padding:.4rem .9rem}
   .pills-arrow{display:none}
+  .filter-menu{position:fixed;left:5%;right:5%;top:auto;bottom:0;max-height:50vh;border-radius:12px 12px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
 }
 </style>
 
@@ -383,14 +388,12 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       const cp = parseFloat(card.dataset.price) || 0;
       const cs = (card.dataset.sizes || '').split('|').filter(Boolean);
       const ccol = (card.dataset.colors || '').split('|').filter(Boolean);
-
       let show = true;
       if (filters.cats.length && !cc.some(c => filters.cats.includes(c))) show = false;
       if (filters.brand && cb !== filters.brand) show = false;
       if (filters.size && !cs.includes(filters.size)) show = false;
       if (filters.color && !ccol.includes(filters.color)) show = false;
       if (cp < filters.priceMin || cp > filters.priceMax) show = false;
-
       card.style.display = show ? '' : 'none';
       if (show) visible++;
     });
@@ -415,54 +418,48 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       apply();
     });
   });
-
   document.getElementById('gActiveClear')?.addEventListener('click', () => {
-    filters.cats = [];
-    pills.forEach(p => p.classList.remove('active'));
-    if (banner) banner.style.display = 'none';
-    apply();
+    filters.cats = []; pills.forEach(p => p.classList.remove('active'));
+    if (banner) banner.style.display = 'none'; apply();
   });
 
-  // Generic dropdown toggle
+  // Dropdown management
+  function closeAll() {
+    document.querySelectorAll('.filter-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.filter-btn.open').forEach(b => b.classList.remove('open'));
+  }
+
   document.querySelectorAll('.filter-btn[data-menu]').forEach(btn => {
     const menu = document.getElementById(btn.dataset.menu);
     if (!menu) return;
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      document.querySelectorAll('.filter-menu.open').forEach(m => { if (m !== menu) m.classList.remove('open'); });
-      document.querySelectorAll('.filter-btn.open').forEach(b => { if (b !== btn) b.classList.remove('open'); });
-      btn.classList.toggle('open');
-      menu.classList.toggle('open');
+      const isOpen = menu.classList.contains('open');
+      closeAll();
+      if (!isOpen) { btn.classList.add('open'); menu.classList.add('open'); }
     });
-
-    // Standard option clicks (size, brand)
-    menu.querySelectorAll('.filter-option[data-size],.filter-option[data-brand]').forEach(opt => {
-      opt.addEventListener('click', () => {
-        const key = opt.dataset.size !== undefined ? 'size' : 'brand';
-        filters[key] = opt.dataset[key] || '';
-        menu.querySelectorAll('.filter-option,.filter-color-opt').forEach(o => o.classList.remove('active'));
-        opt.classList.add('active');
-        const labels = { brand: 'Marca', size: 'Talla' };
-        btn.classList.toggle('has-value', !!filters[key]);
-        btn.childNodes[0].textContent = filters[key] ? opt.textContent.trim() + ' ' : (labels[key]) + ' ';
-        btn.classList.remove('open'); menu.classList.remove('open');
-        apply();
-      });
-    });
-
-    // Color option clicks
-    menu.querySelectorAll('.filter-color-opt,.filter-option[data-color]').forEach(opt => {
-      opt.addEventListener('click', () => {
-        filters.color = opt.dataset.color || '';
-        menu.querySelectorAll('.filter-option,.filter-color-opt').forEach(o => o.classList.remove('active'));
-        opt.classList.add('active');
-        btn.classList.toggle('has-value', !!filters.color);
-        btn.childNodes[0].textContent = filters.color ? filters.color + ' ' : 'Color ';
-        btn.classList.remove('open'); menu.classList.remove('open');
-        apply();
-      });
-    });
+    menu.addEventListener('click', e => e.stopPropagation());
   });
+
+  // Filter option clicks (size, brand, color)
+  function handleFilterClick(opt, key, labels) {
+    const btn = opt.closest('.filter-dropdown').querySelector('.filter-btn');
+    const menu = opt.closest('.filter-menu');
+    filters[key] = opt.dataset[key] || '';
+    menu.querySelectorAll('.filter-option,.filter-color-opt').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    if (btn) {
+      btn.classList.toggle('has-value', !!filters[key]);
+      const txt = filters[key] ? (opt.querySelector('.color-swatch') ? opt.textContent.trim() : opt.textContent.trim()) : labels[key];
+      btn.childNodes[0].textContent = txt + ' ';
+    }
+    closeAll(); apply();
+  }
+
+  const labels = { brand: 'Marca', size: 'Talla', color: 'Color' };
+  document.querySelectorAll('.filter-option[data-size]').forEach(o => o.addEventListener('click', () => handleFilterClick(o, 'size', labels)));
+  document.querySelectorAll('.filter-option[data-brand]').forEach(o => o.addEventListener('click', () => handleFilterClick(o, 'brand', labels)));
+  document.querySelectorAll('.filter-option[data-color],.filter-color-opt').forEach(o => o.addEventListener('click', () => handleFilterClick(o, 'color', labels)));
 
   // Price filter
   const priceApply = document.getElementById('priceApply');
@@ -477,29 +474,21 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       if (priceBtn) {
         const hasVal = filters.priceMin > 0 || filters.priceMax < Infinity;
         priceBtn.classList.toggle('has-value', hasVal);
-        priceBtn.childNodes[0].textContent = hasVal ? '$' + (filters.priceMin||0).toLocaleString('es-CO') + ' – $' + (filters.priceMax === Infinity ? '...' : filters.priceMax.toLocaleString('es-CO')) + ' ' : 'Precio ';
-        priceBtn.classList.remove('open');
+        priceBtn.childNodes[0].textContent = hasVal ? '$' + (filters.priceMin||0).toLocaleString('es-CO') + '–$' + (filters.priceMax===Infinity?'...':filters.priceMax.toLocaleString('es-CO')) + ' ' : 'Precio ';
       }
-      document.getElementById('priceMenu')?.classList.remove('open');
-      apply();
+      closeAll(); apply();
     });
   }
   if (priceClear) {
     priceClear.addEventListener('click', () => {
       filters.priceMin = 0; filters.priceMax = Infinity;
-      if (priceMin) priceMin.value = '';
-      if (priceMax) priceMax.value = '';
-      if (priceBtn) { priceBtn.classList.remove('has-value'); priceBtn.childNodes[0].textContent = 'Precio '; priceBtn.classList.remove('open'); }
-      document.getElementById('priceMenu')?.classList.remove('open');
-      apply();
+      if (priceMin) priceMin.value = ''; if (priceMax) priceMax.value = '';
+      if (priceBtn) { priceBtn.classList.remove('has-value'); priceBtn.childNodes[0].textContent = 'Precio '; }
+      closeAll(); apply();
     });
   }
 
-  // Close menus on outside click
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.filter-menu.open').forEach(m => m.classList.remove('open'));
-    document.querySelectorAll('.filter-btn.open').forEach(b => b.classList.remove('open'));
-  });
+  document.addEventListener('click', closeAll);
 
   // Sort
   const sortSelect = document.getElementById('sortSelect');
@@ -519,7 +508,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     });
   }
 
-  // Pill arrows with visibility + scroll by visible width
+  // Scrollers with arrow visibility
   function setupScroller(container, leftBtn, rightBtn) {
     if (!container) return;
     function update() {
@@ -530,15 +519,9 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     if (leftBtn) leftBtn.addEventListener('click', () => container.scrollBy({ left: -amt(), behavior: 'smooth' }));
     if (rightBtn) rightBtn.addEventListener('click', () => container.scrollBy({ left: amt(), behavior: 'smooth' }));
     container.addEventListener('scroll', update);
-    update();
-    window.addEventListener('resize', update);
+    update(); window.addEventListener('resize', update);
   }
-
-  setupScroller(
-    document.querySelector('.cat-pills-scroll'),
-    document.querySelector('.pills-arrow-left'),
-    document.querySelector('.pills-arrow-right')
-  );
+  setupScroller(document.querySelector('.cat-pills-scroll'), document.querySelector('.pills-arrow-left'), document.querySelector('.pills-arrow-right'));
 
   apply();
 })();

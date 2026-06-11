@@ -75,7 +75,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
   {catSections.map((section, si) => (
     <section class="cat-section" id={`cat-${section.cat.slug}`}>
       <div class="cat-section-header">
-        <h2 class="cat-section-title">{section.cat.name}</h2>
+        <h2 class="cat-section-title">{section.cat.name} <span class="swipe-hint">Desliza <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></span></h2>
       </div>
       <div class="cat-carousel-wrap">
         <button type="button" class="carousel-arrow carousel-left" aria-label="Anterior">&#8249;</button>
@@ -135,7 +135,12 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .catalog-section{max-width:1280px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 3rem}
 .cat-section{margin-bottom:2.5rem}
 .cat-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
-.cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em}
+.cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em;display:flex;align-items:center;gap:.5rem}
+.swipe-hint{display:none;font-family:var(--fb);font-size:.7rem;font-weight:500;color:var(--muted);letter-spacing:.02em;align-items:center;gap:.15rem}
+.swipe-hint svg{flex-shrink:0}
+@media(max-width:640px){
+  .swipe-hint{display:inline-flex}
+}
 .cat-carousel-wrap{position:relative;padding:0 40px}
 .carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--grey2);background:var(--white);color:var(--black);font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,.08)}
 .carousel-arrow:hover{border-color:var(--black);background:var(--black);color:var(--white)}
