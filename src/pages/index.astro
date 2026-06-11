@@ -132,9 +132,9 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .cat-section{margin-bottom:2.5rem}
 .cat-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
 .cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em}
-.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.6rem;scroll-snap-type:x mandatory;scrollbar-width:thin}
-.cat-carousel::-webkit-scrollbar{height:4px}
-.cat-carousel::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:2px}
+.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;cursor:grab;scrollbar-width:none;padding-right:clamp(2rem,8vw,6rem)}
+.cat-carousel::-webkit-scrollbar{display:none}
+.cat-carousel.dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
 .cat-carousel .card{flex:0 0 240px;scroll-snap-align:start}
 @media(max-width:640px){
   .cat-carousel .card{flex:0 0 180px}
@@ -147,5 +147,17 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .card-price-sale{color:var(--red)}
 </style>
+
+<script is:inline>
+document.querySelectorAll('.cat-carousel').forEach(el => {
+  let isDown = false, startX, scrollL;
+  el.addEventListener('mousedown', e => { isDown = true; el.classList.add('dragging'); startX = e.pageX - el.offsetLeft; scrollL = el.scrollLeft; });
+  el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mouseup', () => { isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mousemove', e => { if (!isDown) return; e.preventDefault(); el.scrollLeft = scrollL - (e.pageX - el.offsetLeft - startX); });
+  // Prevent click on cards when dragging
+  el.addEventListener('click', e => { if (Math.abs(el.scrollLeft - scrollL) > 5) e.preventDefault(); }, true);
+});
+</script>
 
 </Layout>

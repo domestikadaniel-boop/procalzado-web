@@ -65,14 +65,20 @@ function productData(p: Product) {
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
   const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
   return {
-    slug: p.slug, name: p.name, brandName, catSlugs,
+    slug: p.slug, name: p.name, brandName, brandSlug: p.brands?.slug || '', catSlugs,
     primaryImg, secondImg, featured: p.featured,
     price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     catName: primaryCat?.name || '',
     shortDesc: p.short_description || '',
+    effectivePrice: p.sale_price || p.price || 0,
   };
 }
 const items = products.map(productData);
+
+// Marcas únicas para el filtro
+const uniqueBrands = [...new Map(items.filter(i => i.brandName).map(i => [i.brandSlug, i.brandName])).entries()]
+  .map(([slug, name]) => ({ slug, name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
 
 // Categorías a mostrar: si padre tiene subs → solo subs; si no → el padre
 const subcatsByParent: Record<string, Category[]> = {};
@@ -129,6 +135,32 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 )}
 
 <!-- PRODUCTOS DEL GÉNERO -->
+<!-- FILTROS -->
+<div class="filter-bar" id="filterBar">
+  <div class="filter-bar-inner">
+    <div class="filter-dropdowns">
+      <div class="filter-dropdown">
+        <button type="button" class="filter-btn" id="brandFilterBtn">Marca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="filter-menu" id="brandMenu">
+          <button type="button" class="filter-option active" data-brand="">Todas</button>
+          {uniqueBrands.map(b => (
+            <button type="button" class="filter-option" data-brand={b.slug}>{b.name}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div class="filter-sort">
+      <label>Ordenar:</label>
+      <select id="sortSelect">
+        <option value="default">Relevancia</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="name-asc">Nombre A-Z</option>
+      </select>
+    </div>
+  </div>
+</div>
+
 <main class="products-section" id="main-content">
   <div class="section-header">
     <h2 class="section-title">Productos <span class="red">{config.label}</span></h2>
@@ -144,7 +176,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     {items.map((it, i) => {
       return (
         <>
-          <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
+          <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} data-brand={it.brandSlug} data-price={it.effectivePrice} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
             {it.featured && (
               <span class="card-badge-featured">
                 <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -203,6 +235,25 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
 
 .cat-pills-section{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
+
+/* FILTER BAR */
+.filter-bar{background:var(--grey);border-bottom:1px solid var(--grey2);padding:.7rem clamp(1rem,4vw,3rem);position:sticky;top:var(--header-h);z-index:200}
+.filter-bar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.filter-dropdowns{display:flex;gap:.2rem}
+.filter-dropdown{position:relative}
+.filter-btn{display:flex;align-items:center;gap:.3rem;padding:.45rem .8rem;background:none;border:none;font-family:var(--fb);font-size:.85rem;font-weight:600;color:var(--black);cursor:pointer;transition:color .15s}
+.filter-btn:hover,.filter-btn.open{color:var(--red)}
+.filter-btn svg{width:14px;height:14px;transition:transform .2s}
+.filter-btn.open svg{transform:rotate(180deg)}
+.filter-menu{display:none;position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--grey2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.1);min-width:180px;max-height:280px;overflow-y:auto;z-index:10;padding:.3rem 0}
+.filter-menu.open{display:block}
+.filter-option{display:block;width:100%;text-align:left;padding:.5rem .9rem;background:none;border:none;font-family:var(--fb);font-size:.82rem;color:var(--black);cursor:pointer;transition:background .1s}
+.filter-option:hover{background:var(--grey)}
+.filter-option.active{color:var(--red);font-weight:700}
+.filter-sort{display:flex;align-items:center;gap:.4rem}
+.filter-sort label{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.filter-sort select{padding:.35rem .6rem;border:1px solid var(--grey2);border-radius:6px;font-family:var(--fb);font-size:.82rem;background:var(--white);cursor:pointer}
+
 .cat-pills-scroll{display:flex;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.4rem;scrollbar-width:thin;scroll-behavior:smooth}
 .cat-pills-scroll::-webkit-scrollbar{height:4px}
 .cat-pills-scroll::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:2px}
@@ -236,12 +287,16 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
   const banner = document.getElementById('gActiveBanner');
   const bannerLabel = document.getElementById('gActiveLabel');
   let activeSlugs = [];
+  let activeBrand = '';
 
   function apply() {
     let visible = 0;
     cards.forEach(card => {
       const cardCats = (card.dataset.cats || '').split('|').filter(Boolean);
-      const show = activeSlugs.length === 0 || cardCats.some(c => activeSlugs.includes(c));
+      const cardBrand = card.dataset.brand || '';
+      const catMatch = activeSlugs.length === 0 || cardCats.some(c => activeSlugs.includes(c));
+      const brandMatch = !activeBrand || cardBrand === activeBrand;
+      const show = catMatch && brandMatch;
       card.style.display = show ? '' : 'none';
       if (show) visible++;
     });
@@ -249,6 +304,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     if (emptyState) emptyState.style.display = visible === 0 ? 'block' : 'none';
   }
 
+  // Category pills
   pills.forEach(pill => {
     pill.addEventListener('click', () => {
       const slugs = (pill.dataset.catSlugs || '').split(',');
@@ -266,7 +322,6 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
         }
       }
       apply();
-      document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 
@@ -276,6 +331,52 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     if (banner) banner.style.display = 'none';
     apply();
   });
+
+  // Brand filter dropdown
+  const brandBtn = document.getElementById('brandFilterBtn');
+  const brandMenu = document.getElementById('brandMenu');
+  if (brandBtn && brandMenu) {
+    brandBtn.addEventListener('click', () => {
+      brandBtn.classList.toggle('open');
+      brandMenu.classList.toggle('open');
+    });
+    document.addEventListener('click', e => {
+      if (!brandBtn.contains(e.target) && !brandMenu.contains(e.target)) {
+        brandBtn.classList.remove('open');
+        brandMenu.classList.remove('open');
+      }
+    });
+    brandMenu.querySelectorAll('.filter-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        activeBrand = opt.dataset.brand || '';
+        brandMenu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        brandBtn.firstChild.textContent = activeBrand ? opt.textContent + ' ' : 'Marca ';
+        brandBtn.classList.remove('open');
+        brandMenu.classList.remove('open');
+        apply();
+      });
+    });
+  }
+
+  // Sort
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      const val = sortSelect.value;
+      const sorted = [...cards].sort((a, b) => {
+        const pa = parseFloat(a.dataset.price) || 0;
+        const pb = parseFloat(b.dataset.price) || 0;
+        const na = (a.querySelector('.card-name')?.textContent || '').toLowerCase();
+        const nb = (b.querySelector('.card-name')?.textContent || '').toLowerCase();
+        if (val === 'price-asc') return pa - pb;
+        if (val === 'price-desc') return pb - pa;
+        if (val === 'name-asc') return na.localeCompare(nb);
+        return 0;
+      });
+      sorted.forEach(c => grid.appendChild(c));
+    });
+  }
 
   apply();
 })();
