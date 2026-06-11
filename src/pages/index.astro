@@ -76,18 +76,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
     <section class="cat-section" id={`cat-${section.cat.slug}`}>
       <div class="cat-section-header">
         <h2 class="cat-section-title">{section.cat.name}</h2>
-        <div class="cat-section-right">
-          {section.products.length > 4 && (
-            <button type="button" class="ver-mas-btn" data-cat={section.cat.slug}>
-              Ver todos ({section.products.length})
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-          )}
-        </div>
       </div>
-      <div class="product-grid">
+      <div class="cat-carousel">
         {section.products.map((it, i) => (
-          <a href={`/productos/${it.slug}`} class={`card${i >= 4 ? ' card-hidden' : ''}`} style={`animation-delay:${Math.min(i * 0.03, 0.3)}s`}>
+          <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.3)}s`}>
             {it.featured && (
               <span class="card-badge-featured">
                 <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -132,7 +124,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <style>
 .hero-banner{width:100vw;margin-left:calc(-50vw + 50%);overflow:hidden;background:var(--red);margin-top:calc(-1 * var(--header-h))}
-.hero-banner-img{width:100%;height:auto;display:block}
+.hero-banner-img{width:100%;height:100vh;display:block;object-fit:cover}
 .hero-banner picture{display:block;width:100%}
 .promo-wrap{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-bottom{margin:2rem 0 0}
@@ -140,13 +132,14 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .cat-section{margin-bottom:2.5rem}
 .cat-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
 .cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em}
-.cat-section-right{display:flex;align-items:center;gap:.8rem}
-.card-hidden{display:none}
-.cat-section.expanded .card-hidden{display:flex}
-.ver-mas-btn{display:flex;align-items:center;gap:.3rem;background:none;border:none;padding:.3rem 0;font-family:var(--fb);font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:color .18s;white-space:nowrap}
-.ver-mas-btn:hover{color:var(--black)}
-.ver-mas-btn svg{width:14px;height:14px;transition:transform .2s}
-.cat-section.expanded .ver-mas-btn svg{transform:rotate(180deg)}
+.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.6rem;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.cat-carousel::-webkit-scrollbar{height:4px}
+.cat-carousel::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:2px}
+.cat-carousel .card{flex:0 0 240px;scroll-snap-align:start}
+@media(max-width:640px){
+  .cat-carousel .card{flex:0 0 180px}
+  .hero-banner-img{height:auto;min-height:100vh}
+}
 .card-noimg{font-size:2rem;color:var(--grey2)}
 .card-badge-sale{position:absolute;top:.6rem;right:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.75rem;padding:.22rem .5rem;border-radius:4px;z-index:5}
 .card-desc{font-size:.75rem;color:var(--muted);line-height:1.35;margin-bottom:.5rem}
@@ -154,16 +147,5 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .card-price-sale{color:var(--red)}
 </style>
-
-<script is:inline>
-document.querySelectorAll('.ver-mas-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const section = btn.closest('.cat-section');
-    const isExpanded = section.classList.toggle('expanded');
-    const total = section.dataset.total || btn.textContent.match(/\d+/)?.[0] || '';
-    btn.firstChild.textContent = isExpanded ? 'Ver menos ' : `Ver todos (${total}) `;
-  });
-});
-</script>
 
 </Layout>
