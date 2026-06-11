@@ -226,6 +226,74 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       </select>
     </div>
   </div>
+
+  <!-- Mobile: Filtros + Ordenar -->
+  <div class="mobile-filter-row">
+    <button type="button" class="mobile-filter-btn" id="mobileFilterBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="6" cy="6" r="2" fill="currentColor"/><circle cx="10" cy="12" r="2" fill="currentColor"/><circle cx="6" cy="18" r="2" fill="currentColor"/></svg>
+      Filtros
+    </button>
+    <div class="filter-sort">
+      <span class="filter-sort-label">Ordenar:</span>
+      <select id="sortSelectMobile">
+        <option value="default">Relevancia</option>
+        <option value="price-asc">Menor precio</option>
+        <option value="price-desc">Mayor precio</option>
+        <option value="name-asc">Nombre A-Z</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-filter-overlay" id="mobileFilterOverlay"></div>
+<div class="mobile-filter-panel" id="mobileFilterPanel">
+  <div class="mobile-fp-header">
+    <h3>Filtros</h3>
+    <button type="button" class="mobile-fp-close" id="mobileFilterClose">&times;</button>
+  </div>
+  <div class="mobile-fp-section">
+    <h4>Precio</h4>
+    <div class="mobile-fp-price">
+      <input type="number" id="mPriceMin" placeholder="Min" min="0" step="1000"/>
+      <span>—</span>
+      <input type="number" id="mPriceMax" placeholder="Max" min="0" step="1000"/>
+    </div>
+  </div>
+  {allSizes.length > 0 && (
+    <div class="mobile-fp-section">
+      <h4>Talla</h4>
+      <div class="mobile-fp-options">
+        <button type="button" class="mobile-fp-opt active" data-msize="">Todas</button>
+        {allSizes.map(s => (
+          <button type="button" class="mobile-fp-opt" data-msize={s}>{s}</button>
+        ))}
+      </div>
+    </div>
+  )}
+  <div class="mobile-fp-section">
+    <h4>Marca</h4>
+    <div class="mobile-fp-options">
+      <button type="button" class="mobile-fp-opt active" data-mbrand="">Todas</button>
+      {uniqueBrands.map(b => (
+        <button type="button" class="mobile-fp-opt" data-mbrand={b.slug}>{b.name}</button>
+      ))}
+    </div>
+  </div>
+  {allColors.length > 0 && (
+    <div class="mobile-fp-section">
+      <h4>Color</h4>
+      <div class="mobile-fp-options">
+        <button type="button" class="mobile-fp-opt active" data-mcolor="">Todos</button>
+        {allColors.map(c => (
+          <button type="button" class="mobile-fp-color" data-mcolor={c}>
+            <span class="color-swatch" style={`background:${colorHexMap[c] || '#999'}`}></span>
+            {c}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+  <button type="button" class="mobile-fp-apply" id="mobileFilterApply">Aplicar filtros</button>
 </div>
 
 <!-- PRODUCTOS DEL GÉNERO -->
@@ -348,23 +416,49 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .price-apply:hover{background:var(--red)}
 .price-clear{width:100%;padding:.3rem;background:none;border:none;font-family:var(--fb);font-size:.75rem;color:var(--muted);cursor:pointer}
 .price-clear:hover{color:var(--red)}
-.filter-menu-colors{display:flex;flex-wrap:wrap;gap:.2rem;padding:.5rem;min-width:220px;max-width:300px}
+.filter-menu-colors{flex-wrap:wrap;gap:.2rem;padding:.5rem;min-width:220px;max-width:300px}
+.filter-menu-colors.open{display:flex}
 .filter-menu-colors .filter-option{width:100%;padding:.4rem .7rem}
 .filter-color-opt{display:flex;align-items:center;gap:.5rem;width:100%;text-align:left;padding:.45rem .7rem;background:none;border:none;font-family:var(--fb);font-size:.82rem;color:var(--black);cursor:pointer;transition:background .1s;border-radius:4px}
 .filter-color-opt:hover{background:var(--grey)}
 .filter-color-opt.active{font-weight:700;color:var(--red)}
 .color-swatch{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
 
+/* Mobile: collapse filters into one button */
+.mobile-filter-btn{display:none}
+.mobile-filter-overlay{display:none}
+.mobile-filter-panel{display:none}
 @media(max-width:640px){
-  .filter-section{padding:.8rem .8rem 0}
-  .filter-bar-row{flex-direction:column;align-items:stretch;gap:.5rem}
-  .filter-dropdowns{justify-content:space-between}
-  .filter-btn{font-size:.8rem;padding:.35rem .5rem}
-  .filter-sort{justify-content:space-between;padding-top:.3rem;border-top:1px solid var(--grey2)}
+  .filter-section{padding:.6rem .8rem 0}
+  .filter-bar-row{display:none}
+  .mobile-filter-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem 0 .5rem}
+  .mobile-filter-btn{display:flex;align-items:center;gap:.4rem;background:none;border:1.5px solid var(--grey2);border-radius:8px;padding:.5rem 1rem;font-family:var(--fb);font-size:.85rem;font-weight:600;cursor:pointer;color:var(--black)}
+  .mobile-filter-btn svg{width:16px;height:16px}
+  .mobile-filter-btn.has-filters{border-color:var(--red);color:var(--red)}
+  .mobile-filter-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:5000;opacity:0;visibility:hidden;transition:opacity .2s}
+  .mobile-filter-overlay.open{display:block;opacity:1;visibility:visible}
+  .mobile-filter-panel{position:fixed;bottom:0;left:0;right:0;background:var(--white);z-index:5001;border-radius:16px 16px 0 0;max-height:80vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s ease;padding:0 0 env(safe-area-inset-bottom)}
+  .mobile-filter-panel.open{display:block;transform:translateY(0)}
+  .mobile-fp-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--grey2)}
+  .mobile-fp-header h3{font-family:var(--fd);font-size:1.3rem}
+  .mobile-fp-close{background:none;border:none;font-size:1.6rem;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--black)}
+  .mobile-fp-section{padding:.8rem 1.2rem;border-bottom:1px solid var(--grey)}
+  .mobile-fp-section h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.5rem}
+  .mobile-fp-options{display:flex;flex-wrap:wrap;gap:.4rem}
+  .mobile-fp-opt{padding:.4rem .8rem;border:1px solid var(--grey2);border-radius:6px;font-size:.82rem;background:var(--white);cursor:pointer;font-family:var(--fb)}
+  .mobile-fp-opt.active{background:var(--black);color:var(--white);border-color:var(--black)}
+  .mobile-fp-color{display:flex;align-items:center;gap:.4rem;padding:.4rem .7rem;border:1px solid var(--grey2);border-radius:6px;font-size:.82rem;background:var(--white);cursor:pointer;font-family:var(--fb)}
+  .mobile-fp-color.active{border-color:var(--red);font-weight:700;color:var(--red)}
+  .mobile-fp-color .color-swatch{width:16px;height:16px;border-radius:3px;border:1px solid rgba(0,0,0,.15)}
+  .mobile-fp-price{display:flex;gap:.5rem;align-items:center}
+  .mobile-fp-price input{flex:1;padding:.45rem .5rem;border:1px solid var(--grey2);border-radius:6px;font-size:.85rem;font-family:var(--fb)}
+  .mobile-fp-apply{display:block;margin:1rem 1.2rem;padding:.75rem;background:var(--black);color:var(--white);border:none;border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;text-transform:uppercase;cursor:pointer;width:calc(100% - 2.4rem)}
+  .mobile-fp-apply:hover{background:var(--red)}
   .cat-pill{font-size:.78rem;padding:.4rem .9rem}
   .pills-arrow{display:none}
   .filter-menu{position:fixed;left:5%;right:5%;top:auto;bottom:0;max-height:50vh;border-radius:12px 12px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
 }
+@media(min-width:641px){.mobile-filter-row{display:none}}
 </style>
 
 <script is:inline>
@@ -522,6 +616,69 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     update(); window.addEventListener('resize', update);
   }
   setupScroller(document.querySelector('.cat-pills-scroll'), document.querySelector('.pills-arrow-left'), document.querySelector('.pills-arrow-right'));
+
+  // Mobile filter panel
+  const mfBtn = document.getElementById('mobileFilterBtn');
+  const mfOverlay = document.getElementById('mobileFilterOverlay');
+  const mfPanel = document.getElementById('mobileFilterPanel');
+  const mfClose = document.getElementById('mobileFilterClose');
+  const mfApply = document.getElementById('mobileFilterApply');
+
+  function openMobileFilters() { mfOverlay?.classList.add('open'); mfPanel?.classList.add('open'); }
+  function closeMobileFilters() { mfOverlay?.classList.remove('open'); mfPanel?.classList.remove('open'); }
+
+  mfBtn?.addEventListener('click', openMobileFilters);
+  mfOverlay?.addEventListener('click', closeMobileFilters);
+  mfClose?.addEventListener('click', closeMobileFilters);
+
+  // Mobile option selection (toggle active)
+  document.querySelectorAll('[data-msize]').forEach(o => o.addEventListener('click', () => {
+    o.closest('.mobile-fp-options').querySelectorAll('.mobile-fp-opt,.mobile-fp-color').forEach(x => x.classList.remove('active'));
+    o.classList.add('active');
+  }));
+  document.querySelectorAll('[data-mbrand]').forEach(o => o.addEventListener('click', () => {
+    o.closest('.mobile-fp-options').querySelectorAll('.mobile-fp-opt,.mobile-fp-color').forEach(x => x.classList.remove('active'));
+    o.classList.add('active');
+  }));
+  document.querySelectorAll('[data-mcolor]').forEach(o => o.addEventListener('click', () => {
+    o.closest('.mobile-fp-options').querySelectorAll('.mobile-fp-opt,.mobile-fp-color').forEach(x => x.classList.remove('active'));
+    o.classList.add('active');
+  }));
+
+  mfApply?.addEventListener('click', () => {
+    filters.priceMin = parseFloat(document.getElementById('mPriceMin')?.value) || 0;
+    filters.priceMax = parseFloat(document.getElementById('mPriceMax')?.value) || Infinity;
+    const activeSize = document.querySelector('[data-msize].active');
+    filters.size = activeSize?.dataset.msize || '';
+    const activeBrand = document.querySelector('[data-mbrand].active');
+    filters.brand = activeBrand?.dataset.mbrand || '';
+    const activeColor = document.querySelector('[data-mcolor].active');
+    filters.color = activeColor?.dataset.mcolor || '';
+    // Update mobile filter btn indicator
+    const hasFilters = filters.priceMin > 0 || filters.priceMax < Infinity || filters.size || filters.brand || filters.color;
+    mfBtn?.classList.toggle('has-filters', hasFilters);
+    closeMobileFilters();
+    apply();
+  });
+
+  // Mobile sort
+  const sortMobile = document.getElementById('sortSelectMobile');
+  if (sortMobile) {
+    sortMobile.addEventListener('change', () => {
+      const val = sortMobile.value;
+      if (sortSelect) sortSelect.value = val;
+      const sorted = [...cards].sort((a, b) => {
+        const pa = parseFloat(a.dataset.price) || 0, pb = parseFloat(b.dataset.price) || 0;
+        const na = (a.querySelector('.card-name')?.textContent || '').toLowerCase();
+        const nb = (b.querySelector('.card-name')?.textContent || '').toLowerCase();
+        if (val === 'price-asc') return pa - pb;
+        if (val === 'price-desc') return pb - pa;
+        if (val === 'name-asc') return na.localeCompare(nb);
+        return 0;
+      });
+      sorted.forEach(c => grid.appendChild(c));
+    });
+  }
 
   apply();
 })();
