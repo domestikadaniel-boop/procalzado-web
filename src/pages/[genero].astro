@@ -74,13 +74,26 @@ function productData(p: Product) {
 }
 const items = products.map(productData);
 
-// Extraer categorías padre presentes en los productos de este género
-const catSlugsInUse = new Set(items.flatMap(it => it.catSlugs));
-const genreCats = parentCats.filter(c => {
-  // Incluir si algún producto tiene esta categoría o alguna subcategoría de ella
-  const subcats = allCategories.filter(sc => sc.parent_id === c.id);
-  const slugs = [c.slug, ...subcats.map(sc => sc.slug)];
-  return slugs.some(s => catSlugsInUse.has(s));
+// Categorías a mostrar: si padre tiene subs → solo subs; si no → el padre
+const subcatsByParent: Record<string, Category[]> = {};
+allCategories.filter(c => c.parent_id).forEach(c => {
+  if (!subcatsByParent[c.parent_id!]) subcatsByParent[c.parent_id!] = [];
+  subcatsByParent[c.parent_id!].push(c);
+});
+
+const displayCats: Category[] = [];
+parentCats.forEach(parent => {
+  const subs = subcatsByParent[parent.id];
+  if (subs && subs.length > 0) {
+    subs.forEach(s => displayCats.push(s));
+  } else {
+    displayCats.push(parent);
+  }
+});
+
+// Filtrar solo las que tienen productos en este género
+const genreCats = displayCats.filter(cat => {
+  return items.some(it => it.catSlugs.includes(cat.slug));
 });
 
 const pageTitle = `${config.title} | Procalzado`;
@@ -106,15 +119,11 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 {genreCats.length > 0 && (
   <section class="cat-pills-section">
     <div class="cat-pills-scroll">
-      {genreCats.map(cat => {
-        const subcats = allCategories.filter(sc => sc.parent_id === cat.id);
-        const slugs = [cat.slug, ...subcats.map(sc => sc.slug)].join(',');
-        return (
-          <button type="button" class="cat-pill" data-cat-slugs={slugs}>
-            {cat.name}
-          </button>
-        );
-      })}
+      {genreCats.map(cat => (
+        <button type="button" class="cat-pill" data-cat-slugs={cat.slug}>
+          {cat.name}
+        </button>
+      ))}
     </div>
   </section>
 )}
@@ -185,8 +194,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 
 <style>
 .gender-hero{background:var(--black);color:var(--white);padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,3rem);padding-top:calc(var(--header-h) + clamp(2rem,5vw,3.5rem));margin-top:calc(-1 * var(--header-h));background-size:cover;background-position:center;background-repeat:no-repeat;position:relative}
-.gender-hero::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);pointer-events:none}
-.gender-hero-inner{max-width:1280px;margin:0 auto;position:relative;z-index:1}
+.gender-hero-inner{max-width:1280px;margin:0 auto}
 .promo-wrap-page{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-bottom{margin:2rem 0 0}
 .promo-grid-full{grid-column:1/-1;margin:1rem 0}

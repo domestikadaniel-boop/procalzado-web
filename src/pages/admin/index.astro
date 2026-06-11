@@ -189,7 +189,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     </div>
     <div id="tab-brands" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las marcas (arrastra para reordenar)</span><button class="btn-add" id="addBrandBtn">+ Nueva marca</button></div>
-      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th style="width:90px">Productos</th><th>Dist. Autorizado</th><th>En filtros</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="brandTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th style="width:90px">Productos</th><th>Dist. Autorizado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="brandTableBody"></tbody></table></div>
     </div>
     <div id="tab-categories" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las categorías (arrastra para reordenar)</span><button class="btn-add" id="addCatBtn">+ Nueva categoría</button></div>
@@ -343,12 +343,6 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         <input type="text" id="cDisplayTitle" placeholder="Ej: Para el trabajo más duro"/>
         <small style="color:var(--muted);font-size:.72rem">Texto llamativo que se muestra en el menú. Si lo dejas vacío se usa el nombre normal.</small>
       </div>
-      <div class="field"><label>Imagen de la categoría (opcional)</label>
-        <div id="cImagePreview" style="margin-bottom:.5rem"></div>
-        <button type="button" class="upload-color-btn" id="cImageUploadBtn">📷 Subir imagen</button>
-        <input type="hidden" id="cImageUrl"/>
-        <small style="display:block;color:var(--muted);font-size:.72rem;margin-top:.4rem">Se muestra en la tarjeta del menú de categorías. Recomendado: <strong>800 × 1000 px</strong> (vertical), formato <strong>JPG o WebP</strong>, máx. 500 KB.</small>
-      </div>
       <div class="field"><label>Meta Title (SEO)</label><input type="text" id="cMetaTitle" placeholder="Botas de Caucho en Colombia | Procalzado"/></div>
       <div class="field"><label>Meta Description (SEO)</label><textarea id="cMetaDesc" rows="2" maxlength="160" placeholder="Descripción para Google (máx 160 chars)"></textarea></div>
       <div class="field"><label><input type="checkbox" id="cActive" checked/> Categoría activa</label></div>
@@ -361,8 +355,6 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 </div>
 
 <input type="file" id="hiddenColorInput" accept="image/*" multiple style="display:none"/>
-<input type="file" id="hiddenCatImageInput" accept="image/*" style="display:none"/>
-<input type="file" id="hiddenGcardImageInput" accept="image/*" style="display:none"/>
 <input type="file" id="hiddenPromoImageInput" accept="image/*" style="display:none"/>
 
 <!-- PROMO PRODUCT MODAL -->
@@ -616,14 +608,11 @@ $('adminSearch').addEventListener('input',e=>renderProducts(e.target.value.toLow
 function renderBrands(){
   $('brandTableBody').innerHTML=brands.map(b=>{
     const count=products.filter(p=>p.brand_id===b.id).length;
-    // show_in_filters: si es null/undefined se asume true (aparece por defecto)
-    const inFilters=b.show_in_filters!==false;
     return `<tr draggable="true" data-id="${b.id}" class="draggable-row">
     <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
     <td><strong>${b.name}</strong></td><td><code style="font-size:.78rem;color:var(--muted)">${b.slug}</code></td>
     <td style="text-align:center"><span class="badge ${count>0?'badge-active':'badge-inactive'}" style="min-width:32px;display:inline-block">${count}</span></td>
     <td><label class="toggle-switch"><input type="checkbox" ${b.is_authorized_distributor?'checked':''} onchange="window.toggleBrandAuth('${b.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
-    <td><label class="toggle-switch"><input type="checkbox" ${inFilters?'checked':''} onchange="window.toggleBrandFilter('${b.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
     <td><span class="badge ${b.active?'badge-active':'badge-inactive'}">${b.active?'Activa':'Off'}</span></td>
     <td class="actions-cell"><button class="action-btn edit" onclick="window.editBrand('${b.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteBrand('${b.id}',\`${b.name}\`)">🗑️</button></td>
   </tr>`}).join('');
@@ -1091,32 +1080,9 @@ $('brandSaveBtn').addEventListener('click',async()=>{
 });
 window.editBrand=id=>{const b=brands.find(x=>x.id===id);if(!b)return;$('brandId').value=b.id;$('bName').value=b.name;$('bSlug').value=b.slug;$('bAuthorized').checked=b.is_authorized_distributor;$('brandFormTitle').textContent='Editar Marca';$('brandModal').classList.add('open')};
 window.toggleBrandAuth=async(id,checked)=>{await supabase.from('brands').update({is_authorized_distributor:checked}).eq('id',id);const b=brands.find(x=>x.id===id);if(b)b.is_authorized_distributor=checked;showToast(checked?'Autorizado ✓':'Desmarcado')};
-window.toggleBrandFilter=async(id,checked)=>{await supabase.from('brands').update({show_in_filters:checked}).eq('id',id);const b=brands.find(x=>x.id===id);if(b)b.show_in_filters=checked;showToast(checked?'Aparece en filtros ✓':'Oculta de filtros')};
 window.deleteBrand=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))return;loading(true);await supabase.from('brands').delete().eq('id',id);await loadData();loading(false)};
 
 // CATEGORIES
-function renderCatImagePreview(){
-  const url=$('cImageUrl').value;
-  $('cImagePreview').innerHTML = url
-    ? `<div class="color-img-thumb" style="width:90px;height:112px"><img src="${url}" style="width:90px;height:112px;object-fit:cover;display:block"/><button type="button" class="x" id="cImageRemove">×</button></div>`
-    : '';
-  const rm=$('cImageRemove');
-  if(rm) rm.addEventListener('click',()=>{$('cImageUrl').value='';renderCatImagePreview()});
-}
-$('cImageUploadBtn').addEventListener('click',()=>$('hiddenCatImageInput').click());
-$('hiddenCatImageInput').addEventListener('change',async e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-  const path=`categorias/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
-  loading(true);
-  const{error}=await supabase.storage.from('product-images').upload(path,file);
-  loading(false);
-  if(error){alert('Error: '+error.message);return}
-  const{data:{publicUrl}}=supabase.storage.from('product-images').getPublicUrl(path);
-  $('cImageUrl').value=publicUrl;
-  renderCatImagePreview();
-  e.target.value='';
-});
 
 function populateCatParentSelect(currentCatId = null) {
   const sel = $('cParent');
@@ -1128,7 +1094,7 @@ function populateCatParentSelect(currentCatId = null) {
 
 $('addCatBtn').addEventListener('click',()=>{
   $('catId').value='';$('cName').value='';$('cSlug').value='';$('cMetaTitle').value='';$('cMetaDesc').value='';$('cActive').checked=true;
-  $('cDisplayTitle').value='';$('cImageUrl').value='';renderCatImagePreview();
+  $('cDisplayTitle').value='';
   populateCatParentSelect();
   $('cParent').value='';
   $('catFormTitle').textContent='Nueva Categoría';$('categoryModal').classList.add('open');
@@ -1138,7 +1104,7 @@ $('cSlug').addEventListener('blur',e=>{ e.target.value=slugify(e.target.value); 
 $('catSaveBtn').addEventListener('click',async()=>{
   const name=$('cName').value.trim();if(!name){alert('Nombre obligatorio');return}
   const slug=$('cSlug').value.trim()||slugify(name);
-  const d={name,slug,parent_id:$('cParent').value||null,display_title:$('cDisplayTitle').value.trim()||null,image_url:$('cImageUrl').value||null,meta_title:$('cMetaTitle').value.trim()||null,meta_description:$('cMetaDesc').value.trim()||null,active:$('cActive').checked};
+  const d={name,slug,parent_id:$('cParent').value||null,display_title:$('cDisplayTitle').value.trim()||null,meta_title:$('cMetaTitle').value.trim()||null,meta_description:$('cMetaDesc').value.trim()||null,active:$('cActive').checked};
   loading(true);const id=$('catId').value;
   if(id)await supabase.from('categories').update(d).eq('id',id);else await supabase.from('categories').insert(d);
   $('categoryModal').classList.remove('open');await loadData();loading(false);showToast('Categoría guardada ✓');
@@ -1146,7 +1112,7 @@ $('catSaveBtn').addEventListener('click',async()=>{
 window.editCategory=id=>{
   const c=categories.find(x=>x.id===id);if(!c)return;
   $('catId').value=c.id;$('cName').value=c.name;$('cSlug').value=c.slug;
-  $('cDisplayTitle').value=c.display_title||'';$('cImageUrl').value=c.image_url||'';renderCatImagePreview();
+  $('cDisplayTitle').value=c.display_title||'';
   $('cMetaTitle').value=c.meta_title||'';$('cMetaDesc').value=c.meta_description||'';$('cActive').checked=c.active;
   populateCatParentSelect(id);
   $('cParent').value=c.parent_id||'';
