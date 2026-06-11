@@ -64,6 +64,14 @@ function productData(p: Product) {
   const catSlugs = cats.map(c => c.slug);
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
   const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
+  const variants = (p.product_variants || []).filter(v => v.active);
+  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const colors = [...new Set(variants.map(v => v.color).filter(c => c && c !== 'Único'))];
+  const colorHexes = variants.reduce((acc, v) => {
+    if (v.color && v.color !== 'Único' && v.color_hex) acc[v.color] = v.color_hex;
+    return acc;
+  }, {} as Record<string, string>);
+
   return {
     slug: p.slug, name: p.name, brandName, brandSlug: p.brands?.slug || '', catSlugs,
     primaryImg, secondImg, featured: p.featured,
@@ -71,14 +79,22 @@ function productData(p: Product) {
     catName: primaryCat?.name || '',
     shortDesc: p.short_description || '',
     effectivePrice: p.sale_price || p.price || 0,
+    sizes, colors,
   };
 }
 const items = products.map(productData);
 
-// Marcas únicas para el filtro
+// Datos para filtros
 const uniqueBrands = [...new Map(items.filter(i => i.brandName).map(i => [i.brandSlug, i.brandName])).entries()]
   .map(([slug, name]) => ({ slug, name }))
   .sort((a, b) => a.name.localeCompare(b.name));
+
+const allSizes = [...new Set(items.flatMap(i => i.sizes))].sort((a, b) => {
+  const na = parseFloat(a), nb = parseFloat(b);
+  return isNaN(na) || isNaN(nb) ? a.localeCompare(b) : na - nb;
+});
+
+const allColors = [...new Set(items.flatMap(i => i.colors))].sort();
 
 // Categorías a mostrar: si padre tiene subs → solo subs; si no → el padre
 const subcatsByParent: Record<string, Category[]> = {};
@@ -121,9 +137,9 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
   <div class="promo-wrap-page"><PromoBanner block={promos.hero} /></div>
 )}
 
-<!-- CATEGORÍAS -->
-{genreCats.length > 0 && (
-  <section class="cat-pills-section">
+<!-- CATEGORÍAS + FILTROS -->
+<div class="filter-section">
+  {genreCats.length > 0 && (
     <div class="cat-pills-scroll">
       {genreCats.map(cat => (
         <button type="button" class="cat-pill" data-cat-slugs={cat.slug}>
@@ -131,16 +147,32 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
         </button>
       ))}
     </div>
-  </section>
-)}
-
-<!-- PRODUCTOS DEL GÉNERO -->
-<!-- FILTROS -->
-<div class="filter-bar" id="filterBar">
-  <div class="filter-bar-inner">
+  )}
+  <div class="filter-bar-row">
     <div class="filter-dropdowns">
       <div class="filter-dropdown">
-        <button type="button" class="filter-btn" id="brandFilterBtn">Marca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <button type="button" class="filter-btn" data-menu="priceMenu">Precio <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="filter-menu" id="priceMenu">
+          <button type="button" class="filter-option active" data-price="">Todos</button>
+          <button type="button" class="filter-option" data-price="0-50000">Hasta $50.000</button>
+          <button type="button" class="filter-option" data-price="50000-100000">$50.000 – $100.000</button>
+          <button type="button" class="filter-option" data-price="100000-200000">$100.000 – $200.000</button>
+          <button type="button" class="filter-option" data-price="200000-999999">Más de $200.000</button>
+        </div>
+      </div>
+      {allSizes.length > 0 && (
+        <div class="filter-dropdown">
+          <button type="button" class="filter-btn" data-menu="sizeMenu">Talla <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="filter-menu" id="sizeMenu">
+            <button type="button" class="filter-option active" data-size="">Todas</button>
+            {allSizes.map(s => (
+              <button type="button" class="filter-option" data-size={s}>{s}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div class="filter-dropdown">
+        <button type="button" class="filter-btn" data-menu="brandMenu">Marca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
         <div class="filter-menu" id="brandMenu">
           <button type="button" class="filter-option active" data-brand="">Todas</button>
           {uniqueBrands.map(b => (
@@ -148,18 +180,31 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
           ))}
         </div>
       </div>
+      {allColors.length > 0 && (
+        <div class="filter-dropdown">
+          <button type="button" class="filter-btn" data-menu="colorMenu">Color <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="filter-menu" id="colorMenu">
+            <button type="button" class="filter-option active" data-color="">Todos</button>
+            {allColors.map(c => (
+              <button type="button" class="filter-option" data-color={c}>{c}</button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
     <div class="filter-sort">
-      <label>Ordenar:</label>
+      <span class="filter-sort-label">Ordenar:</span>
       <select id="sortSelect">
         <option value="default">Relevancia</option>
-        <option value="price-asc">Precio: menor a mayor</option>
-        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="price-asc">Menor precio</option>
+        <option value="price-desc">Mayor precio</option>
         <option value="name-asc">Nombre A-Z</option>
       </select>
     </div>
   </div>
 </div>
+
+<!-- PRODUCTOS DEL GÉNERO -->
 
 <main class="products-section" id="main-content">
   <div class="section-header">
@@ -176,7 +221,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     {items.map((it, i) => {
       return (
         <>
-          <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} data-brand={it.brandSlug} data-price={it.effectivePrice} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
+          <a href={`/productos/${it.slug}`} class="card" data-cats={it.catSlugs.join('|')} data-brand={it.brandSlug} data-price={it.effectivePrice} data-sizes={it.sizes.join('|')} data-colors={it.colors.join('|')} style={`animation-delay:${Math.min(i * 0.03, 0.4)}s`}>
             {it.featured && (
               <span class="card-badge-featured">
                 <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -234,32 +279,28 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
 
-.cat-pills-section{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
-
-/* FILTER BAR */
-.filter-bar{background:var(--grey);border-bottom:1px solid var(--grey2);padding:.7rem clamp(1rem,4vw,3rem);position:sticky;top:var(--header-h);z-index:200}
-.filter-bar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.filter-dropdowns{display:flex;gap:.2rem}
+.filter-section{max-width:1280px;margin:0 auto;padding:1.2rem clamp(1rem,4vw,3rem) 0;position:sticky;top:var(--header-h);z-index:200;background:var(--grey)}
+.cat-pills-scroll{display:flex;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.8rem;scrollbar-width:none;scroll-behavior:smooth}
+.cat-pills-scroll::-webkit-scrollbar{display:none}
+.cat-pill{padding:.45rem 1rem;border:1.5px solid var(--grey2);border-radius:20px;background:var(--white);font-family:var(--fb);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;color:var(--black);white-space:nowrap;flex-shrink:0}
+.cat-pill:hover{border-color:var(--black)}
+.cat-pill.active{background:var(--black);border-color:var(--black);color:var(--white)}
+.filter-bar-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-top:1px solid var(--grey2);padding-top:.6rem;padding-bottom:.3rem}
+.filter-dropdowns{display:flex;gap:.1rem}
 .filter-dropdown{position:relative}
-.filter-btn{display:flex;align-items:center;gap:.3rem;padding:.45rem .8rem;background:none;border:none;font-family:var(--fb);font-size:.85rem;font-weight:600;color:var(--black);cursor:pointer;transition:color .15s}
+.filter-btn{display:flex;align-items:center;gap:.3rem;padding:.4rem .7rem;background:none;border:none;font-family:var(--fb);font-size:.85rem;font-weight:600;color:var(--black);cursor:pointer;transition:color .15s;white-space:nowrap}
 .filter-btn:hover,.filter-btn.open{color:var(--red)}
 .filter-btn svg{width:14px;height:14px;transition:transform .2s}
 .filter-btn.open svg{transform:rotate(180deg)}
-.filter-menu{display:none;position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--grey2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.1);min-width:180px;max-height:280px;overflow-y:auto;z-index:10;padding:.3rem 0}
+.filter-btn.has-value{color:var(--red)}
+.filter-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--white);border:1px solid var(--grey2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;max-height:280px;overflow-y:auto;z-index:10;padding:.3rem 0}
 .filter-menu.open{display:block}
 .filter-option{display:block;width:100%;text-align:left;padding:.5rem .9rem;background:none;border:none;font-family:var(--fb);font-size:.82rem;color:var(--black);cursor:pointer;transition:background .1s}
 .filter-option:hover{background:var(--grey)}
 .filter-option.active{color:var(--red);font-weight:700}
-.filter-sort{display:flex;align-items:center;gap:.4rem}
-.filter-sort label{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.filter-sort{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.filter-sort-label{font-size:.78rem;color:var(--muted);white-space:nowrap}
 .filter-sort select{padding:.35rem .6rem;border:1px solid var(--grey2);border-radius:6px;font-family:var(--fb);font-size:.82rem;background:var(--white);cursor:pointer}
-
-.cat-pills-scroll{display:flex;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.4rem;scrollbar-width:thin;scroll-behavior:smooth}
-.cat-pills-scroll::-webkit-scrollbar{height:4px}
-.cat-pills-scroll::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:2px}
-.cat-pill{padding:.5rem 1.1rem;border:1.5px solid var(--grey2);border-radius:20px;background:var(--white);font-family:var(--fb);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;color:var(--black);white-space:nowrap;flex-shrink:0}
-.cat-pill:hover{border-color:var(--black)}
-.cat-pill.active{background:var(--black);border-color:var(--black);color:var(--white)}
 
 .active-cat-banner{align-items:center;justify-content:space-between;gap:1rem;background:#fff5f5;border:1px solid var(--red);border-radius:8px;padding:.7rem 1rem;margin-bottom:1.2rem;font-size:.9rem}
 .active-cat-banner strong{text-transform:uppercase;letter-spacing:.03em}
@@ -272,6 +313,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .card-price-sale{color:var(--red)}
 @media(max-width:640px){
+  .filter-bar-row{flex-wrap:wrap}
   .cat-pill{font-size:.78rem;padding:.4rem .9rem}
 }
 </style>
@@ -286,17 +328,28 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
   const emptyState = document.getElementById('emptyState');
   const banner = document.getElementById('gActiveBanner');
   const bannerLabel = document.getElementById('gActiveLabel');
-  let activeSlugs = [];
-  let activeBrand = '';
+
+  let filters = { cats: [], brand: '', price: '', size: '', color: '' };
 
   function apply() {
     let visible = 0;
     cards.forEach(card => {
-      const cardCats = (card.dataset.cats || '').split('|').filter(Boolean);
-      const cardBrand = card.dataset.brand || '';
-      const catMatch = activeSlugs.length === 0 || cardCats.some(c => activeSlugs.includes(c));
-      const brandMatch = !activeBrand || cardBrand === activeBrand;
-      const show = catMatch && brandMatch;
+      const cc = (card.dataset.cats || '').split('|').filter(Boolean);
+      const cb = card.dataset.brand || '';
+      const cp = parseFloat(card.dataset.price) || 0;
+      const cs = (card.dataset.sizes || '').split('|').filter(Boolean);
+      const ccol = (card.dataset.colors || '').split('|').filter(Boolean);
+
+      let show = true;
+      if (filters.cats.length && !cc.some(c => filters.cats.includes(c))) show = false;
+      if (filters.brand && cb !== filters.brand) show = false;
+      if (filters.size && !cs.includes(filters.size)) show = false;
+      if (filters.color && !ccol.includes(filters.color)) show = false;
+      if (filters.price) {
+        const [min, max] = filters.price.split('-').map(Number);
+        if (cp < min || cp > max) show = false;
+      }
+
       card.style.display = show ? '' : 'none';
       if (show) visible++;
     });
@@ -309,55 +362,62 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     pill.addEventListener('click', () => {
       const slugs = (pill.dataset.catSlugs || '').split(',');
       if (pill.classList.contains('active')) {
-        activeSlugs = [];
+        filters.cats = [];
         pills.forEach(p => p.classList.remove('active'));
         if (banner) banner.style.display = 'none';
       } else {
-        activeSlugs = slugs;
+        filters.cats = slugs;
         pills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
-        if (banner) {
-          banner.style.display = 'flex';
-          if (bannerLabel) bannerLabel.textContent = pill.textContent.trim();
-        }
+        if (banner) { banner.style.display = 'flex'; if (bannerLabel) bannerLabel.textContent = pill.textContent.trim(); }
       }
       apply();
     });
   });
 
   document.getElementById('gActiveClear')?.addEventListener('click', () => {
-    activeSlugs = [];
+    filters.cats = [];
     pills.forEach(p => p.classList.remove('active'));
     if (banner) banner.style.display = 'none';
     apply();
   });
 
-  // Brand filter dropdown
-  const brandBtn = document.getElementById('brandFilterBtn');
-  const brandMenu = document.getElementById('brandMenu');
-  if (brandBtn && brandMenu) {
-    brandBtn.addEventListener('click', () => {
-      brandBtn.classList.toggle('open');
-      brandMenu.classList.toggle('open');
+  // Generic dropdown logic
+  document.querySelectorAll('.filter-btn[data-menu]').forEach(btn => {
+    const menu = document.getElementById(btn.dataset.menu);
+    if (!menu) return;
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      // Close others
+      document.querySelectorAll('.filter-menu.open').forEach(m => { if (m !== menu) m.classList.remove('open'); });
+      document.querySelectorAll('.filter-btn.open').forEach(b => { if (b !== btn) b.classList.remove('open'); });
+      btn.classList.toggle('open');
+      menu.classList.toggle('open');
     });
-    document.addEventListener('click', e => {
-      if (!brandBtn.contains(e.target) && !brandMenu.contains(e.target)) {
-        brandBtn.classList.remove('open');
-        brandMenu.classList.remove('open');
-      }
-    });
-    brandMenu.querySelectorAll('.filter-option').forEach(opt => {
+
+    menu.querySelectorAll('.filter-option').forEach(opt => {
       opt.addEventListener('click', () => {
-        activeBrand = opt.dataset.brand || '';
-        brandMenu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+        const key = opt.dataset.brand !== undefined ? 'brand' : opt.dataset.price !== undefined ? 'price' : opt.dataset.size !== undefined ? 'size' : opt.dataset.color !== undefined ? 'color' : '';
+        const val = opt.dataset[key] || '';
+        filters[key] = val;
+        menu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
         opt.classList.add('active');
-        brandBtn.firstChild.textContent = activeBrand ? opt.textContent + ' ' : 'Marca ';
-        brandBtn.classList.remove('open');
-        brandMenu.classList.remove('open');
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+        const labels = { brand: 'Marca', price: 'Precio', size: 'Talla', color: 'Color' };
+        btn.classList.toggle('has-value', !!val);
+        btn.childNodes[0].textContent = val ? opt.textContent.trim() + ' ' : (labels[key] || label) + ' ';
+        btn.classList.remove('open');
+        menu.classList.remove('open');
         apply();
       });
     });
-  }
+  });
+
+  // Close menus on outside click
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.filter-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.filter-btn.open').forEach(b => b.classList.remove('open'));
+  });
 
   // Sort
   const sortSelect = document.getElementById('sortSelect');
@@ -365,8 +425,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     sortSelect.addEventListener('change', () => {
       const val = sortSelect.value;
       const sorted = [...cards].sort((a, b) => {
-        const pa = parseFloat(a.dataset.price) || 0;
-        const pb = parseFloat(b.dataset.price) || 0;
+        const pa = parseFloat(a.dataset.price) || 0, pb = parseFloat(b.dataset.price) || 0;
         const na = (a.querySelector('.card-name')?.textContent || '').toLowerCase();
         const nb = (b.querySelector('.card-name')?.textContent || '').toLowerCase();
         if (val === 'price-asc') return pa - pb;

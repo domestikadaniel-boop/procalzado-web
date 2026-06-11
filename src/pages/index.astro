@@ -76,8 +76,13 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
     <section class="cat-section" id={`cat-${section.cat.slug}`}>
       <div class="cat-section-header">
         <h2 class="cat-section-title">{section.cat.name}</h2>
+        <div class="carousel-arrows">
+          <button type="button" class="carousel-arrow carousel-left" aria-label="Anterior">&#8249;</button>
+          <button type="button" class="carousel-arrow carousel-right" aria-label="Siguiente">&#8250;</button>
+        </div>
       </div>
-      <div class="cat-carousel">
+      <div class="cat-carousel-wrap">
+        <div class="cat-carousel">
         {section.products.map((it, i) => (
           <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.3)}s`}>
             {it.featured && (
@@ -113,6 +118,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
             </div>
           </a>
         ))}
+        </div>
       </div>
     </section>
   ))}
@@ -132,12 +138,17 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .cat-section{margin-bottom:2.5rem}
 .cat-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
 .cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em}
-.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;cursor:grab;scrollbar-width:none;padding-right:clamp(2rem,8vw,6rem)}
+.carousel-arrows{display:flex;gap:.3rem}
+.carousel-arrow{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--grey2);background:var(--white);color:var(--black);font-size:1.3rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.carousel-arrow:hover{border-color:var(--black);background:var(--black);color:var(--white)}
+.cat-carousel-wrap{position:relative}
+.cat-carousel-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:60px;background:linear-gradient(to right,transparent,var(--grey));pointer-events:none;z-index:2}
+.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding-right:60px}
 .cat-carousel::-webkit-scrollbar{display:none}
-.cat-carousel.dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
 .cat-carousel .card{flex:0 0 240px;scroll-snap-align:start}
 @media(max-width:640px){
   .cat-carousel .card{flex:0 0 180px}
+  .carousel-arrows{display:none}
   .hero-banner-img{height:auto;min-height:100vh}
 }
 .card-noimg{font-size:2rem;color:var(--grey2)}
@@ -149,14 +160,14 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 </style>
 
 <script is:inline>
-document.querySelectorAll('.cat-carousel').forEach(el => {
-  let isDown = false, startX, scrollL;
-  el.addEventListener('mousedown', e => { isDown = true; el.classList.add('dragging'); startX = e.pageX - el.offsetLeft; scrollL = el.scrollLeft; });
-  el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('dragging'); });
-  el.addEventListener('mouseup', () => { isDown = false; el.classList.remove('dragging'); });
-  el.addEventListener('mousemove', e => { if (!isDown) return; e.preventDefault(); el.scrollLeft = scrollL - (e.pageX - el.offsetLeft - startX); });
-  // Prevent click on cards when dragging
-  el.addEventListener('click', e => { if (Math.abs(el.scrollLeft - scrollL) > 5) e.preventDefault(); }, true);
+document.querySelectorAll('.cat-section').forEach(section => {
+  const carousel = section.querySelector('.cat-carousel');
+  const left = section.querySelector('.carousel-left');
+  const right = section.querySelector('.carousel-right');
+  if (!carousel) return;
+  const scrollAmt = 260;
+  if (left) left.addEventListener('click', () => carousel.scrollBy({ left: -scrollAmt, behavior: 'smooth' }));
+  if (right) right.addEventListener('click', () => carousel.scrollBy({ left: scrollAmt, behavior: 'smooth' }));
 });
 </script>
 

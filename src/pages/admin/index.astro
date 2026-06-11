@@ -176,7 +176,6 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab active" data-tab="products">Productos</button>
     <button class="tab" data-tab="brands">Marcas</button>
     <button class="tab" data-tab="categories">Categorías</button>
-    <button class="tab" data-tab="pages">Páginas</button>
     <button class="tab" data-tab="recommended">Recomendados</button>
     <button class="tab" data-tab="promos">Promos</button>
     <button class="tab" data-tab="promopage">Promoción</button>
@@ -502,7 +501,7 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','pages','recommended','promos','promopage','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','recommended','promos','promopage','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
 }));
 
 // LOAD
