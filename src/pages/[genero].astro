@@ -140,12 +140,16 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 <!-- CATEGORÍAS + FILTROS -->
 <div class="filter-section">
   {genreCats.length > 0 && (
-    <div class="cat-pills-scroll">
-      {genreCats.map(cat => (
-        <button type="button" class="cat-pill" data-cat-slugs={cat.slug}>
-          {cat.name}
-        </button>
-      ))}
+    <div class="pills-wrap">
+      <button type="button" class="pills-arrow pills-arrow-left" aria-label="Anterior">&#8249;</button>
+      <div class="cat-pills-scroll">
+        {genreCats.map(cat => (
+          <button type="button" class="cat-pill" data-cat-slugs={cat.slug}>
+            {cat.name}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="pills-arrow pills-arrow-right" aria-label="Siguiente">&#8250;</button>
     </div>
   )}
   <div class="filter-bar-row">
@@ -279,13 +283,16 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .gender-hero h1{font-family:var(--fd);font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.03em;line-height:1}
 .gender-hero p{font-size:.95rem;font-weight:300;color:rgba(255,255,255,.85);margin-top:.6rem;max-width:540px}
 
-.filter-section{max-width:1280px;margin:0 auto;padding:1.2rem clamp(1rem,4vw,3rem) 0;position:sticky;top:var(--header-h);z-index:200;background:var(--grey)}
-.cat-pills-scroll{display:flex;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.8rem;scrollbar-width:none;scroll-behavior:smooth}
+.filter-section{max-width:1280px;margin:0 auto;padding:1rem clamp(1rem,4vw,3rem) 0;position:sticky;top:var(--header-h);z-index:200;background:var(--white);border-bottom:1px solid var(--grey2)}
+.pills-wrap{position:relative;display:flex;align-items:center;gap:.3rem;padding-bottom:.6rem}
+.pills-arrow{width:28px;height:28px;border-radius:50%;border:1px solid var(--grey2);background:var(--white);color:var(--black);font-size:1.2rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.pills-arrow:hover{border-color:var(--black);background:var(--black);color:var(--white)}
+.cat-pills-scroll{display:flex;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-behavior:smooth;flex:1;min-width:0}
 .cat-pills-scroll::-webkit-scrollbar{display:none}
 .cat-pill{padding:.45rem 1rem;border:1.5px solid var(--grey2);border-radius:20px;background:var(--white);font-family:var(--fb);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;color:var(--black);white-space:nowrap;flex-shrink:0}
 .cat-pill:hover{border-color:var(--black)}
 .cat-pill.active{background:var(--black);border-color:var(--black);color:var(--white)}
-.filter-bar-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-top:1px solid var(--grey2);padding-top:.6rem;padding-bottom:.3rem}
+.filter-bar-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:.4rem;padding-bottom:.5rem}
 .filter-dropdowns{display:flex;gap:.1rem}
 .filter-dropdown{position:relative}
 .filter-btn{display:flex;align-items:center;gap:.3rem;padding:.4rem .7rem;background:none;border:none;font-family:var(--fb);font-size:.85rem;font-weight:600;color:var(--black);cursor:pointer;transition:color .15s;white-space:nowrap}
@@ -315,6 +322,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 @media(max-width:640px){
   .filter-bar-row{flex-wrap:wrap}
   .cat-pill{font-size:.78rem;padding:.4rem .9rem}
+  .pills-arrow{display:none}
 }
 </style>
 
@@ -435,6 +443,15 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       });
       sorted.forEach(c => grid.appendChild(c));
     });
+  }
+
+  // Pill arrows
+  const pillScroll = document.querySelector('.cat-pills-scroll');
+  const pillLeft = document.querySelector('.pills-arrow-left');
+  const pillRight = document.querySelector('.pills-arrow-right');
+  if (pillScroll && pillLeft && pillRight) {
+    pillLeft.addEventListener('click', () => pillScroll.scrollBy({ left: -200, behavior: 'smooth' }));
+    pillRight.addEventListener('click', () => pillScroll.scrollBy({ left: 200, behavior: 'smooth' }));
   }
 
   apply();

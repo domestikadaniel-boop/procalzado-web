@@ -76,12 +76,9 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
     <section class="cat-section" id={`cat-${section.cat.slug}`}>
       <div class="cat-section-header">
         <h2 class="cat-section-title">{section.cat.name}</h2>
-        <div class="carousel-arrows">
-          <button type="button" class="carousel-arrow carousel-left" aria-label="Anterior">&#8249;</button>
-          <button type="button" class="carousel-arrow carousel-right" aria-label="Siguiente">&#8250;</button>
-        </div>
       </div>
       <div class="cat-carousel-wrap">
+        <button type="button" class="carousel-arrow carousel-left" aria-label="Anterior">&#8249;</button>
         <div class="cat-carousel">
         {section.products.map((it, i) => (
           <a href={`/productos/${it.slug}`} class="card" style={`animation-delay:${Math.min(i * 0.03, 0.3)}s`}>
@@ -119,6 +116,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
           </a>
         ))}
         </div>
+        <button type="button" class="carousel-arrow carousel-right" aria-label="Siguiente">&#8250;</button>
       </div>
     </section>
   ))}
@@ -138,17 +136,18 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 .cat-section{margin-bottom:2.5rem}
 .cat-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:2px solid var(--grey2);padding-bottom:.5rem}
 .cat-section-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,1.8rem);letter-spacing:.03em}
-.carousel-arrows{display:flex;gap:.3rem}
-.carousel-arrow{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--grey2);background:var(--white);color:var(--black);font-size:1.3rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.cat-carousel-wrap{position:relative;padding:0 40px}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--grey2);background:var(--white);color:var(--black);font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,.08)}
 .carousel-arrow:hover{border-color:var(--black);background:var(--black);color:var(--white)}
-.cat-carousel-wrap{position:relative}
-.cat-carousel-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:60px;background:linear-gradient(to right,transparent,var(--grey));pointer-events:none;z-index:2}
-.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding-right:60px}
+.carousel-left{left:0}
+.carousel-right{right:0}
+.cat-carousel{display:flex;gap:1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none}
 .cat-carousel::-webkit-scrollbar{display:none}
 .cat-carousel .card{flex:0 0 240px;scroll-snap-align:start}
 @media(max-width:640px){
   .cat-carousel .card{flex:0 0 180px}
-  .carousel-arrows{display:none}
+  .cat-carousel-wrap{padding:0}
+  .carousel-arrow{display:none}
   .hero-banner-img{height:auto;min-height:100vh}
 }
 .card-noimg{font-size:2rem;color:var(--grey2)}
