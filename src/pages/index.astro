@@ -164,9 +164,16 @@ document.querySelectorAll('.cat-section').forEach(section => {
   const left = section.querySelector('.carousel-left');
   const right = section.querySelector('.carousel-right');
   if (!carousel) return;
-  const scrollAmt = 260;
-  if (left) left.addEventListener('click', () => carousel.scrollBy({ left: -scrollAmt, behavior: 'smooth' }));
-  if (right) right.addEventListener('click', () => carousel.scrollBy({ left: scrollAmt, behavior: 'smooth' }));
+  function update() {
+    if (left) left.style.visibility = carousel.scrollLeft <= 4 ? 'hidden' : 'visible';
+    if (right) right.style.visibility = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4 ? 'hidden' : 'visible';
+  }
+  const amt = () => carousel.clientWidth * 0.85;
+  if (left) left.addEventListener('click', () => carousel.scrollBy({ left: -amt(), behavior: 'smooth' }));
+  if (right) right.addEventListener('click', () => carousel.scrollBy({ left: amt(), behavior: 'smooth' }));
+  carousel.addEventListener('scroll', update);
+  update();
+  window.addEventListener('resize', update);
 });
 </script>
 

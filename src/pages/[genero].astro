@@ -96,6 +96,16 @@ const allSizes = [...new Set(items.flatMap(i => i.sizes))].sort((a, b) => {
 
 const allColors = [...new Set(items.flatMap(i => i.colors))].sort();
 
+// Color hex map for colored squares
+const colorHexMap: Record<string, string> = {};
+products.forEach(p => {
+  (p.product_variants || []).forEach(v => {
+    if (v.color && v.color !== 'Único' && v.color_hex && !colorHexMap[v.color]) {
+      colorHexMap[v.color] = v.color_hex;
+    }
+  });
+});
+
 // Categorías a mostrar: si padre tiene subs → solo subs; si no → el padre
 const subcatsByParent: Record<string, Category[]> = {};
 allCategories.filter(c => c.parent_id).forEach(c => {
@@ -156,12 +166,19 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     <div class="filter-dropdowns">
       <div class="filter-dropdown">
         <button type="button" class="filter-btn" data-menu="priceMenu">Precio <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-        <div class="filter-menu" id="priceMenu">
-          <button type="button" class="filter-option active" data-price="">Todos</button>
-          <button type="button" class="filter-option" data-price="0-50000">Hasta $50.000</button>
-          <button type="button" class="filter-option" data-price="50000-100000">$50.000 – $100.000</button>
-          <button type="button" class="filter-option" data-price="100000-200000">$100.000 – $200.000</button>
-          <button type="button" class="filter-option" data-price="200000-999999">Más de $200.000</button>
+        <div class="filter-menu filter-menu-price" id="priceMenu">
+          <div class="price-inputs">
+            <div class="price-field">
+              <label>Mínimo</label>
+              <input type="number" id="priceMin" placeholder="0" min="0" step="1000"/>
+            </div>
+            <div class="price-field">
+              <label>Máximo</label>
+              <input type="number" id="priceMax" placeholder="999999" min="0" step="1000"/>
+            </div>
+          </div>
+          <button type="button" class="price-apply" id="priceApply">Aplicar</button>
+          <button type="button" class="price-clear" id="priceClear">Limpiar</button>
         </div>
       </div>
       {allSizes.length > 0 && (
@@ -187,10 +204,13 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       {allColors.length > 0 && (
         <div class="filter-dropdown">
           <button type="button" class="filter-btn" data-menu="colorMenu">Color <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-          <div class="filter-menu" id="colorMenu">
+          <div class="filter-menu filter-menu-colors" id="colorMenu">
             <button type="button" class="filter-option active" data-color="">Todos</button>
             {allColors.map(c => (
-              <button type="button" class="filter-option" data-color={c}>{c}</button>
+              <button type="button" class="filter-color-opt" data-color={c}>
+                <span class="color-swatch" style={`background:${colorHexMap[c] || '#999'}`}></span>
+                {c}
+              </button>
             ))}
           </div>
         </div>
@@ -319,6 +339,22 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 .card-price-row{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
 .card-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .card-price-sale{color:var(--red)}
+.filter-menu-price{padding:.8rem;min-width:220px}
+.price-inputs{display:flex;gap:.5rem;margin-bottom:.6rem}
+.price-field{flex:1}
+.price-field label{display:block;font-size:.68rem;font-weight:600;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.05em}
+.price-field input{width:100%;padding:.4rem .5rem;border:1px solid var(--grey2);border-radius:5px;font-family:var(--fb);font-size:.85rem}
+.price-apply{width:100%;padding:.45rem;background:var(--black);color:var(--white);border:none;border-radius:5px;font-family:var(--fb);font-size:.8rem;font-weight:700;cursor:pointer;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.03em}
+.price-apply:hover{background:var(--red)}
+.price-clear{width:100%;padding:.3rem;background:none;border:none;font-family:var(--fb);font-size:.75rem;color:var(--muted);cursor:pointer}
+.price-clear:hover{color:var(--red)}
+.filter-menu-colors{display:flex;flex-wrap:wrap;gap:.2rem;padding:.5rem;min-width:220px;max-width:300px}
+.filter-menu-colors .filter-option{width:100%;padding:.4rem .7rem}
+.filter-color-opt{display:flex;align-items:center;gap:.5rem;width:100%;text-align:left;padding:.45rem .7rem;background:none;border:none;font-family:var(--fb);font-size:.82rem;color:var(--black);cursor:pointer;transition:background .1s;border-radius:4px}
+.filter-color-opt:hover{background:var(--grey)}
+.filter-color-opt.active{font-weight:700;color:var(--red)}
+.color-swatch{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
+
 @media(max-width:640px){
   .filter-bar-row{flex-wrap:wrap}
   .cat-pill{font-size:.78rem;padding:.4rem .9rem}
@@ -337,7 +373,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
   const banner = document.getElementById('gActiveBanner');
   const bannerLabel = document.getElementById('gActiveLabel');
 
-  let filters = { cats: [], brand: '', price: '', size: '', color: '' };
+  let filters = { cats: [], brand: '', priceMin: 0, priceMax: Infinity, size: '', color: '' };
 
   function apply() {
     let visible = 0;
@@ -353,10 +389,7 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
       if (filters.brand && cb !== filters.brand) show = false;
       if (filters.size && !cs.includes(filters.size)) show = false;
       if (filters.color && !ccol.includes(filters.color)) show = false;
-      if (filters.price) {
-        const [min, max] = filters.price.split('-').map(Number);
-        if (cp < min || cp > max) show = false;
-      }
+      if (cp < filters.priceMin || cp > filters.priceMax) show = false;
 
       card.style.display = show ? '' : 'none';
       if (show) visible++;
@@ -390,36 +423,77 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     apply();
   });
 
-  // Generic dropdown logic
+  // Generic dropdown toggle
   document.querySelectorAll('.filter-btn[data-menu]').forEach(btn => {
     const menu = document.getElementById(btn.dataset.menu);
     if (!menu) return;
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      // Close others
       document.querySelectorAll('.filter-menu.open').forEach(m => { if (m !== menu) m.classList.remove('open'); });
       document.querySelectorAll('.filter-btn.open').forEach(b => { if (b !== btn) b.classList.remove('open'); });
       btn.classList.toggle('open');
       menu.classList.toggle('open');
     });
 
-    menu.querySelectorAll('.filter-option').forEach(opt => {
+    // Standard option clicks (size, brand)
+    menu.querySelectorAll('.filter-option[data-size],.filter-option[data-brand]').forEach(opt => {
       opt.addEventListener('click', () => {
-        const key = opt.dataset.brand !== undefined ? 'brand' : opt.dataset.price !== undefined ? 'price' : opt.dataset.size !== undefined ? 'size' : opt.dataset.color !== undefined ? 'color' : '';
-        const val = opt.dataset[key] || '';
-        filters[key] = val;
-        menu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+        const key = opt.dataset.size !== undefined ? 'size' : 'brand';
+        filters[key] = opt.dataset[key] || '';
+        menu.querySelectorAll('.filter-option,.filter-color-opt').forEach(o => o.classList.remove('active'));
         opt.classList.add('active');
-        const label = key.charAt(0).toUpperCase() + key.slice(1);
-        const labels = { brand: 'Marca', price: 'Precio', size: 'Talla', color: 'Color' };
-        btn.classList.toggle('has-value', !!val);
-        btn.childNodes[0].textContent = val ? opt.textContent.trim() + ' ' : (labels[key] || label) + ' ';
-        btn.classList.remove('open');
-        menu.classList.remove('open');
+        const labels = { brand: 'Marca', size: 'Talla' };
+        btn.classList.toggle('has-value', !!filters[key]);
+        btn.childNodes[0].textContent = filters[key] ? opt.textContent.trim() + ' ' : (labels[key]) + ' ';
+        btn.classList.remove('open'); menu.classList.remove('open');
+        apply();
+      });
+    });
+
+    // Color option clicks
+    menu.querySelectorAll('.filter-color-opt,.filter-option[data-color]').forEach(opt => {
+      opt.addEventListener('click', () => {
+        filters.color = opt.dataset.color || '';
+        menu.querySelectorAll('.filter-option,.filter-color-opt').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        btn.classList.toggle('has-value', !!filters.color);
+        btn.childNodes[0].textContent = filters.color ? filters.color + ' ' : 'Color ';
+        btn.classList.remove('open'); menu.classList.remove('open');
         apply();
       });
     });
   });
+
+  // Price filter
+  const priceApply = document.getElementById('priceApply');
+  const priceClear = document.getElementById('priceClear');
+  const priceMin = document.getElementById('priceMin');
+  const priceMax = document.getElementById('priceMax');
+  const priceBtn = document.querySelector('[data-menu="priceMenu"]');
+  if (priceApply) {
+    priceApply.addEventListener('click', () => {
+      filters.priceMin = parseFloat(priceMin.value) || 0;
+      filters.priceMax = parseFloat(priceMax.value) || Infinity;
+      if (priceBtn) {
+        const hasVal = filters.priceMin > 0 || filters.priceMax < Infinity;
+        priceBtn.classList.toggle('has-value', hasVal);
+        priceBtn.childNodes[0].textContent = hasVal ? '$' + (filters.priceMin||0).toLocaleString('es-CO') + ' – $' + (filters.priceMax === Infinity ? '...' : filters.priceMax.toLocaleString('es-CO')) + ' ' : 'Precio ';
+        priceBtn.classList.remove('open');
+      }
+      document.getElementById('priceMenu')?.classList.remove('open');
+      apply();
+    });
+  }
+  if (priceClear) {
+    priceClear.addEventListener('click', () => {
+      filters.priceMin = 0; filters.priceMax = Infinity;
+      if (priceMin) priceMin.value = '';
+      if (priceMax) priceMax.value = '';
+      if (priceBtn) { priceBtn.classList.remove('has-value'); priceBtn.childNodes[0].textContent = 'Precio '; priceBtn.classList.remove('open'); }
+      document.getElementById('priceMenu')?.classList.remove('open');
+      apply();
+    });
+  }
 
   // Close menus on outside click
   document.addEventListener('click', () => {
@@ -445,14 +519,26 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     });
   }
 
-  // Pill arrows
-  const pillScroll = document.querySelector('.cat-pills-scroll');
-  const pillLeft = document.querySelector('.pills-arrow-left');
-  const pillRight = document.querySelector('.pills-arrow-right');
-  if (pillScroll && pillLeft && pillRight) {
-    pillLeft.addEventListener('click', () => pillScroll.scrollBy({ left: -200, behavior: 'smooth' }));
-    pillRight.addEventListener('click', () => pillScroll.scrollBy({ left: 200, behavior: 'smooth' }));
+  // Pill arrows with visibility + scroll by visible width
+  function setupScroller(container, leftBtn, rightBtn) {
+    if (!container) return;
+    function update() {
+      if (leftBtn) leftBtn.style.visibility = container.scrollLeft <= 4 ? 'hidden' : 'visible';
+      if (rightBtn) rightBtn.style.visibility = container.scrollLeft + container.clientWidth >= container.scrollWidth - 4 ? 'hidden' : 'visible';
+    }
+    const amt = () => container.clientWidth * 0.85;
+    if (leftBtn) leftBtn.addEventListener('click', () => container.scrollBy({ left: -amt(), behavior: 'smooth' }));
+    if (rightBtn) rightBtn.addEventListener('click', () => container.scrollBy({ left: amt(), behavior: 'smooth' }));
+    container.addEventListener('scroll', update);
+    update();
+    window.addEventListener('resize', update);
   }
+
+  setupScroller(
+    document.querySelector('.cat-pills-scroll'),
+    document.querySelector('.pills-arrow-left'),
+    document.querySelector('.pills-arrow-right')
+  );
 
   apply();
 })();
