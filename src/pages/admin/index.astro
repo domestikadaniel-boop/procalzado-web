@@ -291,8 +291,13 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
       <div id="specsContainer"></div>
       <button type="button" class="add-row-btn" id="addSpecBtn">+ Agregar especificación</button>
 
-      <div class="section-label">Tallas Disponibles</div>
-      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.3rem">Marca las tallas que tienes disponibles.</p>
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+        Tallas Disponibles
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--muted);border-bottom:none;margin:0;padding:0">
+          <input type="checkbox" id="perColorSizesToggle" style="accent-color:var(--red)"/> Tallas por color
+        </label>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.3rem" id="sizesHelp">Marca las tallas que tienes disponibles.</p>
       <div class="sizes-grid" id="sizesGrid"></div>
 
       <div class="section-label">Colores e Imágenes</div>
@@ -410,6 +415,7 @@ let brands=[],categories=[],products=[],genderCards=[],recommended=[],promos={},
 // Estructura interna: { colors: [{ name, hex, images: [{url,id?,existing}] }], sizes: ['38','39'] }
 let formColors=[];
 let activeColorIdx=null;
+let perColorSizes=false;
 
 const $=id=>document.getElementById(id);
 function showToast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
@@ -723,7 +729,16 @@ function getSelectedSizes() {
 
 // COLORS
 function renderColors(){
-  $('colorsContainer').innerHTML = formColors.map((c,idx) => `
+  $('colorsContainer').innerHTML = formColors.map((c,idx) => {
+    const sizesHtml = perColorSizes ? `
+      <div style="margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--grey2)">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.3rem">Tallas para este color</div>
+        <div class="sizes-grid" data-color-sizes="${idx}">${SIZES_LIST.map(s => `
+          <label class="size-check ${(c.sizes||[]).includes(s)?'checked':''}">
+            <input type="checkbox" value="${s}" ${(c.sizes||[]).includes(s)?'checked':''} data-colorsize="${idx}"/> ${s}
+          </label>`).join('')}</div>
+      </div>` : '';
+    return `
     <div class="color-block" data-idx="${idx}">
       <div class="color-row1">
         <input type="color" value="${c.hex||'#000000'}" data-action="hex" data-idx="${idx}" title="Color principal"/>
@@ -737,7 +752,9 @@ function renderColors(){
         ${(c.images||[]).map((img,i)=>`<div class="color-img-thumb" style="width:70px;height:70px"><img src="${img.url}" width="70" height="70" style="width:70px;height:70px;object-fit:cover;display:block"/><button type="button" class="x" data-rmimg="${idx}-${i}">×</button></div>`).join('')}
         <button type="button" class="upload-color-btn" data-action="upload" data-idx="${idx}">📷 Subir imagen</button>
       </div>
-    </div>`).join('');
+      ${sizesHtml}
+    </div>`;
+  }).join('');
 
   $('colorsContainer').querySelectorAll('[data-action]').forEach(el=>{
     el.addEventListener('change',handleColorChange);
@@ -748,6 +765,16 @@ function renderColors(){
       const[ci,ii]=e.target.dataset.rmimg.split('-').map(Number);
       formColors[ci].images.splice(ii,1);
       renderColors();
+    });
+  });
+  // Per-color size checkboxes
+  $('colorsContainer').querySelectorAll('[data-colorsize]').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const ci = parseInt(e.target.dataset.colorsize);
+      e.target.closest('.size-check').classList.toggle('checked', e.target.checked);
+      formColors[ci].sizes = Array.from(
+        e.target.closest('.sizes-grid').querySelectorAll('input:checked')
+      ).map(i => i.value);
     });
   });
 }
@@ -790,7 +817,25 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[]});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[]});
+  renderColors();
+});
+
+// Per-color sizes toggle
+$('perColorSizesToggle').addEventListener('change', () => {
+  perColorSizes = $('perColorSizesToggle').checked;
+  const globalGrid = $('sizesGrid');
+  const sizesHelp = $('sizesHelp');
+  if (perColorSizes) {
+    // Copy global sizes to each color that has none
+    const globalSizes = getSelectedSizes();
+    formColors.forEach(c => { if (!c.sizes || !c.sizes.length) c.sizes = [...globalSizes]; });
+    globalGrid.style.display = 'none';
+    sizesHelp.textContent = 'Las tallas se configuran dentro de cada color.';
+  } else {
+    globalGrid.style.display = '';
+    sizesHelp.textContent = 'Marca las tallas que tienes disponibles.';
+  }
   renderColors();
 });
 
@@ -825,25 +870,38 @@ function openProductForm(p=null){
   const specs=p?.specs||{};Object.entries(specs).forEach(([k,v])=>addSpecRow(k,String(v)));if(!Object.keys(specs).length)addSpecRow();
 
   // Sizes
-  const sizes = p?.product_variants ? [...new Set(p.product_variants.map(v=>v.size))] : [];
-  renderSizesGrid(sizes);
+  const allSizes = p?.product_variants ? [...new Set(p.product_variants.map(v=>v.size))] : [];
+  renderSizesGrid(allSizes);
 
-  // Colors with their images
+  // Detect per-color sizes: check if different colors have different size sets
+  perColorSizes = false;
   if(p?.product_variants){
     const uniqueColors=[...new Set(p.product_variants.map(v=>v.color))];
+    if (uniqueColors.length > 1) {
+      const sizeSets = uniqueColors.map(c => {
+        const s = p.product_variants.filter(v=>v.color===c).map(v=>v.size).sort().join(',');
+        return s;
+      });
+      perColorSizes = !sizeSets.every(s => s === sizeSets[0]);
+    }
     formColors=uniqueColors.map(cname=>{
       const variant=p.product_variants.find(v=>v.color===cname);
       const colorImages=(p.product_images||[]).filter(i=>i.color===cname);
+      const colorSizes=p.product_variants.filter(v=>v.color===cname).map(v=>v.size).filter(s=>s!=='Única');
       return{
         name:cname,
         hex:variant?.color_hex||'#000000',
         hex2:variant?.color_hex_2||'#FFFFFF',
         dual:!!variant?.color_hex_2,
-        images:colorImages.map(i=>({url:i.url,id:i.id,existing:true}))
+        images:colorImages.map(i=>({url:i.url,id:i.id,existing:true})),
+        sizes:colorSizes
       };
     });
   }
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[]});
+  $('perColorSizesToggle').checked = perColorSizes;
+  $('sizesGrid').style.display = perColorSizes ? 'none' : '';
+  $('sizesHelp').textContent = perColorSizes ? 'Las tallas se configuran dentro de cada color.' : 'Marca las tallas que tienes disponibles.';
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[]});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -887,17 +945,34 @@ $('formSaveBtn').addEventListener('click',async()=>{
 
   // VARIANTS = combinación de cada color con cada talla
   await supabase.from('product_variants').delete().eq('product_id',pid);
-  const sizes = getSelectedSizes();
+  const sizes = perColorSizes ? [] : getSelectedSizes();
   const validColors = formColors.filter(c=>c.name.trim());
   const variants=[];
-  if (validColors.length === 0 && sizes.length === 0) {
-    variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:'Única',stock:0,active:true});
-  } else if (validColors.length === 0) {
-    sizes.forEach(s => variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:s,stock:0,active:true}));
-  } else if (sizes.length === 0) {
-    validColors.forEach(c => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:'Única',stock:0,active:true}));
+  if (perColorSizes) {
+    // Per-color sizes mode
+    if (validColors.length === 0) {
+      variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:'Única',stock:0,active:true});
+    } else {
+      validColors.forEach(c => {
+        const colorSizes = (c.sizes || []).filter(Boolean);
+        if (colorSizes.length === 0) {
+          variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:'Única',stock:0,active:true});
+        } else {
+          colorSizes.forEach(s => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:s,stock:0,active:true}));
+        }
+      });
+    }
   } else {
-    validColors.forEach(c => sizes.forEach(s => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:s,stock:0,active:true})));
+    // Global sizes mode (original logic)
+    if (validColors.length === 0 && sizes.length === 0) {
+      variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:'Única',stock:0,active:true});
+    } else if (validColors.length === 0) {
+      sizes.forEach(s => variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:s,stock:0,active:true}));
+    } else if (sizes.length === 0) {
+      validColors.forEach(c => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:'Única',stock:0,active:true}));
+    } else {
+      validColors.forEach(c => sizes.forEach(s => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:s,stock:0,active:true})));
+    }
   }
   if(variants.length)await supabase.from('product_variants').insert(variants);
 

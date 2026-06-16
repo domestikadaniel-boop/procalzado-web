@@ -476,6 +476,16 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
 
   function apply() {
     let visible = 0;
+    // First pass: determine which products match category filter only
+    const catMatchProducts = [];
+    cards.forEach(card => {
+      const cc = (card.dataset.cats || '').split('|').filter(Boolean);
+      const matchesCat = !filters.cats.length || cc.some(c => filters.cats.includes(c));
+      if (matchesCat) catMatchProducts.push(card);
+    });
+    // Update available filter options based on category-matched products
+    updateFilterOptions(catMatchProducts);
+    // Second pass: apply all filters
     cards.forEach(card => {
       const cc = (card.dataset.cats || '').split('|').filter(Boolean);
       const cb = card.dataset.brand || '';
@@ -493,6 +503,68 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
     });
     if (resultCount) resultCount.textContent = visible + (visible === 1 ? ' producto' : ' productos');
     if (emptyState) emptyState.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  function updateFilterOptions(matchedCards) {
+    const availSizes = new Set();
+    const availBrands = new Set();
+    const availColors = new Set();
+    matchedCards.forEach(card => {
+      (card.dataset.sizes || '').split('|').filter(Boolean).forEach(s => availSizes.add(s));
+      if (card.dataset.brand) availBrands.add(card.dataset.brand);
+      (card.dataset.colors || '').split('|').filter(Boolean).forEach(c => availColors.add(c));
+    });
+    // Desktop filters
+    document.querySelectorAll('.filter-option[data-size]').forEach(o => {
+      if (!o.dataset.size) { o.style.display = ''; return; } // "Todas"
+      o.style.display = availSizes.has(o.dataset.size) ? '' : 'none';
+    });
+    document.querySelectorAll('.filter-option[data-brand]').forEach(o => {
+      if (!o.dataset.brand) { o.style.display = ''; return; }
+      o.style.display = availBrands.has(o.dataset.brand) ? '' : 'none';
+    });
+    document.querySelectorAll('.filter-option[data-color],.filter-color-opt').forEach(o => {
+      if (!o.dataset.color) { o.style.display = ''; return; }
+      o.style.display = availColors.has(o.dataset.color) ? '' : 'none';
+    });
+    // Mobile filters
+    document.querySelectorAll('[data-msize]').forEach(o => {
+      if (!o.dataset.msize) { o.style.display = ''; return; }
+      o.style.display = availSizes.has(o.dataset.msize) ? '' : 'none';
+    });
+    document.querySelectorAll('[data-mbrand]').forEach(o => {
+      if (!o.dataset.mbrand) { o.style.display = ''; return; }
+      o.style.display = availBrands.has(o.dataset.mbrand) ? '' : 'none';
+    });
+    document.querySelectorAll('[data-mcolor]').forEach(o => {
+      if (!o.dataset.mcolor) { o.style.display = ''; return; }
+      o.style.display = availColors.has(o.dataset.mcolor) ? '' : 'none';
+    });
+    // Clear filters that no longer have valid options
+    if (filters.size && !availSizes.has(filters.size)) {
+      filters.size = '';
+      const sizeBtn = document.querySelector('[data-menu="sizeMenu"]');
+      if (sizeBtn) { sizeBtn.classList.remove('has-value'); sizeBtn.childNodes[0].textContent = 'Talla '; }
+      document.querySelectorAll('.filter-option[data-size]').forEach(o => o.classList.remove('active'));
+      const allOpt = document.querySelector('.filter-option[data-size=""]');
+      if (allOpt) allOpt.classList.add('active');
+    }
+    if (filters.brand && !availBrands.has(filters.brand)) {
+      filters.brand = '';
+      const brandBtn = document.querySelector('[data-menu="brandMenu"]');
+      if (brandBtn) { brandBtn.classList.remove('has-value'); brandBtn.childNodes[0].textContent = 'Marca '; }
+      document.querySelectorAll('.filter-option[data-brand]').forEach(o => o.classList.remove('active'));
+      const allOpt = document.querySelector('.filter-option[data-brand=""]');
+      if (allOpt) allOpt.classList.add('active');
+    }
+    if (filters.color && !availColors.has(filters.color)) {
+      filters.color = '';
+      const colorBtn = document.querySelector('[data-menu="colorMenu"]');
+      if (colorBtn) { colorBtn.classList.remove('has-value'); colorBtn.childNodes[0].textContent = 'Color '; }
+      document.querySelectorAll('.filter-option[data-color],.filter-color-opt').forEach(o => o.classList.remove('active'));
+      const allOpt = document.querySelector('.filter-option[data-color=""]');
+      if (allOpt) allOpt.classList.add('active');
+    }
   }
 
   // Category pills

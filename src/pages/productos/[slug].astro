@@ -106,6 +106,7 @@ const schemaProduct = {
       {images.length > 0 && (
         <script type="application/json" id="galleryData" set:html={JSON.stringify(images.map(i => ({ url: i.url, color: i.color, alt: i.alt_text })))}></script>
       )}
+      <script type="application/json" id="variantsData" set:html={JSON.stringify(variants.map(v => ({ size: v.size, color: v.color })))}></script>
     </div>
 
     <!-- INFO -->
@@ -226,14 +227,37 @@ const schemaProduct = {
   const allImages = dataEl ? JSON.parse(dataEl.textContent) : [];
   visibleImages = allImages.slice();
 
+  // Cargar datos de variantes para filtrar tallas por color
+  const variantsEl = document.getElementById('variantsData');
+  const allVariants = variantsEl ? JSON.parse(variantsEl.textContent) : [];
+
   // Precargar TODAS las imágenes al inicio para que el cambio sea instantáneo
   allImages.forEach(imgData => {
     const preload = new Image();
     preload.src = imgData.url;
   });
 
-  // Inicializar tallas
+  // Función para actualizar tallas visibles según color seleccionado
   const sizeBtns = document.querySelectorAll('.size-tag-btn');
+  function updateSizesForColor(color) {
+    if (!sizeBtns.length || !allVariants.length) return;
+    const sizesForColor = allVariants.filter(v => v.color === color).map(v => v.size);
+    if (!sizesForColor.length) return;
+    let currentSizeAvailable = false;
+    sizeBtns.forEach(btn => {
+      const s = btn.dataset.size;
+      const available = sizesForColor.includes(s);
+      btn.style.display = available ? '' : 'none';
+      if (available && s === selectedSize) currentSizeAvailable = true;
+    });
+    if (!currentSizeAvailable) {
+      sizeBtns.forEach(b => b.classList.remove('selected'));
+      const first = [...sizeBtns].find(b => b.style.display !== 'none');
+      if (first) { first.classList.add('selected'); selectedSize = first.dataset.size; }
+    }
+  }
+
+  // Inicializar tallas
   if (sizeBtns.length > 0) {
     selectedSize = sizeBtns[0].dataset.size;
     sizeBtns.forEach(btn => btn.addEventListener('click', () => {
@@ -249,12 +273,14 @@ const schemaProduct = {
   if (colorBtns.length > 0) {
     selectedColor = colorBtns[0].dataset.color;
     if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
+    updateSizesForColor(selectedColor);
 
     colorBtns.forEach(btn => btn.addEventListener('click', () => {
       colorBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedColor = btn.dataset.color;
       if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
+      updateSizesForColor(selectedColor);
 
       // Saltar a la primera imagen de ese color (sin filtrar la galería)
       const firstImgIdx = visibleImages.findIndex(img => img.color === selectedColor);
