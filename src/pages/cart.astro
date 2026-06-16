@@ -57,12 +57,12 @@ const pageTitle = 'Tu Carrito | Procalzado';
 .cart-item-name a{color:var(--black);text-decoration:none}
 .cart-item-name a:hover{color:var(--red)}
 .cart-item-meta{font-size:.75rem;color:var(--muted)}
-.cart-item-price{font-weight:700;font-size:.95rem;white-space:nowrap;margin-left:.5rem}
-.cart-item-qty{display:flex;align-items:center;gap:0;border:1.5px solid var(--grey2);border-radius:20px;background:var(--white);overflow:hidden;width:fit-content}
+.cart-item-price{font-weight:700;font-size:.95rem;white-space:nowrap;text-align:right}
+.cart-item-right{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0;margin-left:.5rem}
+.cart-item-qty{display:flex;align-items:center;gap:0;border:1.5px solid var(--grey2);border-radius:20px;background:var(--white);overflow:hidden;margin-top:.4rem;width:fit-content}
 .cart-item-qty button{background:var(--white);border:none;width:32px;height:32px;cursor:pointer;font-size:1.1rem;font-weight:600;color:var(--black);transition:all .15s;font-family:inherit;display:flex;align-items:center;justify-content:center}
 .cart-item-qty button:hover{background:var(--red);color:var(--white)}
 .cart-item-qty span{width:32px;text-align:center;font-size:.85rem;font-weight:700;line-height:32px}
-.cart-item-controls{display:flex;align-items:center;gap:.8rem;margin-top:.4rem}
 .cart-item-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;padding:0;font-family:inherit;transition:color .15s;text-decoration:underline}
 .cart-item-remove:hover{color:var(--red)}
 
@@ -113,16 +113,16 @@ const pageTitle = 'Tu Carrito | Procalzado';
           <div class="cart-item-brand">${it.brand || ''}</div>
           <div class="cart-item-name"><a href="/productos/${it.slug}">${it.name}</a></div>
           <div class="cart-item-meta">${it.color ? 'Color: ' + it.color : ''}${it.color && it.size ? ' · ' : ''}${it.size ? 'Talla: ' + it.size : ''}</div>
-          <div class="cart-item-controls">
-            <div class="cart-item-qty">
-              <button data-action="dec" data-idx="${i}">−</button>
-              <span>${it.qty}</span>
-              <button data-action="inc" data-idx="${i}">+</button>
-            </div>
-            <button class="cart-item-remove" data-action="rm" data-idx="${i}">Eliminar</button>
+          <div class="cart-item-qty">
+            <button data-action="dec" data-idx="${i}">−</button>
+            <span>${it.qty}</span>
+            <button data-action="inc" data-idx="${i}">+</button>
           </div>
         </div>
-        ${it.price ? `<div class="cart-item-price">$${(it.price * it.qty).toLocaleString('es-CO')}</div>` : ''}
+        <div class="cart-item-right">
+          ${it.price ? `<div class="cart-item-price">$${(it.price * it.qty).toLocaleString('es-CO')}</div>` : ''}
+          <button class="cart-item-remove" data-action="rm" data-idx="${i}">Eliminar</button>
+        </div>
       </div>
     `).join('');
 
