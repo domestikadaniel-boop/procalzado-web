@@ -6,7 +6,7 @@ const show = block && block.active && (block.image_url || block.title);
 const overlay = Math.min(Math.max(block?.overlay ?? 35, 0), 80) / 100;
 const textColor = block?.text_color || '#FFFFFF';
 // El banner 'hero' (banner 1) siempre lleva a /promocion
-const href = block?.slot === 'hero' ? '/promocion' : (block?.cta_href || '#');
+const href = block?.cta_href || (block?.slot === 'hero' ? '/promocion' : '#');
 ---
 {show && (
   <a
