@@ -22,11 +22,11 @@ const pageTitle = 'Tu Carrito | Procalzado';
         <span>Total</span>
         <strong id="cartPageTotal">$0</strong>
       </div>
-      <p class="cart-note">Precios sujetos a disponibilidad. Para pedidos al por mayor, escríbenos por WhatsApp.</p>
+      <p class="cart-note">Para pedidos al por mayor consultar a través de WhatsApp.</p>
       <div class="cart-actions">
-        <button class="cart-wa-btn" id="cartPageWa">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Pedir por WhatsApp
+        <button class="cart-buy-btn" id="cartPageWa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          Comprar
         </button>
         <button class="cart-clear-btn" id="cartPageClear">Vaciar carrito</button>
       </div>
@@ -58,11 +58,12 @@ const pageTitle = 'Tu Carrito | Procalzado';
 .cart-item-name a:hover{color:var(--red)}
 .cart-item-meta{font-size:.75rem;color:var(--muted)}
 .cart-item-price{font-weight:700;font-size:.95rem;white-space:nowrap;margin-left:.5rem}
-.cart-item-qty{display:flex;align-items:center;gap:0;border:2px solid var(--grey2);border-radius:6px;background:var(--white);overflow:hidden;margin-top:.4rem;width:fit-content}
-.cart-item-qty button{background:var(--white);border:none;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:600;color:var(--black);transition:background .15s;font-family:inherit}
+.cart-item-qty{display:flex;align-items:center;gap:0;border:1.5px solid var(--grey2);border-radius:20px;background:var(--white);overflow:hidden;width:fit-content}
+.cart-item-qty button{background:var(--white);border:none;width:32px;height:32px;cursor:pointer;font-size:1.1rem;font-weight:600;color:var(--black);transition:all .15s;font-family:inherit;display:flex;align-items:center;justify-content:center}
 .cart-item-qty button:hover{background:var(--red);color:var(--white)}
-.cart-item-qty span{width:36px;text-align:center;font-size:.85rem;font-weight:600;border-left:1px solid var(--grey2);border-right:1px solid var(--grey2);line-height:30px}
-.cart-item-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;margin-top:.3rem;padding:0;font-family:inherit;transition:color .15s}
+.cart-item-qty span{width:32px;text-align:center;font-size:.85rem;font-weight:700;line-height:32px}
+.cart-item-controls{display:flex;align-items:center;gap:.8rem;margin-top:.4rem}
+.cart-item-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;padding:0;font-family:inherit;transition:color .15s;text-decoration:underline}
 .cart-item-remove:hover{color:var(--red)}
 
 .cart-summary{background:var(--grey);border-radius:12px;padding:1.5rem;position:sticky;top:80px}
@@ -71,9 +72,9 @@ const pageTitle = 'Tu Carrito | Procalzado';
 .cart-summary-row strong{font-family:var(--fd);font-size:1.4rem}
 .cart-note{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1.2rem}
 .cart-actions{display:flex;flex-direction:column;gap:.6rem}
-.cart-wa-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;background:#25D366;color:var(--white);padding:.85rem;border:none;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .15s}
-.cart-wa-btn:hover{background:#1BA44F}
-.cart-wa-btn svg{width:18px;height:18px}
+.cart-buy-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--red);color:var(--white);padding:.85rem;border:none;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .15s}
+.cart-buy-btn:hover{background:#cc0000}
+.cart-buy-btn svg{width:18px;height:18px}
 .cart-clear-btn{background:none;border:1px dashed var(--grey2);border-radius:8px;padding:.6rem;font-size:.78rem;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s}
 .cart-clear-btn:hover{border-color:var(--red);color:var(--red)}
 
@@ -112,12 +113,14 @@ const pageTitle = 'Tu Carrito | Procalzado';
           <div class="cart-item-brand">${it.brand || ''}</div>
           <div class="cart-item-name"><a href="/productos/${it.slug}">${it.name}</a></div>
           <div class="cart-item-meta">${it.color ? 'Color: ' + it.color : ''}${it.color && it.size ? ' · ' : ''}${it.size ? 'Talla: ' + it.size : ''}</div>
-          <div class="cart-item-qty">
-            <button data-action="dec" data-idx="${i}">−</button>
-            <span>${it.qty}</span>
-            <button data-action="inc" data-idx="${i}">+</button>
+          <div class="cart-item-controls">
+            <div class="cart-item-qty">
+              <button data-action="dec" data-idx="${i}">−</button>
+              <span>${it.qty}</span>
+              <button data-action="inc" data-idx="${i}">+</button>
+            </div>
+            <button class="cart-item-remove" data-action="rm" data-idx="${i}">Eliminar</button>
           </div>
-          <button class="cart-item-remove" data-action="rm" data-idx="${i}">Eliminar</button>
         </div>
         ${it.price ? `<div class="cart-item-price">$${(it.price * it.qty).toLocaleString('es-CO')}</div>` : ''}
       </div>
