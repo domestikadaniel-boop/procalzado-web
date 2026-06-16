@@ -118,7 +118,7 @@ header.header-solid .logo-img{filter:none}
 .hs-item-noimg{width:46px;height:46px;border-radius:6px;background:var(--grey);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
 .hs-brand{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
 .hs-name{font-size:.92rem;font-weight:600;line-height:1.15}
-.hs-name mark{background:#fff3b0;color:inherit;padding:0 1px;border-radius:2px}
+.hs-name mark{background:none;color:var(--red);padding:0;border-radius:0;font-weight:700}
 .hs-price{margin-left:auto;font-family:var(--fb);font-weight:700;font-size:.9rem;white-space:nowrap}
 .hs-empty{padding:1.2rem .4rem;color:var(--muted);font-size:.9rem;text-align:center}
 .header-search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:3100;opacity:0;visibility:hidden;transition:opacity .26s}
@@ -623,12 +623,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function openSearch(){ hsWrap?.classList.add('open'); hsOverlay?.classList.add('open'); setTimeout(()=>hsInput?.focus(),80); }
   function closeSearch(){ hsWrap?.classList.remove('open'); hsOverlay?.classList.remove('open'); if(hsSug) hsSug.innerHTML=''; if(hsInput) hsInput.value=''; }
   function fmt(n){ return '$' + Number(n).toLocaleString('es-CO'); }
-  function hl(text, q){ const i=text.toLowerCase().indexOf(q.toLowerCase()); if(i<0||!q) return text; return text.slice(0,i)+'<mark>'+text.slice(i,i+q.length)+'</mark>'+text.slice(i+q.length); }
+  function hl(text, q){ if(!q) return text; const re=new RegExp('(\\b'+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); return text.replace(re,'<mark>$1</mark>'); }
+  function wordMatch(str, q){ const re=new RegExp('\\b'+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); return re.test(str); }
   function renderHs(q){
     if(!hsSug) return;
     if(!q){ hsSug.innerHTML=''; return; }
-    const ql=q.toLowerCase();
-    const matches=hsData.filter(it=>it.name.toLowerCase().includes(ql)||it.brand.toLowerCase().includes(ql)).slice(0,8);
+    const matches=hsData.filter(it=>wordMatch(it.name,q)||wordMatch(it.brand,q)).slice(0,8);
     if(matches.length===0){ hsSug.innerHTML='<div class="hs-empty">Sin coincidencias para “'+q+'”</div>'; return; }
     hsSug.innerHTML=matches.map(m=>{
       const price = m.sale ? fmt(m.sale) : (m.price ? fmt(m.price) : '');
