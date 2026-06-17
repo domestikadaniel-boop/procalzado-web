@@ -11,17 +11,19 @@ import Layout from '../../layouts/Layout.astro';
 
     <div class="auth-alert" id="authAlert" style="display:none"></div>
 
-    <form id="resetForm" novalidate style="display:none" id="resetFormWrap">
-      <label class="auth-label">
-        Nueva contraseña
-        <input type="password" id="newPass" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6"/>
-      </label>
-      <label class="auth-label">
-        Confirmar contraseña
-        <input type="password" id="newPass2" required autocomplete="new-password" placeholder="Repite la contraseña" minlength="6"/>
-      </label>
-      <button type="submit" class="auth-btn" id="resetBtn">Guardar Contraseña</button>
-    </form>
+    <div id="resetFormWrap" style="display:none">
+      <form id="resetForm" novalidate>
+        <label class="auth-label">
+          Nueva contraseña
+          <input type="password" id="newPass" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6"/>
+        </label>
+        <label class="auth-label">
+          Confirmar contraseña
+          <input type="password" id="newPass2" required autocomplete="new-password" placeholder="Repite la contraseña" minlength="6"/>
+        </label>
+        <button type="submit" class="auth-btn" id="resetBtn">Guardar Contraseña</button>
+      </form>
+    </div>
   </div>
 </main>
 
@@ -48,6 +50,7 @@ import Layout from '../../layouts/Layout.astro';
 
   var alert = document.getElementById('authAlert');
   var formWrap = document.getElementById('resetFormWrap');
+  if (!alert || !formWrap) return;
 
   function showAlert(msg, type) {
     alert.textContent = msg;
@@ -75,7 +78,10 @@ import Layout from '../../layouts/Layout.astro';
     }
   });
 
-  document.getElementById('resetForm').addEventListener('submit', async function(e) {
+  var resetForm = document.getElementById('resetForm');
+  if (!resetForm) return;
+
+  resetForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     alert.style.display = 'none';
     var p1 = document.getElementById('newPass').value;
