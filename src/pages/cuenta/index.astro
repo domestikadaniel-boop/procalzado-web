@@ -1,0 +1,353 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Mi Cuenta | Procalzado">
+
+<main class="cuenta-page" id="cuentaPage">
+  <div class="cuenta-loading" id="cuentaLoading">Cargando...</div>
+
+  <div class="cuenta-content" id="cuentaContent" style="display:none">
+    <div class="cuenta-header">
+      <div>
+        <h1>Mi Cuenta</h1>
+        <p class="cuenta-email" id="cuentaEmail"></p>
+      </div>
+      <button class="cuenta-logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
+
+    <!-- TABS -->
+    <div class="cuenta-tabs">
+      <button class="cuenta-tab active" data-tab="perfil">Perfil</button>
+      <button class="cuenta-tab" data-tab="direcciones">Direcciones</button>
+      <button class="cuenta-tab" data-tab="pedidos">Pedidos</button>
+    </div>
+
+    <!-- TAB: PERFIL -->
+    <section class="cuenta-section" id="tab-perfil">
+      <div class="auth-alert" id="profileAlert" style="display:none"></div>
+      <form id="profileForm" novalidate>
+        <label class="auth-label">
+          Nombre completo
+          <input type="text" id="profName" required/>
+        </label>
+        <label class="auth-label">
+          Teléfono
+          <input type="tel" id="profPhone"/>
+        </label>
+        <label class="auth-label">
+          Tipo de documento
+          <select id="profDocType">
+            <option value="CC">Cédula de Ciudadanía</option>
+            <option value="CE">Cédula de Extranjería</option>
+            <option value="NIT">NIT</option>
+            <option value="PP">Pasaporte</option>
+            <option value="TI">Tarjeta de Identidad</option>
+          </select>
+        </label>
+        <label class="auth-label">
+          Número de documento
+          <input type="text" id="profDocNum"/>
+        </label>
+        <button type="submit" class="auth-btn" id="profSaveBtn">Guardar</button>
+      </form>
+    </section>
+
+    <!-- TAB: DIRECCIONES -->
+    <section class="cuenta-section" id="tab-direcciones" style="display:none">
+      <div class="auth-alert" id="addrAlert" style="display:none"></div>
+      <div id="addressList"></div>
+      <button class="cuenta-add-btn" id="addAddrBtn">+ Agregar dirección</button>
+
+      <div class="addr-form-wrap" id="addrFormWrap" style="display:none">
+        <h3 id="addrFormTitle">Nueva dirección</h3>
+        <form id="addrForm" novalidate>
+          <input type="hidden" id="addrId"/>
+          <label class="auth-label">Etiqueta <input type="text" id="addrLabel" placeholder="Casa, Oficina..." required/></label>
+          <label class="auth-label">Nombre del destinatario <input type="text" id="addrName" required/></label>
+          <label class="auth-label">Teléfono <input type="tel" id="addrPhone" required/></label>
+          <div class="addr-row">
+            <label class="auth-label">Departamento <input type="text" id="addrDept" required/></label>
+            <label class="auth-label">Ciudad <input type="text" id="addrCity" required/></label>
+          </div>
+          <label class="auth-label">Dirección <input type="text" id="addrLine" required placeholder="Calle 10 #20-30"/></label>
+          <label class="auth-label">Detalle (apto, torre, barrio) <input type="text" id="addrDetail"/></label>
+          <div class="addr-actions">
+            <button type="submit" class="auth-btn">Guardar</button>
+            <button type="button" class="cuenta-cancel-btn" id="addrCancel">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB: PEDIDOS -->
+    <section class="cuenta-section" id="tab-pedidos" style="display:none">
+      <div id="ordersList"></div>
+      <p class="cuenta-empty" id="ordersEmpty" style="display:none">Aún no tienes pedidos.</p>
+    </section>
+  </div>
+</main>
+
+<style>
+.cuenta-page{max-width:720px;margin:0 auto;padding:2rem clamp(1rem,4vw,2rem) 5rem;min-height:65vh}
+.cuenta-loading{text-align:center;padding:4rem 0;color:var(--muted);font-size:.9rem}
+.cuenta-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.cuenta-header h1{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2rem);letter-spacing:.03em}
+.cuenta-email{color:var(--muted);font-size:.85rem;margin-top:.15rem}
+.cuenta-logout{background:none;border:1.5px solid var(--grey2);color:var(--muted);font-family:var(--fb);font-size:.78rem;font-weight:600;padding:.45rem 1rem;border-radius:6px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
+.cuenta-logout:hover{border-color:var(--red);color:var(--red)}
+
+.cuenta-tabs{display:flex;gap:0;border-bottom:2px solid var(--grey2);margin-bottom:2rem}
+.cuenta-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:var(--fb);font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:.7rem 1.2rem;cursor:pointer;transition:all .15s}
+.cuenta-tab:hover{color:var(--black)}
+.cuenta-tab.active{color:var(--black);border-bottom-color:var(--red)}
+
+.cuenta-section .auth-label select{display:block;width:100%;margin-top:.4rem;padding:.75rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.95rem;color:var(--black);background:var(--white);outline:none}
+.cuenta-section .auth-label select:focus{border-color:var(--red)}
+
+.cuenta-add-btn{background:none;border:1.5px dashed var(--grey2);color:var(--muted);font-family:var(--fb);font-size:.85rem;font-weight:600;padding:.8rem;width:100%;border-radius:8px;cursor:pointer;transition:all .15s;margin-top:1rem}
+.cuenta-add-btn:hover{border-color:var(--red);color:var(--red)}
+.addr-form-wrap{margin-top:1.5rem;padding:1.5rem;background:var(--grey);border-radius:10px}
+.addr-form-wrap h3{font-family:var(--fd);font-size:1.2rem;margin-bottom:1rem}
+.addr-row{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+.addr-actions{display:flex;gap:.8rem;margin-top:.5rem}
+.addr-actions .auth-btn{flex:1}
+.cuenta-cancel-btn{flex:1;background:var(--white);border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;cursor:pointer;color:var(--muted);padding:.8rem;text-transform:uppercase;letter-spacing:.05em}
+.cuenta-cancel-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* Address cards */
+.addr-card{display:flex;justify-content:space-between;align-items:flex-start;padding:1rem;border:1.5px solid var(--grey2);border-radius:10px;margin-bottom:.8rem}
+.addr-card-info{flex:1;min-width:0}
+.addr-card-label{font-weight:700;font-size:.85rem;margin-bottom:.2rem;display:flex;align-items:center;gap:.5rem}
+.addr-card-default{font-size:.65rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+.addr-card-text{font-size:.84rem;color:var(--muted);line-height:1.5}
+.addr-card-actions{display:flex;gap:.5rem;flex-shrink:0;margin-left:1rem}
+.addr-card-actions button{background:none;border:none;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--muted);padding:.3rem .4rem;border-radius:4px}
+.addr-card-actions button:hover{color:var(--red)}
+
+/* Orders */
+.order-card{border:1.5px solid var(--grey2);border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.order-card-header{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;background:var(--grey);font-size:.8rem}
+.order-card-header strong{font-family:var(--fd);font-size:.95rem;letter-spacing:.02em}
+.order-status{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.25rem .6rem;border-radius:20px;background:var(--grey2);color:var(--muted)}
+.order-status.paid,.order-status.approved{background:#E6F9E6;color:#006600}
+.order-status.shipped{background:#E6F0FF;color:#0044CC}
+.order-status.delivered{background:#E6F9E6;color:#006600}
+.order-status.cancelled,.order-status.refunded{background:#FFF0F0;color:#CC0000}
+.order-card-body{padding:1rem}
+.order-item{display:flex;gap:.8rem;align-items:center;padding:.4rem 0;font-size:.84rem}
+.order-item img{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--grey)}
+.order-item-info{flex:1;min-width:0}
+.order-total{text-align:right;font-weight:700;font-size:.95rem;padding-top:.8rem;margin-top:.5rem;border-top:1px solid var(--grey2)}
+.cuenta-empty{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.9rem}
+
+.auth-alert{padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1.2rem;line-height:1.4}
+.auth-alert.error{background:#FFF0F0;color:#CC0000;border:1px solid #FFCCCC}
+.auth-alert.success{background:#F0FFF0;color:#006600;border:1px solid #CCFFCC}
+.auth-label{display:block;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:1.2rem}
+.auth-label input{display:block;width:100%;margin-top:.4rem;padding:.75rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.95rem;color:var(--black);background:var(--white);transition:border-color .15s;outline:none}
+.auth-label input:focus{border-color:var(--red)}
+.auth-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;border:none;border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s;text-transform:uppercase;letter-spacing:.05em;background:var(--black);color:var(--white)}
+.auth-btn:hover{background:var(--red)}
+.auth-btn:disabled{opacity:.5;pointer-events:none}
+
+@media(max-width:600px){
+  .addr-row{grid-template-columns:1fr}
+  .cuenta-header{flex-direction:column}
+}
+</style>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', () => {
+  function waitSb(cb) { if (window.__sb) cb(); else setTimeout(() => waitSb(cb), 80); }
+  waitSb(init);
+
+  function init() {
+    const sb = window.__sb;
+    let currentUser = null;
+
+    sb.auth.getSession().then(({ data }) => {
+      if (!data?.session?.user) { window.location.href = '/cuenta/login'; return; }
+      currentUser = data.session.user;
+      document.getElementById('cuentaEmail').textContent = currentUser.email;
+      document.getElementById('cuentaLoading').style.display = 'none';
+      document.getElementById('cuentaContent').style.display = 'block';
+      loadProfile();
+      setupTabs();
+    });
+
+    // ── TABS ──
+    function setupTabs() {
+      document.querySelectorAll('.cuenta-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.cuenta-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.cuenta-section').forEach(s => s.style.display = 'none');
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).style.display = 'block';
+          if (tab.dataset.tab === 'direcciones') loadAddresses();
+          if (tab.dataset.tab === 'pedidos') loadOrders();
+        });
+      });
+    }
+
+    // ── PERFIL ──
+    async function loadProfile() {
+      const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (data) {
+        document.getElementById('profName').value = data.full_name || '';
+        document.getElementById('profPhone').value = data.phone || '';
+        document.getElementById('profDocType').value = data.document_type || 'CC';
+        document.getElementById('profDocNum').value = data.document_number || '';
+      }
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alert = document.getElementById('profileAlert');
+      const btn = document.getElementById('profSaveBtn');
+      btn.disabled = true; btn.textContent = 'Guardando...';
+      const { error } = await sb.from('profiles').update({
+        full_name: document.getElementById('profName').value.trim(),
+        phone: document.getElementById('profPhone').value.trim(),
+        document_type: document.getElementById('profDocType').value,
+        document_number: document.getElementById('profDocNum').value.trim(),
+      }).eq('id', currentUser.id);
+      btn.disabled = false; btn.textContent = 'Guardar';
+      if (error) { alert.textContent = 'Error al guardar.'; alert.className = 'auth-alert error'; alert.style.display = 'block'; }
+      else { alert.textContent = 'Perfil actualizado.'; alert.className = 'auth-alert success'; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3000); }
+    });
+
+    // ── DIRECCIONES ──
+    let addresses = [];
+    async function loadAddresses() {
+      const { data } = await sb.from('addresses').select('*').eq('user_id', currentUser.id).order('is_default', { ascending: false });
+      addresses = data || [];
+      renderAddresses();
+    }
+
+    function renderAddresses() {
+      const list = document.getElementById('addressList');
+      if (addresses.length === 0) { list.innerHTML = '<p class="cuenta-empty">No tienes direcciones guardadas.</p>'; return; }
+      list.innerHTML = addresses.map(a => `
+        <div class="addr-card">
+          <div class="addr-card-info">
+            <div class="addr-card-label">${a.label}${a.is_default ? ' <span class="addr-card-default">Predeterminada</span>' : ''}</div>
+            <div class="addr-card-text">${a.full_name}<br>${a.address_line}${a.address_detail ? ', ' + a.address_detail : ''}<br>${a.city}, ${a.department}<br>${a.phone}</div>
+          </div>
+          <div class="addr-card-actions">
+            <button data-edit="${a.id}">Editar</button>
+            <button data-del="${a.id}">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => editAddress(b.dataset.edit)));
+      list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => deleteAddress(b.dataset.del)));
+    }
+
+    function editAddress(id) {
+      const a = addresses.find(x => x.id === id);
+      if (!a) return;
+      document.getElementById('addrId').value = a.id;
+      document.getElementById('addrLabel').value = a.label;
+      document.getElementById('addrName').value = a.full_name;
+      document.getElementById('addrPhone').value = a.phone;
+      document.getElementById('addrDept').value = a.department;
+      document.getElementById('addrCity').value = a.city;
+      document.getElementById('addrLine').value = a.address_line;
+      document.getElementById('addrDetail').value = a.address_detail || '';
+      document.getElementById('addrFormTitle').textContent = 'Editar dirección';
+      document.getElementById('addrFormWrap').style.display = 'block';
+    }
+
+    async function deleteAddress(id) {
+      if (!confirm('¿Eliminar esta dirección?')) return;
+      await sb.from('addresses').delete().eq('id', id);
+      loadAddresses();
+    }
+
+    document.getElementById('addAddrBtn').addEventListener('click', () => {
+      document.getElementById('addrForm').reset();
+      document.getElementById('addrId').value = '';
+      document.getElementById('addrFormTitle').textContent = 'Nueva dirección';
+      document.getElementById('addrFormWrap').style.display = 'block';
+    });
+
+    document.getElementById('addrCancel').addEventListener('click', () => {
+      document.getElementById('addrFormWrap').style.display = 'none';
+    });
+
+    document.getElementById('addrForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('addrId').value;
+      const payload = {
+        user_id: currentUser.id,
+        label: document.getElementById('addrLabel').value.trim(),
+        full_name: document.getElementById('addrName').value.trim(),
+        phone: document.getElementById('addrPhone').value.trim(),
+        department: document.getElementById('addrDept').value.trim(),
+        city: document.getElementById('addrCity').value.trim(),
+        address_line: document.getElementById('addrLine').value.trim(),
+        address_detail: document.getElementById('addrDetail').value.trim(),
+        is_default: addresses.length === 0, // primera es default
+      };
+      if (id) {
+        await sb.from('addresses').update(payload).eq('id', id);
+      } else {
+        await sb.from('addresses').insert(payload);
+      }
+      document.getElementById('addrFormWrap').style.display = 'none';
+      loadAddresses();
+    });
+
+    // ── PEDIDOS ──
+    async function loadOrders() {
+      const { data } = await sb.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      const orders = data || [];
+      const empty = document.getElementById('ordersEmpty');
+      const list = document.getElementById('ordersList');
+
+      if (orders.length === 0) { empty.style.display = 'block'; list.innerHTML = ''; return; }
+      empty.style.display = 'none';
+
+      // Cargar items de todos los pedidos
+      const orderIds = orders.map(o => o.id);
+      const { data: items } = await sb.from('order_items').select('*').in('order_id', orderIds);
+
+      const statusLabels = { pending: 'Pendiente', paid: 'Pagado', approved: 'Aprobado', shipped: 'Enviado', delivered: 'Entregado', cancelled: 'Cancelado', refunded: 'Reembolsado' };
+
+      list.innerHTML = orders.map(o => {
+        const oItems = (items || []).filter(i => i.order_id === o.id);
+        const date = new Date(o.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+        return `
+          <div class="order-card">
+            <div class="order-card-header">
+              <div><strong>Pedido #${o.order_number}</strong> &middot; ${date}</div>
+              <span class="order-status ${o.status}">${statusLabels[o.status] || o.status}</span>
+            </div>
+            <div class="order-card-body">
+              ${oItems.map(i => `
+                <div class="order-item">
+                  ${i.product_image ? `<img src="${i.product_image}" alt=""/>` : ''}
+                  <div class="order-item-info">
+                    <strong>${i.product_name}</strong>
+                    ${i.color ? ' · ' + i.color : ''}${i.size ? ' · Talla ' + i.size : ''} &times; ${i.quantity}
+                  </div>
+                </div>
+              `).join('')}
+              <div class="order-total">Total: $${(o.total_cents / 100).toLocaleString('es-CO')}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── LOGOUT ──
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = '/';
+    });
+  }
+});
+</script>
+
+</Layout>
