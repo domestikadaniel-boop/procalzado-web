@@ -1,0 +1,107 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Restablecer Contraseña | Procalzado">
+
+<main class="auth-page">
+  <div class="auth-card">
+    <h1>Nueva Contraseña</h1>
+    <p class="auth-sub">Escribe tu nueva contraseña para tu cuenta de Procalzado.</p>
+
+    <div class="auth-alert" id="authAlert" style="display:none"></div>
+
+    <form id="resetForm" novalidate style="display:none" id="resetFormWrap">
+      <label class="auth-label">
+        Nueva contraseña
+        <input type="password" id="newPass" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6"/>
+      </label>
+      <label class="auth-label">
+        Confirmar contraseña
+        <input type="password" id="newPass2" required autocomplete="new-password" placeholder="Repite la contraseña" minlength="6"/>
+      </label>
+      <button type="submit" class="auth-btn" id="resetBtn">Guardar Contraseña</button>
+    </form>
+  </div>
+</main>
+
+<style>
+.auth-page{max-width:440px;margin:0 auto;padding:3rem clamp(1rem,4vw,2rem) 5rem;min-height:65vh;display:flex;align-items:flex-start;justify-content:center}
+.auth-card{width:100%}
+.auth-card h1{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2rem);letter-spacing:.03em;margin-bottom:.3rem}
+.auth-sub{color:var(--muted);font-size:.88rem;margin-bottom:2rem;line-height:1.5}
+.auth-label{display:block;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:1.2rem}
+.auth-label input{display:block;width:100%;margin-top:.4rem;padding:.75rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.95rem;color:var(--black);background:var(--white);transition:border-color .15s;outline:none}
+.auth-label input:focus{border-color:var(--red)}
+.auth-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;border:none;border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s;text-transform:uppercase;letter-spacing:.05em;background:var(--black);color:var(--white)}
+.auth-btn:hover{background:var(--red)}
+.auth-btn:disabled{opacity:.5;pointer-events:none}
+.auth-alert{padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1.2rem;line-height:1.4}
+.auth-alert.error{background:#FFF0F0;color:#CC0000;border:1px solid #FFCCCC}
+.auth-alert.success{background:#F0FFF0;color:#006600;border:1px solid #CCFFCC}
+</style>
+
+<script is:inline>
+(function waitSb(){
+  if (!window.__sb) { setTimeout(waitSb, 100); return; }
+  var sb = window.__sb;
+
+  var alert = document.getElementById('authAlert');
+  var formWrap = document.getElementById('resetFormWrap');
+
+  function showAlert(msg, type) {
+    alert.textContent = msg;
+    alert.className = 'auth-alert ' + type;
+    alert.style.display = 'block';
+  }
+
+  // Supabase pone la sesión temporal de recovery automáticamente al cargar
+  // si el link tiene el token en la URL (#access_token=...&type=recovery)
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (event === 'PASSWORD_RECOVERY') {
+      formWrap.style.display = 'block';
+    }
+  });
+
+  // fallback: si ya hay sesión de recovery activa al cargar
+  sb.auth.getSession().then(function(r) {
+    var hash = window.location.hash;
+    if (hash && hash.indexOf('type=recovery') >= 0) {
+      formWrap.style.display = 'block';
+    } else if (!r.data || !r.data.session) {
+      showAlert('Este enlace no es válido o ya expiró. Solicita uno nuevo desde "Olvidé mi contraseña".', 'error');
+    } else {
+      formWrap.style.display = 'block';
+    }
+  });
+
+  document.getElementById('resetForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    alert.style.display = 'none';
+    var p1 = document.getElementById('newPass').value;
+    var p2 = document.getElementById('newPass2').value;
+
+    if (p1.length < 6) { showAlert('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+    if (p1 !== p2) { showAlert('Las contraseñas no coinciden.', 'error'); return; }
+
+    var btn = document.getElementById('resetBtn');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    var result = await sb.auth.updateUser({ password: p1 });
+
+    btn.disabled = false;
+    btn.textContent = 'Guardar Contraseña';
+
+    if (result.error) {
+      showAlert('No se pudo actualizar la contraseña. Intenta de nuevo.', 'error');
+      return;
+    }
+
+    showAlert('Contraseña actualizada. Redirigiendo...', 'success');
+    setTimeout(function() { window.location.href = '/cuenta'; }, 1500);
+  });
+})();
+</script>
+
+</Layout>

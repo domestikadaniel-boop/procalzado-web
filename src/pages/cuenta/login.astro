@@ -20,6 +20,7 @@ import Layout from '../../layouts/Layout.astro';
         Contraseña
         <input type="password" id="loginPass" required autocomplete="current-password" placeholder="Tu contraseña" minlength="6"/>
       </label>
+      <p class="auth-forgot"><a href="/cuenta/olvide-password">¿Olvidaste tu contraseña?</a></p>
       <button type="submit" class="auth-btn" id="loginBtn">Ingresar</button>
     </form>
 
@@ -42,6 +43,9 @@ import Layout from '../../layouts/Layout.astro';
 .auth-card h1{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2rem);letter-spacing:.03em;margin-bottom:.3rem}
 .auth-sub{color:var(--muted);font-size:.88rem;margin-bottom:2rem}
 .auth-label{display:block;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:1.2rem}
+.auth-forgot{text-align:right;margin:-0.6rem 0 1.2rem;font-size:.8rem}
+.auth-forgot a{color:var(--muted);text-decoration:none}
+.auth-forgot a:hover{color:var(--red);text-decoration:underline}
 .auth-label input{display:block;width:100%;margin-top:.4rem;padding:.75rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.95rem;color:var(--black);background:var(--white);transition:border-color .15s;outline:none}
 .auth-label input:focus{border-color:var(--red)}
 .auth-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;border:none;border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s;text-transform:uppercase;letter-spacing:.05em}
