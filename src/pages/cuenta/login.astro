@@ -61,18 +61,17 @@ import Layout from '../../layouts/Layout.astro';
 </style>
 
 <script is:inline>
-document.addEventListener('DOMContentLoaded', () => {
-  if (!window.__sb) { setTimeout(arguments.callee, 100); return; }
-  const sb = window.__sb;
+(function waitSb(){
+  if (!window.__sb) { setTimeout(waitSb, 100); return; }
+  var sb = window.__sb;
 
-  // Si ya está logueado, redirigir a /cuenta
-  sb.auth.getSession().then(({ data }) => {
-    if (data?.session?.user) window.location.href = '/cuenta';
+  sb.auth.getSession().then(function(r) {
+    if (r.data && r.data.session && r.data.session.user) window.location.href = '/cuenta';
   });
 
-  const form = document.getElementById('loginForm');
-  const alert = document.getElementById('authAlert');
-  const btn = document.getElementById('loginBtn');
+  var form = document.getElementById('loginForm');
+  var alert = document.getElementById('authAlert');
+  var btn = document.getElementById('loginBtn');
 
   function showAlert(msg, type) {
     alert.textContent = msg;
@@ -80,34 +79,34 @@ document.addEventListener('DOMContentLoaded', () => {
     alert.style.display = 'block';
   }
 
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
     alert.style.display = 'none';
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass = document.getElementById('loginPass').value;
+    var email = document.getElementById('loginEmail').value.trim();
+    var pass = document.getElementById('loginPass').value;
     if (!email || !pass) { showAlert('Completa todos los campos.', 'error'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Ingresando...';
 
-    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) {
+    var result = await sb.auth.signInWithPassword({ email: email, password: pass });
+    if (result.error) {
       btn.disabled = false;
       btn.textContent = 'Ingresar';
-      const msg = error.message.includes('Invalid login') ? 'Correo o contraseña incorrectos.' : error.message;
+      var msg = result.error.message.indexOf('Invalid login') >= 0 ? 'Correo o contraseña incorrectos.' : result.error.message;
       showAlert(msg, 'error');
       return;
     }
     window.location.href = '/cuenta';
   });
 
-  document.getElementById('googleBtn')?.addEventListener('click', async () => {
+  document.getElementById('googleBtn').addEventListener('click', async function() {
     await sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin + '/cuenta' }
     });
   });
-});
+})();
 </script>
 
 </Layout>

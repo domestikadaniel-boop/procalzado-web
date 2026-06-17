@@ -69,17 +69,17 @@ import Layout from '../../layouts/Layout.astro';
 </style>
 
 <script is:inline>
-document.addEventListener('DOMContentLoaded', () => {
-  if (!window.__sb) { setTimeout(arguments.callee, 100); return; }
-  const sb = window.__sb;
+(function waitSb(){
+  if (!window.__sb) { setTimeout(waitSb, 100); return; }
+  var sb = window.__sb;
 
-  sb.auth.getSession().then(({ data }) => {
-    if (data?.session?.user) window.location.href = '/cuenta';
+  sb.auth.getSession().then(function(r) {
+    if (r.data && r.data.session && r.data.session.user) window.location.href = '/cuenta';
   });
 
-  const form = document.getElementById('registerForm');
-  const alert = document.getElementById('authAlert');
-  const btn = document.getElementById('regBtn');
+  var form = document.getElementById('registerForm');
+  var alert = document.getElementById('authAlert');
+  var btn = document.getElementById('regBtn');
 
   function showAlert(msg, type) {
     alert.textContent = msg;
@@ -87,13 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
     alert.style.display = 'block';
   }
 
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
     alert.style.display = 'none';
-    const name = document.getElementById('regName').value.trim();
-    const phone = document.getElementById('regPhone').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const pass = document.getElementById('regPass').value;
+    var name = document.getElementById('regName').value.trim();
+    var phone = document.getElementById('regPhone').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var pass = document.getElementById('regPass').value;
 
     if (!name || !phone || !email || !pass) { showAlert('Completa todos los campos.', 'error'); return; }
     if (pass.length < 6) { showAlert('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
@@ -101,45 +101,40 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.disabled = true;
     btn.textContent = 'Creando cuenta...';
 
-    const { data, error } = await sb.auth.signUp({
-      email,
+    var result = await sb.auth.signUp({
+      email: email,
       password: pass,
-      options: {
-        data: { full_name: name, phone: phone }
-      }
+      options: { data: { full_name: name, phone: phone } }
     });
 
-    if (error) {
+    if (result.error) {
       btn.disabled = false;
       btn.textContent = 'Crear Cuenta';
-      const msg = error.message.includes('already registered') ? 'Este correo ya está registrado.' : error.message;
+      var msg = result.error.message.indexOf('already registered') >= 0 ? 'Este correo ya está registrado.' : result.error.message;
       showAlert(msg, 'error');
       return;
     }
 
-    // Si Supabase requiere confirmación de email
-    if (data?.user && !data.session) {
+    if (result.data && result.data.user && !result.data.session) {
       showAlert('Cuenta creada. Revisa tu correo para confirmar.', 'success');
       btn.disabled = false;
       btn.textContent = 'Crear Cuenta';
       return;
     }
 
-    // Actualizar perfil
-    if (data?.session) {
-      await sb.from('profiles').update({ full_name: name, phone: phone }).eq('id', data.user.id);
+    if (result.data && result.data.session) {
+      await sb.from('profiles').update({ full_name: name, phone: phone }).eq('id', result.data.user.id);
     }
-
     window.location.href = '/cuenta';
   });
 
-  document.getElementById('googleBtn')?.addEventListener('click', async () => {
+  document.getElementById('googleBtn').addEventListener('click', async function() {
     await sb.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin + '/cuenta' }
     });
   });
-});
+})();
 </script>
 
 </Layout>

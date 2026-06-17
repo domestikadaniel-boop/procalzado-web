@@ -158,17 +158,18 @@ import Layout from '../../layouts/Layout.astro';
 </style>
 
 <script is:inline>
-document.addEventListener('DOMContentLoaded', () => {
-  function waitSb(cb) { if (window.__sb) cb(); else setTimeout(() => waitSb(cb), 80); }
-  waitSb(init);
+(function waitSb(){
+  if (!window.__sb) { setTimeout(waitSb, 100); return; }
+  init();
 
   function init() {
-    const sb = window.__sb;
-    let currentUser = null;
+    var sb = window.__sb;
+    var currentUser = null;
 
-    sb.auth.getSession().then(({ data }) => {
-      if (!data?.session?.user) { window.location.href = '/cuenta/login'; return; }
-      currentUser = data.session.user;
+    sb.auth.getSession().then(function(r) {
+      var user = r.data && r.data.session && r.data.session.user;
+      if (!user) { window.location.href = '/cuenta/login'; return; }
+      currentUser = user;
       document.getElementById('cuentaEmail').textContent = currentUser.email;
       document.getElementById('cuentaLoading').style.display = 'none';
       document.getElementById('cuentaContent').style.display = 'block';
@@ -342,12 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── LOGOUT ──
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
+    document.getElementById('logoutBtn').addEventListener('click', async function() {
       await sb.auth.signOut();
       window.location.href = '/';
     });
   }
-});
+})();
 </script>
 
 </Layout>
