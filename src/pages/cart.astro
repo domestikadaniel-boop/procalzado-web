@@ -24,9 +24,13 @@ const pageTitle = 'Tu Carrito | Procalzado';
       </div>
       <p class="cart-note">Para pedidos al por mayor consultar a través de WhatsApp.</p>
       <div class="cart-actions">
+        <button class="cart-buy-btn cart-buy-btn-online" id="cartPagoOnline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Pagar en línea
+        </button>
         <button class="cart-buy-btn" id="cartPageWa">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-          Comprar
+          Cotizar por WhatsApp
         </button>
         <button class="cart-clear-btn" id="cartPageClear">Vaciar carrito</button>
       </div>
@@ -75,6 +79,8 @@ const pageTitle = 'Tu Carrito | Procalzado';
 .cart-buy-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--red);color:var(--white);padding:.85rem;border:none;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .15s}
 .cart-buy-btn:hover{background:#cc0000}
 .cart-buy-btn svg{width:18px;height:18px}
+.cart-buy-btn-online{background:var(--black)}
+.cart-buy-btn-online:hover{background:#222}
 .cart-clear-btn{background:none;border:1px dashed var(--grey2);border-radius:8px;padding:.6rem;font-size:.78rem;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s}
 .cart-clear-btn:hover{border-color:var(--red);color:var(--red)}
 
@@ -153,6 +159,16 @@ const pageTitle = 'Tu Carrito | Procalzado';
 
   document.getElementById('cartPageClear')?.addEventListener('click', () => {
     if (confirm('¿Vaciar todo el carrito?')) { cart = []; save(); render(); updateBadge(); }
+  });
+
+  document.getElementById('cartPagoOnline')?.addEventListener('click', () => {
+    if (cart.length === 0) return;
+    const withPrice = cart.filter(i => i.price);
+    if (withPrice.length !== cart.length) {
+      alert('Algunos productos en tu carrito no tienen precio visible. Para pagar en línea, todos los productos deben tener precio. Usa "Cotizar por WhatsApp" para esos casos.');
+      return;
+    }
+    window.location.href = '/checkout';
   });
 
   document.getElementById('cartPageWa')?.addEventListener('click', () => {

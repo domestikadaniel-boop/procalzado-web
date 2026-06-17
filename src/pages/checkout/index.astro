@@ -1,0 +1,238 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Finalizar Compra | Procalzado">
+
+<main class="checkout-page">
+  <h1 class="checkout-title">Finalizar Compra</h1>
+
+  <div class="checkout-empty" id="checkoutEmpty" style="display:none">
+    <p>Tu carrito está vacío.</p>
+    <a href="/" class="checkout-back-btn">Ver productos</a>
+  </div>
+
+  <div class="checkout-content" id="checkoutContent">
+    <div class="checkout-form-col">
+      <div class="auth-alert" id="checkoutAlert" style="display:none"></div>
+
+      <h2 class="checkout-section-title">Tus datos</h2>
+      <div class="checkout-grid">
+        <label class="auth-label">Nombre completo
+          <input type="text" id="buyerName" required/>
+        </label>
+        <label class="auth-label">Correo electrónico
+          <input type="email" id="buyerEmail" required/>
+        </label>
+        <label class="auth-label">Teléfono
+          <input type="tel" id="buyerPhone" required/>
+        </label>
+        <label class="auth-label">Documento
+          <input type="text" id="buyerDoc" required/>
+        </label>
+      </div>
+
+      <h2 class="checkout-section-title">Envío</h2>
+      <div class="checkout-grid">
+        <label class="auth-label">Departamento
+          <input type="text" id="shipDept" required/>
+        </label>
+        <label class="auth-label">Ciudad
+          <input type="text" id="shipCity" required/>
+        </label>
+        <label class="auth-label full">Dirección
+          <input type="text" id="shipAddress" required placeholder="Calle 10 #20-30"/>
+        </label>
+        <label class="auth-label full">Detalle (apto, torre, barrio)
+          <input type="text" id="shipDetail"/>
+        </label>
+      </div>
+
+      <button type="button" class="checkout-pay-btn" id="payBtn">Pagar con Wompi</button>
+      <p class="checkout-secure-note">Pago seguro procesado por Wompi. Aceptamos tarjetas, PSE, Nequi y más.</p>
+    </div>
+
+    <div class="checkout-summary-col">
+      <div class="checkout-summary">
+        <h3>Resumen del pedido</h3>
+        <div id="summaryItems"></div>
+        <div class="checkout-total-row">
+          <span>Total</span>
+          <strong id="summaryTotal">$0</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Formulario oculto para redirigir a Wompi -->
+<form id="wompiForm" action="https://checkout.wompi.co/p/" method="GET" style="display:none">
+  <input type="hidden" name="public-key" id="wPublicKey"/>
+  <input type="hidden" name="currency" value="COP"/>
+  <input type="hidden" name="amount-in-cents" id="wAmount"/>
+  <input type="hidden" name="reference" id="wReference"/>
+  <input type="hidden" name="signature:integrity" id="wSignature"/>
+  <input type="hidden" name="redirect-url" id="wRedirect"/>
+  <input type="hidden" name="customer-data:email" id="wEmail"/>
+</form>
+
+<style>
+.checkout-page{max-width:1100px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 5rem;min-height:60vh}
+.checkout-title{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:.03em;margin-bottom:2rem;padding-bottom:.8rem;border-bottom:2px solid var(--grey2)}
+.checkout-empty{text-align:center;padding:4rem 1rem}
+.checkout-back-btn{display:inline-block;background:var(--black);color:var(--white);padding:.7rem 1.5rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none;margin-top:1rem}
+.checkout-back-btn:hover{background:var(--red)}
+
+.checkout-content{display:grid;grid-template-columns:1fr 360px;gap:2.5rem;align-items:start}
+.checkout-section-title{font-family:var(--fd);font-size:1.1rem;letter-spacing:.03em;margin:1.5rem 0 1rem;padding-bottom:.4rem;border-bottom:2px solid var(--grey2)}
+.checkout-section-title:first-child{margin-top:0}
+.checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+.checkout-grid .full{grid-column:1/-1}
+
+.auth-label{display:block;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:1.1rem}
+.auth-label input{display:block;width:100%;margin-top:.4rem;padding:.7rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.92rem;color:var(--black);background:var(--white);transition:border-color .15s;outline:none}
+.auth-label input:focus{border-color:var(--red)}
+
+.checkout-pay-btn{width:100%;padding:1rem;background:var(--red);color:var(--white);border:none;border-radius:8px;font-weight:700;font-size:.95rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:1rem}
+.checkout-pay-btn:hover{background:#cc0000}
+.checkout-pay-btn:disabled{opacity:.5;pointer-events:none}
+.checkout-secure-note{font-size:.78rem;color:var(--muted);text-align:center;margin-top:.7rem;line-height:1.5}
+
+.checkout-summary{background:var(--grey);border-radius:12px;padding:1.5rem;position:sticky;top:80px}
+.checkout-summary h3{font-family:var(--fd);font-size:1.1rem;margin-bottom:1rem;letter-spacing:.02em}
+.summary-item{display:flex;justify-content:space-between;gap:.5rem;font-size:.85rem;padding:.5rem 0;border-bottom:1px solid var(--grey2)}
+.summary-item-name{flex:1;color:var(--black)}
+.summary-item-meta{font-size:.74rem;color:var(--muted)}
+.summary-item-price{font-weight:700;white-space:nowrap}
+.checkout-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;margin-top:.5rem}
+.checkout-total-row span{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.checkout-total-row strong{font-family:var(--fd);font-size:1.5rem;color:var(--red)}
+
+.auth-alert{padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1.2rem;line-height:1.4}
+.auth-alert.error{background:#FFF0F0;color:#CC0000;border:1px solid #FFCCCC}
+
+@media(max-width:768px){
+  .checkout-content{grid-template-columns:1fr}
+  .checkout-grid{grid-template-columns:1fr}
+  .checkout-summary{position:static}
+}
+</style>
+
+<script is:inline>
+(function waitSb(){
+  if (!window.__sb) { setTimeout(waitSb, 100); return; }
+  var sb = window.__sb;
+
+  var cart = JSON.parse(localStorage.getItem('procalzado_cart') || '[]');
+
+  if (cart.length === 0) {
+    document.getElementById('checkoutEmpty').style.display = 'block';
+    document.getElementById('checkoutContent').style.display = 'none';
+    return;
+  }
+
+  // Renderizar resumen
+  var summaryEl = document.getElementById('summaryItems');
+  var total = 0;
+  summaryEl.innerHTML = cart.map(function(it) {
+    var lineTotal = (it.price || 0) * it.qty;
+    total += lineTotal;
+    return '<div class="summary-item">' +
+      '<div class="summary-item-name">' + it.name + (it.color ? ' <span class="summary-item-meta">' + it.color + (it.size ? ', ' + it.size : '') + '</span>' : '') + ' x' + it.qty + '</div>' +
+      '<div class="summary-item-price">$' + lineTotal.toLocaleString('es-CO') + '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('summaryTotal').textContent = '$' + total.toLocaleString('es-CO');
+
+  // Prellenar datos si el usuario está logueado
+  sb.auth.getSession().then(async function(r) {
+    var user = r.data && r.data.session && r.data.session.user;
+    if (!user) return;
+    document.getElementById('buyerEmail').value = user.email || '';
+    var prof = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if (prof.data) {
+      document.getElementById('buyerName').value = prof.data.full_name || '';
+      document.getElementById('buyerPhone').value = prof.data.phone || '';
+      document.getElementById('buyerDoc').value = prof.data.document_number || '';
+    }
+    var addr = await sb.from('addresses').select('*').eq('user_id', user.id).eq('is_default', true).maybeSingle();
+    if (addr.data) {
+      document.getElementById('shipDept').value = addr.data.department || '';
+      document.getElementById('shipCity').value = addr.data.city || '';
+      document.getElementById('shipAddress').value = addr.data.address_line || '';
+      document.getElementById('shipDetail').value = addr.data.address_detail || '';
+    }
+  });
+
+  function showAlert(msg) {
+    var alert = document.getElementById('checkoutAlert');
+    alert.textContent = msg;
+    alert.className = 'auth-alert error';
+    alert.style.display = 'block';
+  }
+
+  document.getElementById('payBtn').addEventListener('click', async function() {
+    var name = document.getElementById('buyerName').value.trim();
+    var email = document.getElementById('buyerEmail').value.trim();
+    var phone = document.getElementById('buyerPhone').value.trim();
+    var doc = document.getElementById('buyerDoc').value.trim();
+    var dept = document.getElementById('shipDept').value.trim();
+    var city = document.getElementById('shipCity').value.trim();
+    var address = document.getElementById('shipAddress').value.trim();
+    var detail = document.getElementById('shipDetail').value.trim();
+
+    if (!name || !email || !phone || !dept || !city || !address) {
+      showAlert('Por favor completa todos los campos obligatorios.');
+      return;
+    }
+
+    var btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.textContent = 'Procesando...';
+
+    var session = await sb.auth.getSession();
+    var userId = (session.data && session.data.session && session.data.session.user) ? session.data.session.user.id : null;
+
+    try {
+      var resp = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map(function(it) {
+            return { productId: it.productId, slug: it.slug, name: it.name, brand: it.brand, color: it.color, size: it.size, price: it.price, img: it.img, qty: it.qty };
+          }),
+          buyer: { name: name, email: email, phone: phone, documentType: 'CC', documentNumber: doc },
+          shipping: { department: dept, city: city, address: address, detail: detail },
+          userId: userId,
+        }),
+      });
+
+      var data = await resp.json();
+      if (!resp.ok) {
+        showAlert(data.error || 'No se pudo procesar el pedido.');
+        btn.disabled = false;
+        btn.textContent = 'Pagar con Wompi';
+        return;
+      }
+
+      // Llenar y enviar el form oculto hacia Wompi
+      document.getElementById('wPublicKey').value = data.publicKey;
+      document.getElementById('wAmount').value = data.amountInCents;
+      document.getElementById('wReference').value = data.reference;
+      document.getElementById('wSignature').value = data.integritySignature;
+      document.getElementById('wRedirect').value = window.location.origin + '/checkout/gracias?ref=' + data.reference;
+      document.getElementById('wEmail').value = data.customerEmail;
+
+      localStorage.removeItem('procalzado_cart');
+      document.getElementById('wompiForm').submit();
+
+    } catch (err) {
+      showAlert('Error de conexión. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Pagar con Wompi';
+    }
+  });
+})();
+</script>
+
+</Layout>

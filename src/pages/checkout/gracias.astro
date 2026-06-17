@@ -1,0 +1,81 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Gracias por tu compra | Procalzado">
+
+<main class="gracias-page">
+  <div class="gracias-card" id="graciasCard">
+    <div class="gracias-spinner" id="graciasLoading">
+      <p>Confirmando tu pago...</p>
+    </div>
+  </div>
+</main>
+
+<style>
+.gracias-page{max-width:520px;margin:0 auto;padding:4rem clamp(1rem,4vw,2rem) 6rem;min-height:60vh;display:flex;align-items:center;justify-content:center}
+.gracias-card{width:100%;text-align:center}
+.gracias-icon{width:64px;height:64px;margin:0 auto 1.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.gracias-icon.success{background:#E6F9E6;color:#006600}
+.gracias-icon.pending{background:#FFF8E6;color:#996600}
+.gracias-icon.error{background:#FFF0F0;color:#CC0000}
+.gracias-icon svg{width:32px;height:32px}
+.gracias-card h1{font-family:var(--fd);font-size:1.6rem;letter-spacing:.03em;margin-bottom:.6rem}
+.gracias-card p{color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.5rem}
+.gracias-back-btn{display:inline-block;background:var(--black);color:var(--white);padding:.8rem 1.8rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none}
+.gracias-back-btn:hover{background:var(--red)}
+</style>
+
+<script is:inline>
+(function waitSb(){
+  if (!window.__sb) { setTimeout(waitSb, 100); return; }
+  var sb = window.__sb;
+
+  var params = new URLSearchParams(window.location.search);
+  var ref = params.get('ref') || params.get('reference');
+
+  if (!ref) {
+    renderResult('error', 'No encontramos tu pedido', 'No pudimos identificar la referencia de tu pago. Si realizaste un pago, contáctanos por WhatsApp con tu comprobante.');
+    return;
+  }
+
+  var attempts = 0;
+  function checkStatus() {
+    attempts++;
+    sb.rpc('get_order_status_by_reference', { ref: ref }).then(function(r) {
+      var rows = r.data;
+      var order = (rows && rows.length > 0) ? rows[0] : null;
+      if (!order) {
+        if (attempts < 8) { setTimeout(checkStatus, 1500); return; }
+        renderResult('error', 'Pedido no encontrado', 'No pudimos encontrar tu pedido. Contáctanos por WhatsApp con tu comprobante de pago.');
+        return;
+      }
+      if (order.status === 'paid' || order.status === 'approved') {
+        renderResult('success', '¡Pago confirmado!', 'Tu pedido #' + order.order_number + ' fue aprobado. Te enviamos la confirmación a tu correo.');
+      } else if (order.status === 'cancelled') {
+        renderResult('error', 'Pago no aprobado', 'Tu pago fue rechazado o cancelado. Puedes intentar de nuevo desde tu carrito.');
+      } else {
+        if (attempts < 8) { setTimeout(checkStatus, 1500); return; }
+        renderResult('pending', 'Procesando tu pago', 'Tu pago está siendo verificado. Te enviaremos un correo de confirmación en cuanto se apruebe.');
+      }
+    });
+  }
+
+  function renderResult(type, title, desc) {
+    var icons = {
+      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+      pending: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    };
+    document.getElementById('graciasCard').innerHTML =
+      '<div class="gracias-icon ' + type + '">' + icons[type] + '</div>' +
+      '<h1>' + title + '</h1>' +
+      '<p>' + desc + '</p>' +
+      '<a href="/cuenta" class="gracias-back-btn">Ver mis pedidos</a>';
+  }
+
+  checkStatus();
+})();
+</script>
+
+</Layout>

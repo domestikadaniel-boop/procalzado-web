@@ -1,9 +1,12 @@
 {
   "name": "procalzado-web",
   "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./dist/_worker.js/index.js",
   "assets": {
     "directory": "./dist/",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    "binding": "ASSETS"
   }
 }
