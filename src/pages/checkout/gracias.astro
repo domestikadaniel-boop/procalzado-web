@@ -23,8 +23,7 @@ import Layout from '../../layouts/Layout.astro';
 
 .gracias-inner{display:flex;flex-direction:column;align-items:center;gap:1.2rem}
 
-.gracias-logo-wrap{width:88px;height:88px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto}
-.gracias-logo-wrap img{width:56px;height:56px;object-fit:contain}
+.gracias-logo-wrap{width:100px;height:100px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto;overflow:hidden;flex-shrink:0;padding:8px}
 
 .gracias-title{font-family:var(--fd);font-size:clamp(1.6rem,5vw,2.2rem);letter-spacing:.03em;color:var(--black);margin:0}
 .gracias-subtitle{font-size:1rem;color:var(--red);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0}
@@ -81,7 +80,9 @@ import Layout from '../../layouts/Layout.astro';
   function renderSuccess(orderNum) {
     document.getElementById('graciasCard').innerHTML =
       '<div class="gracias-inner">' +
-        '<div class="gracias-logo-wrap"><img src="/isotipo.png" alt="Procalzado"/></div>' +
+        '<div class="gracias-logo-wrap">' +
+          '<span style="font-family:var(--fd);font-size:13px;color:#fff;letter-spacing:.05em;font-weight:800;text-transform:lowercase">procalzado</span>' +
+        '</div>' +
         '<h1 class="gracias-title">¡Gracias por tu compra!</h1>' +
         '<p class="gracias-subtitle">Bienvenido a nuestra familia</p>' +
         '<p class="gracias-desc">Tu pedido fue aprobado y ya está en proceso. Te enviamos la confirmación y tu factura al correo.</p>' +
