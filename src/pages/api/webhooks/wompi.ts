@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
+import { env as cfEnv } from 'cloudflare:workers';
 
 export const prerender = false;
 
@@ -98,15 +99,14 @@ async function sendInvoiceEmail(resendApiKey: string, order: any, items: any[]) 
   }
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
-    const env = (locals as any).runtime?.env || {};
-    const SUPABASE_URL = env.PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
-    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-    const WOMPI_EVENTS_SECRET = env.WOMPI_EVENTS_SECRET || import.meta.env.WOMPI_EVENTS_SECRET;
-    const TELEGRAM_BOT_TOKEN = env.TELEGRAM_BOT_TOKEN || import.meta.env.TELEGRAM_BOT_TOKEN;
-    const TELEGRAM_CHAT_ID = env.TELEGRAM_CHAT_ID || import.meta.env.TELEGRAM_CHAT_ID;
-    const RESEND_API_KEY = env.RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
+    const SUPABASE_URL = (cfEnv as any).PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = (cfEnv as any).SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+    const WOMPI_EVENTS_SECRET = (cfEnv as any).WOMPI_EVENTS_SECRET || import.meta.env.WOMPI_EVENTS_SECRET;
+    const TELEGRAM_BOT_TOKEN = (cfEnv as any).TELEGRAM_BOT_TOKEN || import.meta.env.TELEGRAM_BOT_TOKEN;
+    const TELEGRAM_CHAT_ID = (cfEnv as any).TELEGRAM_CHAT_ID || import.meta.env.TELEGRAM_CHAT_ID;
+    const RESEND_API_KEY = (cfEnv as any).RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
 
     if (!SUPABASE_URL || !SERVICE_KEY || !WOMPI_EVENTS_SECRET) {
       return new Response('Server misconfigured', { status: 500 });

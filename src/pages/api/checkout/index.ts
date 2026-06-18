@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
+import { env as cfEnv } from 'cloudflare:workers';
 
 export const prerender = false;
 
@@ -34,13 +35,12 @@ interface CheckoutBody {
   userId?: string | null; // si el comprador está logueado
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
-    const env = (locals as any).runtime?.env || {};
-    const SUPABASE_URL = env.PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
-    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-    const WOMPI_PUBLIC_KEY = env.WOMPI_PUBLIC_KEY || import.meta.env.WOMPI_PUBLIC_KEY;
-    const WOMPI_INTEGRITY_SECRET = env.WOMPI_INTEGRITY_SECRET || import.meta.env.WOMPI_INTEGRITY_SECRET;
+    const SUPABASE_URL = (cfEnv as any).PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+    const SERVICE_KEY = (cfEnv as any).SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+    const WOMPI_PUBLIC_KEY = (cfEnv as any).WOMPI_PUBLIC_KEY || import.meta.env.WOMPI_PUBLIC_KEY;
+    const WOMPI_INTEGRITY_SECRET = (cfEnv as any).WOMPI_INTEGRITY_SECRET || import.meta.env.WOMPI_INTEGRITY_SECRET;
 
     if (!SUPABASE_URL || !SERVICE_KEY || !WOMPI_PUBLIC_KEY || !WOMPI_INTEGRITY_SECRET) {
       return new Response(JSON.stringify({ error: 'Configuración del servidor incompleta' }), { status: 500 });
