@@ -31,6 +31,15 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
           <input type="tel" id="buyerPhone" required placeholder="3001234567" pattern="[0-9]+" inputmode="numeric" title="Solo números"/>
           <span class="field-error" id="errPhone"></span>
         </label>
+        <label class="auth-label">Tipo de documento
+          <select id="buyerDocType" required>
+            <option value="CC">Cédula de Ciudadanía</option>
+            <option value="CE">Cédula de Extranjería</option>
+            <option value="NIT">NIT</option>
+            <option value="PP">Pasaporte</option>
+            <option value="TI">Tarjeta de Identidad</option>
+          </select>
+        </label>
         <label class="auth-label">Documento
           <input type="text" id="buyerDoc" required placeholder="1234567890" pattern="[0-9]+" inputmode="numeric" title="Solo números"/>
           <span class="field-error" id="errDoc"></span>
@@ -206,6 +215,7 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
     if (prof.data) {
       document.getElementById('buyerName').value = prof.data.full_name || '';
       document.getElementById('buyerPhone').value = prof.data.phone || '';
+      document.getElementById('buyerDocType').value = prof.data.document_type || 'CC';
       document.getElementById('buyerDoc').value = prof.data.document_number || '';
     }
     var addr = await sb.from('addresses').select('*').eq('user_id', user.id).eq('is_default', true).maybeSingle();
@@ -310,6 +320,7 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
     var name = document.getElementById('buyerName').value.trim();
     var email = document.getElementById('buyerEmail').value.trim();
     var phone = document.getElementById('buyerPhone').value.trim();
+    var docType = document.getElementById('buyerDocType').value;
     var doc = document.getElementById('buyerDoc').value.trim();
     var dept = document.getElementById('shipDept').value;
     var city = document.getElementById('shipCity').value;
@@ -333,7 +344,7 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
           items: cart.map(function(it) {
             return { productId: it.productId, slug: it.slug, name: it.name, brand: it.brand, color: it.color, size: it.size, price: it.price, img: it.img, qty: it.qty };
           }),
-          buyer: { name: name, email: email, phone: phone, documentType: 'CC', documentNumber: doc },
+          buyer: { name: name, email: email, phone: phone, documentType: docType, documentNumber: doc },
           shipping: { department: dept, city: city, address: address, detail: detail },
           userId: userId,
         }),
