@@ -68,7 +68,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .in('id', productIds);
 
     if (prodErr || !dbProducts) {
-      return new Response(JSON.stringify({ error: 'No se pudieron validar los productos' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'No se pudieron validar los productos', detail: prodErr?.message || 'sin datos' }), { status: 500 });
     }
 
     let subtotalCents = 0;
@@ -132,7 +132,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .single();
 
     if (orderErr || !order) {
-      return new Response(JSON.stringify({ error: 'No se pudo crear el pedido' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'No se pudo crear el pedido', detail: orderErr?.message || 'sin datos' }), { status: 500 });
     }
 
     // Insertar los items del pedido

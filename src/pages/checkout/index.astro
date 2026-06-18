@@ -352,7 +352,7 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
 
       var data = await resp.json();
       if (!resp.ok) {
-        showAlert(data.error || 'No se pudo procesar el pedido.');
+        showAlert((data.error || 'No se pudo procesar el pedido.') + (data.detail ? ' (' + data.detail + ')' : ''));
         btn.disabled = false;
         btn.textContent = 'Pagar con Wompi';
         return;
