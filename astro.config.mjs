@@ -8,6 +8,8 @@ export default defineConfig({
   adapter: cloudflare({
     imageService: 'passthrough',
     platformProxy: { enabled: true },
-    sessionKVBindingName: undefined,
   }),
+  session: {
+    driver: 'unstorage/drivers/null',
+  },
 });
