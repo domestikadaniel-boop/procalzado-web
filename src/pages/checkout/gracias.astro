@@ -80,7 +80,7 @@ import Layout from '../../layouts/Layout.astro';
   function renderSuccess(orderNum) {
     document.getElementById('graciasCard').innerHTML =
       '<div style="display:flex;flex-direction:column;align-items:center;gap:1.2rem;text-align:center">' +
-        '<img src="/isotipo.png" alt="Procalzado" style="width:88px;height:88px;object-fit:contain"/>' +
+        '<img src="/isotipo.png" alt="Procalzado" style="width:140px;height:140px;object-fit:contain"/>' +
         '<h1 style="font-size:clamp(1.6rem,5vw,2.2rem);font-weight:800;color:#000;margin:0">¡Gracias por tu compra!</h1>' +
         '<p style="font-size:1rem;color:#FF0000;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0">Bienvenido a nuestra familia</p>' +
         '<p style="font-size:.9rem;color:#666;line-height:1.7;margin:0;max-width:380px">Tu pedido fue aprobado y ya está en proceso. Te enviamos la confirmación y tu factura al correo.</p>' +
@@ -91,7 +91,7 @@ import Layout from '../../layouts/Layout.astro';
   function renderPending(orderNum) {
     document.getElementById('graciasCard').innerHTML =
       '<div style="display:flex;flex-direction:column;align-items:center;gap:1.2rem;text-align:center">' +
-        '<img src="/isotipo.png" alt="Procalzado" style="width:88px;height:88px;object-fit:contain"/>' +
+        '<img src="/isotipo.png" alt="Procalzado" style="width:140px;height:140px;object-fit:contain"/>' +
         '<h1 style="font-size:clamp(1.6rem,5vw,2.2rem);font-weight:800;color:#000;margin:0">Procesando tu pago</h1>' +
         '<p style="font-size:.9rem;color:#666;line-height:1.7;margin:0;max-width:380px">Tu pago está siendo verificado. Te enviaremos un correo de confirmación en cuanto se apruebe.</p>' +
         '<a href="/cuenta" style="display:inline-flex;align-items:center;justify-content:center;background:#FF0000;color:#fff;padding:.85rem 2rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;text-decoration:none;margin-top:.4rem">Ver mis pedidos</a>' +
