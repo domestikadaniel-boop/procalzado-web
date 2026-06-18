@@ -196,13 +196,15 @@ export const POST: APIRoute = async ({ request }) => {
         ).join('\n');
 
         const msg = `🟢 <b>NUEVA VENTA — Pedido #${order.order_number}</b>\n\n` +
-          `👤 ${order.buyer_name}\n` +
+          `👤 <b>${order.buyer_name}</b>\n` +
+          `🪪 ${order.buyer_document_type || 'CC'}: ${order.buyer_document_number || '—'}\n` +
           `📞 ${order.buyer_phone}\n` +
           `✉️ ${order.buyer_email}\n\n` +
-          `${itemsText}\n\n` +
-          `💰 Total: $${(order.total_cents / 100).toLocaleString('es-CO')}\n` +
-          `📍 ${order.shipping_address}, ${order.shipping_city}, ${order.shipping_department}\n` +
-          `💳 ${transaction.payment_method_type || ''}`;
+          `🛍 <b>Productos:</b>\n${itemsText}\n\n` +
+          `💰 <b>Total: $${(order.total_cents / 100).toLocaleString('es-CO')}</b>\n\n` +
+          `📍 <b>Envío:</b>\n${order.shipping_address}${order.shipping_detail ? ', ' + order.shipping_detail : ''}\n${order.shipping_city}, ${order.shipping_department}\n\n` +
+          `💳 Método: ${transaction.payment_method_type || '—'}\n` +
+          `🔖 Ref: <code>${order.wompi_reference}</code>`;
 
         await sendTelegram(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, msg);
       }

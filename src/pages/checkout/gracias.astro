@@ -2,28 +2,45 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout title="Gracias por tu compra | Procalzado">
+<Layout title="¡Gracias por tu compra! | Procalzado">
 
 <main class="gracias-page">
   <div class="gracias-card" id="graciasCard">
-    <div class="gracias-spinner" id="graciasLoading">
+    <div class="gracias-loading" id="graciasLoading">
+      <div class="gracias-spinner"></div>
       <p>Confirmando tu pago...</p>
     </div>
   </div>
 </main>
 
 <style>
-.gracias-page{max-width:520px;margin:0 auto;padding:4rem clamp(1rem,4vw,2rem) 6rem;min-height:60vh;display:flex;align-items:center;justify-content:center}
+.gracias-page{max-width:560px;margin:0 auto;padding:4rem clamp(1rem,4vw,2rem) 6rem;min-height:60vh;display:flex;align-items:center;justify-content:center}
 .gracias-card{width:100%;text-align:center}
-.gracias-icon{width:64px;height:64px;margin:0 auto 1.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.gracias-icon.success{background:#E6F9E6;color:#006600}
-.gracias-icon.pending{background:#FFF8E6;color:#996600}
-.gracias-icon.error{background:#FFF0F0;color:#CC0000}
-.gracias-icon svg{width:32px;height:32px}
-.gracias-card h1{font-family:var(--fd);font-size:1.6rem;letter-spacing:.03em;margin-bottom:.6rem}
-.gracias-card p{color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.5rem}
-.gracias-back-btn{display:inline-block;background:var(--black);color:var(--white);padding:.8rem 1.8rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none}
-.gracias-back-btn:hover{background:var(--red)}
+
+.gracias-loading{display:flex;flex-direction:column;align-items:center;gap:1rem;color:var(--muted);font-size:.9rem}
+.gracias-spinner{width:40px;height:40px;border:3px solid var(--grey2);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.gracias-inner{display:flex;flex-direction:column;align-items:center;gap:1.2rem}
+
+.gracias-logo-wrap{width:88px;height:88px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto}
+.gracias-logo-wrap img{width:56px;height:56px;object-fit:contain}
+
+.gracias-title{font-family:var(--fd);font-size:clamp(1.6rem,5vw,2.2rem);letter-spacing:.03em;color:var(--black);margin:0}
+.gracias-subtitle{font-size:1rem;color:var(--red);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0}
+.gracias-desc{font-size:.9rem;color:var(--muted);line-height:1.7;margin:0;max-width:380px}
+.gracias-order{font-size:.8rem;color:var(--muted);background:var(--grey);padding:.5rem 1rem;border-radius:20px;display:inline-block}
+
+.gracias-btn{display:inline-flex;align-items:center;justify-content:center;background:var(--black);color:var(--white);padding:.85rem 2rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;text-decoration:none;transition:background .15s;margin-top:.4rem}
+.gracias-btn:hover{background:var(--red)}
+
+.gracias-error-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.gracias-error-icon{width:64px;height:64px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center}
+.gracias-error-icon svg{width:32px;height:32px;color:#CC0000}
+.gracias-error-title{font-family:var(--fd);font-size:1.5rem;margin:0}
+.gracias-error-desc{font-size:.88rem;color:var(--muted);line-height:1.6;max-width:360px;margin:0}
+.gracias-wa-btn{display:inline-flex;align-items:center;gap:.5rem;background:#6b6b6b;color:var(--white);padding:.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none}
+.gracias-wa-btn svg{width:18px;height:18px}
 </style>
 
 <script is:inline>
@@ -35,7 +52,7 @@ import Layout from '../../layouts/Layout.astro';
   var ref = params.get('ref') || params.get('reference');
 
   if (!ref) {
-    renderResult('error', 'No encontramos tu pedido', 'No pudimos identificar la referencia de tu pago. Si realizaste un pago, contáctanos por WhatsApp con tu comprobante.');
+    renderError('No encontramos tu pedido', 'No pudimos identificar la referencia de tu pago. Si realizaste un pago, contáctanos por WhatsApp con tu comprobante.');
     return;
   }
 
@@ -46,32 +63,55 @@ import Layout from '../../layouts/Layout.astro';
       var rows = r.data;
       var order = (rows && rows.length > 0) ? rows[0] : null;
       if (!order) {
-        if (attempts < 8) { setTimeout(checkStatus, 1500); return; }
-        renderResult('error', 'Pedido no encontrado', 'No pudimos encontrar tu pedido. Contáctanos por WhatsApp con tu comprobante de pago.');
+        if (attempts < 10) { setTimeout(checkStatus, 1500); return; }
+        renderError('Pedido no encontrado', 'No pudimos encontrar tu pedido. Contáctanos por WhatsApp con tu comprobante de pago.');
         return;
       }
       if (order.status === 'paid' || order.status === 'approved') {
-        renderResult('success', '¡Pago confirmado!', 'Tu pedido #' + order.order_number + ' fue aprobado. Te enviamos la confirmación a tu correo.');
+        renderSuccess(order.order_number);
       } else if (order.status === 'cancelled') {
-        renderResult('error', 'Pago no aprobado', 'Tu pago fue rechazado o cancelado. Puedes intentar de nuevo desde tu carrito.');
+        renderError('Pago no aprobado', 'Tu pago fue rechazado o cancelado. Puedes intentar de nuevo o contáctanos por WhatsApp.');
       } else {
-        if (attempts < 8) { setTimeout(checkStatus, 1500); return; }
-        renderResult('pending', 'Procesando tu pago', 'Tu pago está siendo verificado. Te enviaremos un correo de confirmación en cuanto se apruebe.');
+        if (attempts < 10) { setTimeout(checkStatus, 1500); return; }
+        renderPending(order.order_number);
       }
     });
   }
 
-  function renderResult(type, title, desc) {
-    var icons = {
-      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
-      pending: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
-      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-    };
+  function renderSuccess(orderNum) {
     document.getElementById('graciasCard').innerHTML =
-      '<div class="gracias-icon ' + type + '">' + icons[type] + '</div>' +
-      '<h1>' + title + '</h1>' +
-      '<p>' + desc + '</p>' +
-      '<a href="/cuenta" class="gracias-back-btn">Ver mis pedidos</a>';
+      '<div class="gracias-inner">' +
+        '<div class="gracias-logo-wrap"><img src="/isotipo.png" alt="Procalzado"/></div>' +
+        '<h1 class="gracias-title">¡Gracias por tu compra!</h1>' +
+        '<p class="gracias-subtitle">Bienvenido a nuestra familia</p>' +
+        '<p class="gracias-desc">Tu pedido fue aprobado y ya está en proceso. Te enviamos la confirmación y tu factura al correo.</p>' +
+        '<span class="gracias-order">Pedido #' + orderNum + '</span>' +
+        '<a href="/cuenta" class="gracias-btn">Ver mis pedidos</a>' +
+      '</div>';
+  }
+
+  function renderPending(orderNum) {
+    document.getElementById('graciasCard').innerHTML =
+      '<div class="gracias-inner">' +
+        '<div class="gracias-logo-wrap"><img src="/isotipo.png" alt="Procalzado"/></div>' +
+        '<h1 class="gracias-title">Procesando tu pago</h1>' +
+        '<p class="gracias-desc">Tu pago está siendo verificado. Te enviaremos un correo de confirmación en cuanto se apruebe.</p>' +
+        '<span class="gracias-order">Pedido #' + orderNum + '</span>' +
+        '<a href="/cuenta" class="gracias-btn">Ver mis pedidos</a>' +
+      '</div>';
+  }
+
+  function renderError(title, desc) {
+    document.getElementById('graciasCard').innerHTML =
+      '<div class="gracias-error-wrap">' +
+        '<div class="gracias-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>' +
+        '<h1 class="gracias-error-title">' + title + '</h1>' +
+        '<p class="gracias-error-desc">' + desc + '</p>' +
+        '<a href="https://wa.me/573213154654" class="gracias-wa-btn" target="_blank">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+          'Contactar por WhatsApp' +
+        '</a>' +
+      '</div>';
   }
 
   checkStatus();
