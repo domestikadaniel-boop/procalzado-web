@@ -45,6 +45,7 @@ const searchIndex = await getSearchIndex();
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Bebas+Neue&display=swap"/></noscript>
+<script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style is:global>
 :root{--red:#FF0000;--black:#000;--white:#fff;--grey:#F2F2F2;--grey2:#E5E5E5;--muted:#4A4A4A;--wa:#25D366;--wa-dk:#1BA44F;--fd:'Bebas Neue','Barlow',sans-serif;--fb:'Barlow',sans-serif;--header-h:64px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -315,9 +316,12 @@ body.filters-open header{display:none}
 .btn-add-cart{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--black);color:var(--white);padding:.85rem 1.5rem;border:none;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;width:100%;transition:background .15s,transform .12s}
 .btn-add-cart:hover{background:var(--red);transform:translateY(-1px)}
 .btn-add-cart svg{width:18px;height:18px}
-.btn-wa{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--red);color:var(--white);padding:.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none;transition:background .18s,transform .15s;width:100%}
-.btn-wa:hover{background:#cc0000;transform:scale(1.01)}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:.5rem;background:#6b6b6b;color:var(--white);padding:.8rem 1.5rem;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none;transition:background .18s,transform .15s;width:100%;border:none}
+.btn-wa:hover{background:#555;transform:scale(1.01)}
 .btn-wa svg{width:18px;height:18px}
+.btn-buy-now{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--red);color:var(--white);padding:.8rem 1.5rem;border:none;border-radius:8px;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;width:100%;transition:background .18s,transform .15s}
+.btn-buy-now:hover{background:#cc0000;transform:translateY(-1px)}
+.btn-buy-now svg{width:18px;height:18px}
 
 /* FOOTER */
 footer{background:var(--black);color:rgba(255,255,255,.72);text-align:center;padding:1.8rem 1rem;font-size:.8rem}
@@ -413,8 +417,8 @@ footer a{color:#FF4444;text-decoration:underline}
     <button class="header-icon-btn" id="headerSearchBtn" type="button" aria-label="Buscar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
-    <a href="https://wa.me/573213154654?text=Hola%2C+me+gustar%C3%ADa+conocer+su+cat%C3%A1logo." class="header-icon-btn" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <a href="/cuenta" class="header-icon-btn" id="userBtn" aria-label="Mi cuenta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </a>
     <a href="/cart" class="header-icon-btn cart-icon-btn" id="cartBtn" aria-label="Ver carrito">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
@@ -446,6 +450,7 @@ footer a{color:#FF4444;text-decoration:underline}
     {navLinks.map(l => (
       <a href={l.href} class={`navdrawer-parent${l.highlight ? ' highlight' : ''}`}>{l.label}</a>
     ))}
+    <a href="/cuenta" class="navdrawer-parent" id="navdrawerAccount">Mi Cuenta</a>
   </div>
 </aside>
 
@@ -489,6 +494,7 @@ footer a{color:#FF4444;text-decoration:underline}
 <div class="toast" id="toast" role="alert"></div>
 
 <script type="application/json" id="headerSearchData" set:html={JSON.stringify(searchIndex)}></script>
+<script type="application/json" id="sbConfig" set:html={JSON.stringify({ url: import.meta.env.PUBLIC_SUPABASE_URL, key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY })}></script>
 <script is:inline>
 // ═══ CARRITO ═══
 const WA_PHONE = '573213154654';
@@ -675,6 +681,42 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', checkScroll, { passive: true });
   checkScroll();
 });
+
+// ═══ AUTH STATE ═══
+(function initAuth(){
+  var cfgEl = document.getElementById('sbConfig');
+  if (!cfgEl) return;
+  var cfg = JSON.parse(cfgEl.textContent || '{}');
+  if (!cfg.url || !cfg.key) return;
+  if (typeof supabase === 'undefined' || !supabase.createClient) { setTimeout(initAuth, 100); return; }
+  var sb = supabase.createClient(cfg.url, cfg.key);
+  window.__sb = sb;
+
+  sb.auth.getSession().then(function(r) {
+    var user = r.data && r.data.session && r.data.session.user;
+    var userBtn = document.getElementById('userBtn');
+    var navAcct = document.getElementById('navdrawerAccount');
+    if (user) {
+      if (userBtn) userBtn.href = '/cuenta';
+      if (navAcct) navAcct.textContent = 'Mi Cuenta';
+    } else {
+      if (userBtn) userBtn.href = '/cuenta/login';
+      if (navAcct) { navAcct.href = '/cuenta/login'; navAcct.textContent = 'Iniciar Sesión'; }
+    }
+  });
+
+  sb.auth.onAuthStateChange(function(ev, session) {
+    var userBtn = document.getElementById('userBtn');
+    var navAcct = document.getElementById('navdrawerAccount');
+    if (session && session.user) {
+      if (userBtn) userBtn.href = '/cuenta';
+      if (navAcct) { navAcct.href = '/cuenta'; navAcct.textContent = 'Mi Cuenta'; }
+    } else {
+      if (userBtn) userBtn.href = '/cuenta/login';
+      if (navAcct) { navAcct.href = '/cuenta/login'; navAcct.textContent = 'Iniciar Sesión'; }
+    }
+  });
+})();
 </script>
 </body>
 </html>
