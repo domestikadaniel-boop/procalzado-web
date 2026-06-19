@@ -11,6 +11,6 @@
   "vars": {
     "PUBLIC_SUPABASE_URL": "https://cymbmvlkvajffzxxdrzk.supabase.co",
     "PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5bWJtdmxrdmFqZmZ6eHhkcnprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjY2NzEsImV4cCI6MjA5MzA0MjY3MX0.jISNUM9ejSw33jcZGBWVkDbOJkdqulTGzmsamxL4WaU",
-    "WOMPI_PUBLIC_KEY": "pub_prod_3VJYOnJkkdTa1ujmorQ9ynIEyCGq9n6x"
+    "WOMPI_PUBLIC_KEY": "pub_prod_3VjYOnJkkdTalujmorQ9ynIEyCGq9n6x"
   }
 }
