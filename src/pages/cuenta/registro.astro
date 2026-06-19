@@ -28,6 +28,7 @@ import Layout from '../../layouts/Layout.astro';
         Contraseña
         <input type="password" id="regPass" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6"/>
       </label>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess" style="margin-bottom:1.2rem"></div>
       <button type="submit" class="auth-btn" id="regBtn">Crear Cuenta</button>
     </form>
 
@@ -72,6 +73,8 @@ import Layout from '../../layouts/Layout.astro';
 (function waitSb(){
   if (!window.__sb) { setTimeout(waitSb, 100); return; }
   var sb = window.__sb;
+  window.__turnstileToken = null;
+  window.onTurnstileSuccess = function(token) { window.__turnstileToken = token; };
 
   sb.auth.getSession().then(function(r) {
     if (r.data && r.data.session && r.data.session.user) window.location.href = '/cuenta';
@@ -97,6 +100,7 @@ import Layout from '../../layouts/Layout.astro';
 
     if (!name || !phone || !email || !pass) { showAlert('Completa todos los campos.', 'error'); return; }
     if (pass.length < 6) { showAlert('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+    if (!window.__turnstileToken) { showAlert('Completa la verificación de seguridad.', 'error'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Creando cuenta...';
@@ -104,7 +108,7 @@ import Layout from '../../layouts/Layout.astro';
     var result = await sb.auth.signUp({
       email: email,
       password: pass,
-      options: { data: { full_name: name, phone: phone } }
+      options: { data: { full_name: name, phone: phone }, captchaToken: window.__turnstileToken }
     });
 
     if (result.error) {
@@ -112,6 +116,8 @@ import Layout from '../../layouts/Layout.astro';
       btn.textContent = 'Crear Cuenta';
       var msg = result.error.message.indexOf('already registered') >= 0 ? 'Este correo ya está registrado.' : result.error.message;
       showAlert(msg, 'error');
+      if (window.turnstile) window.turnstile.reset();
+      window.__turnstileToken = null;
       return;
     }
 

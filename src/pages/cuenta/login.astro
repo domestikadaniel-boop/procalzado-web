@@ -21,6 +21,7 @@ import Layout from '../../layouts/Layout.astro';
         <input type="password" id="loginPass" required autocomplete="current-password" placeholder="Tu contraseña" minlength="6"/>
       </label>
       <p class="auth-forgot"><a href="/cuenta/olvide-password">¿Olvidaste tu contraseña?</a></p>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess" style="margin-bottom:1.2rem"></div>
       <button type="submit" class="auth-btn" id="loginBtn">Ingresar</button>
     </form>
 
@@ -68,6 +69,8 @@ import Layout from '../../layouts/Layout.astro';
 (function waitSb(){
   if (!window.__sb) { setTimeout(waitSb, 100); return; }
   var sb = window.__sb;
+  window.__turnstileToken = null;
+  window.onTurnstileSuccess = function(token) { window.__turnstileToken = token; };
 
   sb.auth.getSession().then(function(r) {
     if (r.data && r.data.session && r.data.session.user) window.location.href = '/cuenta';
@@ -89,16 +92,19 @@ import Layout from '../../layouts/Layout.astro';
     var email = document.getElementById('loginEmail').value.trim();
     var pass = document.getElementById('loginPass').value;
     if (!email || !pass) { showAlert('Completa todos los campos.', 'error'); return; }
+    if (!window.__turnstileToken) { showAlert('Completa la verificación de seguridad.', 'error'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Ingresando...';
 
-    var result = await sb.auth.signInWithPassword({ email: email, password: pass });
+    var result = await sb.auth.signInWithPassword({ email: email, password: pass, options: { captchaToken: window.__turnstileToken } });
     if (result.error) {
       btn.disabled = false;
       btn.textContent = 'Ingresar';
       var msg = result.error.message.indexOf('Invalid login') >= 0 ? 'Correo o contraseña incorrectos.' : result.error.message;
       showAlert(msg, 'error');
+      if (window.turnstile) window.turnstile.reset();
+      window.__turnstileToken = null;
       return;
     }
     window.location.href = '/cuenta';
