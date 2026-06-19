@@ -366,8 +366,6 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
       document.getElementById('wRedirect').value = window.location.origin + '/checkout/gracias?ref=' + data.reference;
       document.getElementById('wEmail').value = data.customerEmail;
 
-      console.log('Wompi checkout:', JSON.stringify({pk: data.publicKey, amt: data.amountInCents, ref: data.reference}));
-
       localStorage.removeItem('procalzado_cart');
       document.getElementById('wompiForm').submit();
 
