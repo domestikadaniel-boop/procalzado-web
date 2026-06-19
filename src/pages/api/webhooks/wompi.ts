@@ -112,7 +112,17 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('Server misconfigured', { status: 500 });
     }
 
-    const payload: WompiEvent = await request.json();
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 100_000) {
+      return new Response('Payload too large', { status: 413 });
+    }
+
+    let payload: WompiEvent;
+    try {
+      payload = await request.json();
+    } catch {
+      return new Response('Invalid JSON', { status: 400 });
+    }
 
     // ── VALIDACIÓN DE FIRMA (crítico, sin esto cualquiera podría falsificar un pago) ──
     if (!payload.signature || !payload.signature.properties || !payload.signature.checksum) {
@@ -134,7 +144,10 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('OK', { status: 200 });
     }
 
-    const transaction = payload.data.transaction;
+    const transaction = payload.data?.transaction;
+    if (!transaction || typeof transaction.id !== 'string' || typeof transaction.reference !== 'string' || typeof transaction.status !== 'string') {
+      return new Response('Malformed transaction payload', { status: 400 });
+    }
     const reference = transaction.reference;
     const wompiStatus = transaction.status; // APPROVED, DECLINED, VOIDED, ERROR, PENDING
     const transactionId = transaction.id;
