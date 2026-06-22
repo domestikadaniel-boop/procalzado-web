@@ -207,18 +207,19 @@ import Layout from '../../layouts/Layout.astro';
       const alert = document.getElementById('profileAlert');
       const btn = document.getElementById('profSaveBtn');
       btn.disabled = true; btn.textContent = 'Guardando...';
-      const { data, error } = await sb.from('profiles').update({
+      const { data, error } = await sb.from('profiles').upsert({
+        id: currentUser.id,
         full_name: document.getElementById('profName').value.trim(),
         phone: document.getElementById('profPhone').value.trim(),
         document_type: document.getElementById('profDocType').value,
         document_number: document.getElementById('profDocNum').value.trim(),
-      }).eq('id', currentUser.id).select();
+      }, { onConflict: 'id' }).select();
       btn.disabled = false; btn.textContent = 'Guardar';
       if (error) {
         console.error('Error guardando perfil:', error);
         alert.textContent = 'Error al guardar: ' + error.message; alert.className = 'auth-alert error'; alert.style.display = 'block';
       } else if (!data || data.length === 0) {
-        console.error('Update de perfil no afectó ninguna fila. currentUser.id=', currentUser.id);
+        console.error('Upsert de perfil no afectó ninguna fila. currentUser.id=', currentUser.id);
         alert.textContent = 'No se pudo guardar (tu sesión no coincide con tu perfil). Cierra sesión y vuelve a entrar.'; alert.className = 'auth-alert error'; alert.style.display = 'block';
       } else { alert.textContent = 'Perfil actualizado.'; alert.className = 'auth-alert success'; alert.style.display = 'block'; setTimeout(() => alert.style.display = 'none', 3000); }
     });
