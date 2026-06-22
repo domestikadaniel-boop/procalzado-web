@@ -405,12 +405,12 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 </div>
 
 
+<script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script is:inline define:vars={{sbUrl:import.meta.env.PUBLIC_SUPABASE_URL,sbAnon:import.meta.env.PUBLIC_SUPABASE_ANON_KEY}}>
 window.__SUPABASE_URL__=sbUrl;window.__SUPABASE_ANON__=sbAnon;
 </script>
 <script type="module">
-import { createClient } from '@supabase/supabase-js';
-const supabase = createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON__);
+const supabase = window.supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON__);
 
 const SIZES_LIST = ['20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','Única'];
 
