@@ -44,68 +44,84 @@ import Layout from '../../layouts/Layout.astro';
 </style>
 
 <script is:inline>
-(function waitSb(){
-  if (!window.__sb) { setTimeout(waitSb, 100); return; }
-  var sb = window.__sb;
-
-  var alert = document.getElementById('authAlert');
-  var formWrap = document.getElementById('resetFormWrap');
-  if (!alert || !formWrap) return;
-
-  function showAlert(msg, type) {
-    alert.textContent = msg;
-    alert.className = 'auth-alert ' + type;
-    alert.style.display = 'block';
+(function () {
+  function waitSb(cb) {
+    if (!window.__sb) { setTimeout(function () { waitSb(cb); }, 100); return; }
+    cb(window.__sb);
   }
 
-  // Supabase pone la sesión temporal de recovery automáticamente al cargar
-  // si el link tiene el token en la URL (#access_token=...&type=recovery)
-  sb.auth.onAuthStateChange(function(event, session) {
-    if (event === 'PASSWORD_RECOVERY') {
+  waitSb(async function (sb) {
+    var alert = document.getElementById('authAlert');
+    var formWrap = document.getElementById('resetFormWrap');
+    if (!alert || !formWrap) return;
+
+    function showAlert(msg, type) {
+      alert.textContent = msg;
+      alert.className = 'auth-alert ' + type;
+      alert.style.display = 'block';
+    }
+
+    var resolved = false;
+    function unlock() {
+      if (resolved) return;
+      resolved = true;
       formWrap.style.display = 'block';
     }
-  });
 
-  // fallback: si ya hay sesión de recovery activa al cargar
-  sb.auth.getSession().then(function(r) {
-    var hash = window.location.hash;
-    if (hash && hash.indexOf('type=recovery') >= 0) {
-      formWrap.style.display = 'block';
-    } else if (!r.data || !r.data.session) {
+    sb.auth.onAuthStateChange(function (event) {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') unlock();
+    });
+
+    // Caso PKCE: el link trae ?code=...
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get('code');
+    if (code) {
+      var ex = await sb.auth.exchangeCodeForSession(code);
+      if (!ex.error) { unlock(); }
+    }
+
+    // Caso implicit: el link trae #access_token=...&type=recovery
+    if (!resolved && window.location.hash.indexOf('type=recovery') >= 0) {
+      unlock();
+    }
+
+    // Fallback: dale tiempo al detectSessionInUrl interno antes de declarar inválido
+    setTimeout(async function () {
+      if (resolved) return;
+      var r = await sb.auth.getSession();
+      if (r.data && r.data.session) { unlock(); return; }
       showAlert('Este enlace no es válido o ya expiró. Solicita uno nuevo desde "Olvidé mi contraseña".', 'error');
-    } else {
-      formWrap.style.display = 'block';
-    }
-  });
+    }, 1200);
 
-  var resetForm = document.getElementById('resetForm');
-  if (!resetForm) return;
+    var resetForm = document.getElementById('resetForm');
+    if (!resetForm) return;
 
-  resetForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    alert.style.display = 'none';
-    var p1 = document.getElementById('newPass').value;
-    var p2 = document.getElementById('newPass2').value;
+    resetForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      alert.style.display = 'none';
+      var p1 = document.getElementById('newPass').value;
+      var p2 = document.getElementById('newPass2').value;
 
-    if (p1.length < 6) { showAlert('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
-    if (p1 !== p2) { showAlert('Las contraseñas no coinciden.', 'error'); return; }
+      if (p1.length < 6) { showAlert('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+      if (p1 !== p2) { showAlert('Las contraseñas no coinciden.', 'error'); return; }
 
-    var btn = document.getElementById('resetBtn');
-    btn.disabled = true;
-    btn.textContent = 'Guardando...';
+      var btn = document.getElementById('resetBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
 
-    var result = await sb.auth.updateUser({ password: p1 });
+      var result = await sb.auth.updateUser({ password: p1 });
 
-    btn.disabled = false;
-    btn.textContent = 'Guardar Contraseña';
+      btn.disabled = false;
+      btn.textContent = 'Guardar Contraseña';
 
-    if (result.error) {
-      showAlert('No se pudo actualizar la contraseña. Intenta de nuevo.', 'error');
-      return;
-    }
+      if (result.error) {
+        showAlert('No se pudo actualizar la contraseña. Intenta de nuevo.', 'error');
+        return;
+      }
 
-    showAlert('Contraseña actualizada. Redirigiendo...', 'success');
-    setTimeout(function() { window.location.href = '/cuenta'; }, 1500);
+      showAlert('Contraseña actualizada. Redirigiendo...', 'success');
+      setTimeout(function () { window.location.href = '/cuenta'; }, 1500);
+    });
   });
 })();
 </script>
