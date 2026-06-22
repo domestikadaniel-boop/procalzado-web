@@ -701,6 +701,12 @@ document.addEventListener('DOMContentLoaded', () => {
   var sb = supabase.createClient(cfg.url, cfg.key);
   window.__sb = sb;
 
+  sb.auth.onAuthStateChange(function(event){
+    if (event === 'PASSWORD_RECOVERY' && window.location.pathname !== '/cuenta/restablecer') {
+      window.location.replace('/cuenta/restablecer');
+    }
+  });
+
   sb.auth.getSession().then(function(r) {
     var user = r.data && r.data.session && r.data.session.user;
     var userBtn = document.getElementById('userBtn');
