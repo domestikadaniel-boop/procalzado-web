@@ -128,7 +128,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
 
 <style>
 .hero-banner{width:100vw;margin-left:calc(-50vw + 50%);overflow:hidden;background:var(--red);margin-top:calc(-1 * var(--header-h))}
-.hero-banner-img{width:100%;height:100vh;display:block;object-fit:cover}
+.hero-banner-img{width:100%;height:auto;aspect-ratio:21/9;object-fit:cover;object-position:top center;display:block}
 .hero-banner picture{display:block;width:100%}
 .promo-wrap{max-width:1280px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,3rem) 0}
 .promo-bottom{margin:2rem 0 0}
@@ -153,7 +153,7 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
   .cat-carousel .card{flex:0 0 180px}
   .cat-carousel-wrap{padding:0}
   .carousel-arrow{display:none}
-  .hero-banner-img{height:auto;min-height:100vh}
+  .hero-banner-img{aspect-ratio:4/5}
 }
 .card-noimg{font-size:2rem;color:var(--grey2)}
 .card-badge-sale{position:absolute;top:.6rem;right:.6rem;background:var(--red);color:var(--white);font-family:var(--fb);font-weight:700;font-size:.75rem;padding:.22rem .5rem;border-radius:4px;z-index:5}
