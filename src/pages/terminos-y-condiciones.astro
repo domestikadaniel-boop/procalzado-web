@@ -1,0 +1,93 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Términos y Condiciones | Procalzado';
+const description = 'Términos y condiciones de compra en Procalzado: precios, medios de pago, envíos y entregas en Colombia.';
+---
+
+<Layout title={title} description={description}>
+  <main class="policy">
+    <h1>Términos y Condiciones</h1>
+
+    <section>
+      <h2>1. Generalidades</h2>
+      <p>Estos términos regulan las compras realizadas a través de procalzado.com, operado por Distribuidora Procalzado S.A.S. Al realizar un pedido aceptas las condiciones aquí descritas.</p>
+    </section>
+
+    <section>
+      <h2>2. Precios y pago</h2>
+      <p>Los precios publicados están en pesos colombianos (COP) e incluyen el valor del producto. El pago en línea se procesa de forma segura a través de Wompi, aceptando tarjetas, PSE, Nequi y otros medios disponibles en la pasarela.</p>
+    </section>
+
+    <section>
+      <h2>3. Costo de envío</h2>
+      <p><strong>El costo de envío no está incluido en el precio del producto.</strong> El envío lo paga el comprador directamente a la transportadora en el momento en que el producto llega a la dirección indicada. La tarifa de envío la determina la transportadora encargada según el destino, peso y dimensiones del pedido, y es independiente de Procalzado.</p>
+    </section>
+
+    <section>
+      <h2>4. Tiempos de entrega</h2>
+      <p>Los tiempos de entrega dependen de la transportadora y la ciudad de destino. Una vez confirmado el pago, procesamos y despachamos el pedido en los días hábiles siguientes.</p>
+    </section>
+
+    <section>
+      <h2>5. Cambios y devoluciones</h2>
+      <p>Aplican según nuestra <a href="/devoluciones" target="_blank" rel="noopener">Política de Devoluciones y Reembolsos</a>.</p>
+    </section>
+
+    <section>
+      <h2>6. Datos del comprador</h2>
+      <p>Los datos personales suministrados al momento de la compra (nombre, documento, dirección, teléfono, correo) se usan exclusivamente para procesar el pedido, la facturación y la entrega.</p>
+    </section>
+
+    <section>
+      <h2>7. Contacto</h2>
+      <p>Para dudas sobre tu compra, escríbenos por WhatsApp al <a href="https://wa.me/573213154654">321 315 4654</a>.</p>
+    </section>
+
+    <p class="slogan">Sé parte de nuestra familia.</p>
+  </main>
+</Layout>
+
+<style>
+  .policy {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+  .policy h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+  }
+  .policy h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+  }
+  .policy p, .policy li {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #333;
+  }
+  .policy ul {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+  }
+  .policy li {
+    margin-bottom: 0.5rem;
+  }
+  .policy a {
+    color: #ff0000;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .policy a:hover {
+    text-decoration: underline;
+  }
+  .slogan {
+    margin-top: 3rem;
+    font-style: italic;
+    color: #999;
+    font-size: 0.9rem;
+  }
+</style>

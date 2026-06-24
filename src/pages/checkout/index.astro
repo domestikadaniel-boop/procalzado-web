@@ -69,6 +69,12 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
         </label>
       </div>
 
+      <label class="checkout-terms">
+        <input type="checkbox" id="acceptTerms"/>
+        <span>Acepto los <a href="/terminos-y-condiciones" target="_blank" rel="noopener">Términos y Condiciones</a> (ver más)</span>
+      </label>
+      <span class="field-error" id="errTerms"></span>
+
       <button type="button" class="checkout-pay-btn" id="payBtn">Pagar con Wompi</button>
       <p class="checkout-secure-note">Pago seguro procesado por Wompi. Aceptamos tarjetas, PSE, Nequi y más.</p>
     </div>
@@ -121,6 +127,9 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
 .auth-label select:disabled{background:var(--grey);color:var(--muted);cursor:not-allowed}
 .auth-label input.field-invalid,.auth-label select.field-invalid{border-color:#CC0000}
 .field-error{display:none;font-size:.74rem;color:#CC0000;font-weight:600;text-transform:none;letter-spacing:0;margin-top:.3rem}
+.checkout-terms{display:flex;align-items:flex-start;gap:.55rem;font-size:.85rem;color:var(--black);margin-top:.4rem;cursor:pointer}
+.checkout-terms input{margin-top:.2rem;width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.checkout-terms a{color:var(--red);font-weight:600;text-decoration:underline}
 .field-error.show{display:block}
 
 .checkout-pay-btn{width:100%;padding:1rem;background:var(--red);color:var(--white);border:none;border-radius:8px;font-weight:700;font-size:.95rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:1rem}
@@ -135,7 +144,7 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
 .summary-item-meta{font-size:.74rem;color:var(--muted)}
 .summary-item-price{font-weight:700;white-space:nowrap}
 .checkout-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;margin-top:.5rem}
-.checkout-shipping-note{font-size:.76rem;color:var(--muted);line-height:1.45;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--grey2)}
+.checkout-shipping-note{font-size:.76rem;color:var(--red);font-weight:600;line-height:1.45;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--grey2)}
 .checkout-total-row span{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .checkout-total-row strong{font-family:var(--fd);font-size:1.5rem;color:var(--red)}
 
@@ -292,6 +301,10 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
     if (!address) { setFieldError('shipAddress', 'errAddress', 'Ingresa tu dirección.'); ok = false; }
     else { setFieldError('shipAddress', 'errAddress', ''); }
 
+    var errTerms = document.getElementById('errTerms');
+    if (!document.getElementById('acceptTerms').checked) { errTerms.textContent = 'Debes aceptar los Términos y Condiciones.'; errTerms.style.display = 'block'; ok = false; }
+    else { errTerms.style.display = 'none'; }
+
     return ok;
   }
 
@@ -301,6 +314,9 @@ import { COLOMBIA_DEPARTAMENTOS } from '../../lib/colombia';
   });
   deptSelect.addEventListener('change', function() { setFieldError('shipDept','errDept',''); });
   citySelect.addEventListener('change', function() { setFieldError('shipCity','errCity',''); });
+  document.getElementById('acceptTerms').addEventListener('change', function() {
+    document.getElementById('errTerms').style.display = 'none';
+  });
 
   // Bloquear caracteres no permitidos mientras se escribe
   document.getElementById('buyerPhone').addEventListener('input', function(e) {
