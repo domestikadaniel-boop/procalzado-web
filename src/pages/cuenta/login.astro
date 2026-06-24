@@ -21,7 +21,7 @@ import Layout from '../../layouts/Layout.astro';
         <input type="password" id="loginPass" required autocomplete="current-password" placeholder="Tu contraseña" minlength="6"/>
       </label>
       <p class="auth-forgot"><a href="/cuenta/olvide-password">¿Olvidaste tu contraseña?</a></p>
-      <div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess" style="margin-bottom:1.2rem"></div>
+      <div class="turnstile-wrap"><div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess"></div></div>
       <button type="submit" class="auth-btn" id="loginBtn">Ingresar</button>
     </form>
 
@@ -47,6 +47,7 @@ import Layout from '../../layouts/Layout.astro';
 .auth-forgot{text-align:right;margin:-0.6rem 0 1.2rem;font-size:.8rem}
 .auth-forgot a{color:var(--muted);text-decoration:none}
 .auth-forgot a:hover{color:var(--red);text-decoration:underline}
+.turnstile-wrap{display:flex;justify-content:center;margin-bottom:1.2rem;border-radius:8px;overflow:hidden}
 .auth-label input{display:block;width:100%;margin-top:.4rem;padding:.75rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.95rem;color:var(--black);background:var(--white);transition:border-color .15s;outline:none}
 .auth-label input:focus{border-color:var(--red)}
 .auth-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;border:none;border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s;text-transform:uppercase;letter-spacing:.05em}

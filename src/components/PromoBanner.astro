@@ -25,7 +25,7 @@ const href = block?.cta_href || (block?.slot === 'hero' ? '/promocion' : '#');
 
 <style>
 .promo-banner{display:block;position:relative;width:100%;min-height:clamp(220px,32vw,360px);background-size:cover;background-position:center;text-decoration:none;border-radius:14px;overflow:hidden;color:var(--promo-text);display:flex;align-items:center}
-.promo-inner{max-width:1280px;margin:0 auto;width:100%;padding:clamp(1.5rem,4vw,3rem)}
+.promo-inner{max-width:var(--max-w);margin:0 auto;width:100%;padding:clamp(1.5rem,4vw,3rem)}
 .promo-eyebrow{display:inline-block;font-family:var(--fb);font-size:.74rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.6rem;opacity:.92}
 .promo-title{font-family:var(--fd);font-size:clamp(1.8rem,5vw,3.4rem);line-height:.98;letter-spacing:.03em;margin:0;max-width:18ch}
 .promo-subtitle{font-size:clamp(.9rem,2vw,1.05rem);font-weight:300;margin:.6rem 0 0;max-width:38ch;opacity:.95}

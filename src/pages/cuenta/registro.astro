@@ -28,7 +28,7 @@ import Layout from '../../layouts/Layout.astro';
         Contraseña
         <input type="password" id="regPass" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6"/>
       </label>
-      <div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess" style="margin-bottom:1.2rem"></div>
+      <div class="turnstile-wrap"><div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess"></div></div>
       <button type="submit" class="auth-btn" id="regBtn">Crear Cuenta</button>
     </form>
 
@@ -53,6 +53,7 @@ import Layout from '../../layouts/Layout.astro';
 .auth-label{display:block;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:1.2rem}
 .auth-label input{display:block;width:100%;margin-top:.4rem;padding:.75rem .9rem;border:1.5px solid var(--grey2);border-radius:8px;font-family:var(--fb);font-size:.95rem;color:var(--black);background:var(--white);transition:border-color .15s;outline:none}
 .auth-label input:focus{border-color:var(--red)}
+.turnstile-wrap{display:flex;justify-content:center;margin-bottom:1.2rem;border-radius:8px;overflow:hidden}
 .auth-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;border:none;border-radius:8px;font-family:var(--fb);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s;text-transform:uppercase;letter-spacing:.05em}
 .auth-btn:not(.auth-btn-google){background:var(--black);color:var(--white)}
 .auth-btn:not(.auth-btn-google):hover{background:var(--red)}
