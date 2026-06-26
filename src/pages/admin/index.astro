@@ -148,6 +148,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .search-select-empty{padding:.5rem .7rem;font-size:.82rem;color:var(--muted);font-style:italic}
 </style>
 </head>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <body>
 <div class="loading-overlay" id="loadingOverlay">Cargando...</div>
 <div class="toast" id="toast"></div>
@@ -159,6 +160,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="error-msg" id="loginError"></div>
     <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="tu@email.com"/></div>
     <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••"/></div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess" style="margin-bottom:1rem"></div>
     <button class="btn" id="loginBtn" type="button">Entrar</button>
   </div>
 </div>
@@ -407,6 +409,8 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 
 <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script is:inline define:vars={{sbUrl:import.meta.env.PUBLIC_SUPABASE_URL,sbAnon:import.meta.env.PUBLIC_SUPABASE_ANON_KEY}}>
+window.__turnstileToken = null;
+window.onTurnstileSuccess = function(token) { window.__turnstileToken = token; };
 window.__adminSb = window.supabase.createClient(sbUrl, sbAnon);
 </script>
 <script type="module">
@@ -466,9 +470,15 @@ async function checkAuth(){const{data:{session}}=await supabase.auth.getSession(
 $('loginBtn').addEventListener('click',async()=>{
   const email=$('loginEmail').value.trim(),pass=$('loginPass').value;
   if(!email||!pass){$('loginError').textContent='Completa todos los campos';$('loginError').style.display='block';return}
+  if(!window.__turnstileToken){$('loginError').textContent='Completa la verificación de seguridad.';$('loginError').style.display='block';return}
   $('loginBtn').disabled=true;$('loginBtn').innerHTML='<span class="spinner"></span>';
-  const{data,error}=await supabase.auth.signInWithPassword({email,password:pass});
-  if(error){$('loginError').textContent='Email o contraseña incorrectos';$('loginError').style.display='block';$('loginBtn').disabled=false;$('loginBtn').textContent='Entrar';return}
+  const{data,error}=await supabase.auth.signInWithPassword({email,password:pass,options:{captchaToken:window.__turnstileToken}});
+  if(error){
+    $('loginError').textContent='Email o contraseña incorrectos';$('loginError').style.display='block';$('loginBtn').disabled=false;$('loginBtn').textContent='Entrar';
+    if(window.turnstile)window.turnstile.reset();
+    window.__turnstileToken=null;
+    return
+  }
   showAdmin(data.user.email);
 });
 $('logoutBtn').addEventListener('click',async()=>{await supabase.auth.signOut();$('loginWrap').style.display='';$('adminPanel').style.display='none'});
