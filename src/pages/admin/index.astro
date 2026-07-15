@@ -44,11 +44,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .product-table td{padding:.7rem .9rem;font-size:.85rem;border-bottom:1px solid var(--grey2);vertical-align:middle}
 .badge{display:inline-block;padding:.15rem .5rem;border-radius:3px;font-size:.7rem;font-weight:600;text-transform:uppercase}
 .badge-active{background:#e6ffe6;color:#0a0}.badge-inactive{background:#ffe6e6;color:#c00}
-.action-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;border-radius:5px;cursor:pointer;font-family:inherit;margin-right:.4rem;transition:opacity .15s}
-.action-btn.edit{background:var(--red);color:#fff}
-.action-btn.delete{background:#222;color:#fff}
+.action-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:none!important;border-radius:5px;cursor:pointer;font-family:inherit;margin-right:.4rem;transition:opacity .15s}
+.action-btn.edit{background:#FF0000!important;color:#fff!important}
+.action-btn.delete{background:#222!important;color:#fff!important}
 .action-btn:hover{opacity:.75}
-.action-btn svg{display:block;flex-shrink:0}
+.action-btn svg{display:block;flex-shrink:0;stroke:#fff!important}
 .actions-cell{white-space:nowrap}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
 .modal-bg.open{display:flex}
