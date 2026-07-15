@@ -1183,7 +1183,7 @@ function renderPromos(){
           <small style="display:block;color:var(--muted);font-size:.72rem;margin-top:.4rem">Recomendado: <strong>1600 × 500 px</strong> (horizontal), formato <strong>JPG o WebP</strong>, máx. 800 KB.</small>
         </div>
         <div class="field"><label>Color del texto</label><input type="color" id="promoTextColor-${s.slot}" value="${b.text_color||'#FFFFFF'}" style="width:60px;height:38px;padding:2px"/></div>
-        <div class="field"><label>Oscurecer imagen (${b.overlay??35}%)</label><input type="range" min="0" max="80" id="promoOverlay-${s.slot}" value="${b.overlay??35}" style="width:100%"/><small style="color:var(--muted);font-size:.72rem">Más oscuro = texto más legible.</small></div>
+        <div class="field"><label>Oscurecer imagen (<span id="promoOverlayVal-${s.slot}">${b.overlay??35}</span>%)</label><input type="range" min="0" max="80" id="promoOverlay-${s.slot}" value="${b.overlay??35}" style="width:100%" oninput="document.getElementById('promoOverlayVal-${s.slot}').textContent=this.value"/><small style="color:var(--muted);font-size:.72rem">Más oscuro = texto más legible.</small></div>
         <div style="grid-column:1/-1"><button class="btn-save" data-savepromo="${s.slot}">Guardar este banner</button></div>
       </div>
     </div>`;
