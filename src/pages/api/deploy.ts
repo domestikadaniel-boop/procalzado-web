@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { env as cfEnv } from 'cloudflare:workers';
 
+export const prerender = false;
+
 export const POST: APIRoute = async () => {
   try {
     const hookUrl = (cfEnv as any).CLOUDFLARE_DEPLOY_HOOK;
