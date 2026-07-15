@@ -1286,16 +1286,16 @@ window.triggerDeploy = async function() {
   try {
     const r = await fetch('/api/deploy', { method: 'POST' });
     const text = await r.text();
-    console.log('Deploy response status:', r.status, 'body:', text);
+    console.log('Deploy response:', r.status, text);
     let d = {};
     try { d = JSON.parse(text); } catch(e) { d = { error: text }; }
-    if (r.ok && (d as any).ok) {
+    if (r.ok && d.ok) {
       showToast('✅ Deploy iniciado. El sitio se actualizará en ~1 min.');
     } else {
-      showToast('❌ ' + ((d as any).error || `HTTP ${r.status}`));
+      showToast('❌ ' + (d.error || 'HTTP ' + r.status));
     }
-  } catch(e: any) {
-    console.error('Deploy fetch error:', e);
+  } catch(e) {
+    console.error('Deploy error:', e);
     showToast('❌ ' + (e.message || 'Error de conexión'));
   }
   btn.disabled = false;
