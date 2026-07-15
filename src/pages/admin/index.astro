@@ -44,7 +44,8 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 .product-table td{padding:.7rem .9rem;font-size:.85rem;border-bottom:1px solid var(--grey2);vertical-align:middle}
 .badge{display:inline-block;padding:.15rem .5rem;border-radius:3px;font-size:.7rem;font-weight:600;text-transform:uppercase}
 .badge-active{background:#e6ffe6;color:#0a0}.badge-inactive{background:#ffe6e6;color:#c00}
-.action-btn{padding:.35rem .7rem;border:1px solid var(--grey2);border-radius:4px;background:var(--white);cursor:pointer;font-size:.78rem;font-family:inherit;margin-right:.3rem;white-space:nowrap}
+.action-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .7rem;border:1px solid var(--grey2);border-radius:4px;background:var(--white);cursor:pointer;font-size:.78rem;font-family:inherit;margin-right:.3rem;white-space:nowrap}
+.action-btn.delete{padding:.35rem .5rem}
 .action-btn:hover{border-color:var(--red);color:var(--red)}
 .action-btn.edit{background:#f0f7ff;border-color:#cde;color:#369}
 .action-btn.edit:hover{background:#ddeeff}
@@ -536,7 +537,7 @@ function renderProducts(filter=''){
       <td>${p.brands?.name||'-'}</td><td style="font-size:.78rem">${catNames}</td>
       <td>${p.show_price&&p.price?'$'+Number(p.price).toLocaleString():'-'}</td>
       <td><span class="badge ${p.active?'badge-active':'badge-inactive'}">${p.active?'Activo':'Off'}</span></td>
-      <td class="actions-cell"><button class="action-btn edit" onclick="window.editProduct('${p.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteProduct('${p.id}',\`${p.name.replace(/`/g,'')}\`)">🗑️</button></td>
+      <td class="actions-cell"><button class="action-btn edit" onclick="window.editProduct('${p.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg> Editar</button><button class="action-btn delete" onclick="window.deleteProduct('${p.id}',\`${p.name.replace(/`/g,'')}\`)"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button></td>
     </tr>`}).join('')||'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos. Click "+ Nuevo producto".</td></tr>';
 
   setupDragAndDrop('productTableBody', products, 'products');
@@ -599,7 +600,7 @@ function renderBrands(){
     <td style="text-align:center"><span class="badge ${count>0?'badge-active':'badge-inactive'}" style="min-width:32px;display:inline-block">${count}</span></td>
     <td><label class="toggle-switch"><input type="checkbox" ${b.is_authorized_distributor?'checked':''} onchange="window.toggleBrandAuth('${b.id}',this.checked)"/><span class="toggle-slider"></span></label></td>
     <td><span class="badge ${b.active?'badge-active':'badge-inactive'}">${b.active?'Activa':'Off'}</span></td>
-    <td class="actions-cell"><button class="action-btn edit" onclick="window.editBrand('${b.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteBrand('${b.id}',\`${b.name}\`)">🗑️</button></td>
+    <td class="actions-cell"><button class="action-btn edit" onclick="window.editBrand('${b.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg> Editar</button><button class="action-btn delete" onclick="window.deleteBrand('${b.id}',\`${b.name}\`)"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button></td>
   </tr>`}).join('');
   setupDragAndDrop('brandTableBody', brands, 'brands');
 }
@@ -624,8 +625,8 @@ function renderCategories(){
       <td style="font-size:.75rem">${c.image_url?'<span title="Tiene imagen">🖼️</span>':'<span style="color:var(--grey2)">—</span>'} ${c.display_title?`<span style="color:var(--muted)">${c.display_title}</span>`:'<span style="color:var(--grey2)">sin título</span>'}</td>
       <td><span class="badge ${c.active?'badge-active':'badge-inactive'}">${c.active?'Activa':'Off'}</span></td>
       <td class="actions-cell">
-        <button class="action-btn edit" onclick="window.editCategory('${c.id}')">✏️ Editar</button>
-        <button class="action-btn delete" onclick="window.deleteCategory('${c.id}',\`${c.name}\`)">🗑️</button>
+        <button class="action-btn edit" onclick="window.editCategory('${c.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg> Editar</button>
+        <button class="action-btn delete" onclick="window.deleteCategory('${c.id}',\`${c.name}\`)"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button>
       </td>
     </tr>`;
   }).join('');
@@ -653,7 +654,7 @@ function renderRecommended(){
       <td style="width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
       <td><strong>${p?.name||'(producto eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name||''}</span></td>
       <td style="font-size:.82rem;color:var(--muted);max-width:320px">${r.reason||'<em style="color:var(--grey2)">sin motivo</em>'}</td>
-      <td class="actions-cell"><button class="action-btn edit" onclick="window.editRec('${r.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deleteRec('${r.id}')">🗑️</button></td>
+      <td class="actions-cell"><button class="action-btn edit" onclick="window.editRec('${r.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg> Editar</button><button class="action-btn delete" onclick="window.deleteRec('${r.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button></td>
     </tr>`;
   }).join('');
   setupDragAndDrop('recTableBody', recommended, 'recommended_products');
@@ -1108,7 +1109,7 @@ function renderPromoProducts(){
       <td style="width:60px;padding:.5rem">${img?`<img src="${img.url}" width="50" height="50" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:block"/>`:'<span style="font-size:1.5rem">👢</span>'}</td>
       <td><strong>${p?.name||'(eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name||''}</span></td>
       <td style="font-size:.82rem;color:var(--muted);max-width:320px">${r.reason||'<em style="color:var(--grey2)">sin motivo</em>'}</td>
-      <td class="actions-cell"><button class="action-btn edit" onclick="window.editPromoProd('${r.id}')">✏️ Editar</button><button class="action-btn delete" onclick="window.deletePromoProd('${r.id}')">🗑️</button></td>
+      <td class="actions-cell"><button class="action-btn edit" onclick="window.editPromoProd('${r.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg> Editar</button><button class="action-btn delete" onclick="window.deletePromoProd('${r.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button></td>
     </tr>`;
   }).join('');
   setupDragAndDrop('promoProdTableBody', promoProducts, 'promo_products');
