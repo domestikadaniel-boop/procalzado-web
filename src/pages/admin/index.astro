@@ -143,11 +143,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
   .toolbar{flex-direction:column;align-items:stretch;gap:.5rem}
   .toolbar input{width:100%}
   .btn-add{justify-content:center;width:100%}
-  /* TABLA: ocultar solo MARCA CATEGORÍA, mostrar IMG NOMBRE ESTADO ACCIONES */
-  .product-table th:nth-child(3),
-  .product-table td:nth-child(3),
+  /* TABLA: ocultar MARCA y CATEGORÍA, mostrar IMG NOMBRE PRECIO ESTADO ACCIONES */
   .product-table th:nth-child(4),
-  .product-table td:nth-child(4){display:none}
+  .product-table td:nth-child(4),
+  .product-table th:nth-child(5),
+  .product-table td:nth-child(5){display:none}
   .product-table th,.product-table td{padding:.45rem .35rem;font-size:.75rem}
   .product-table td:nth-child(7){text-align:left}
   .actions-cell{display:flex;gap:.25rem;justify-content:flex-start}
