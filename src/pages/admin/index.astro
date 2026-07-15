@@ -133,7 +133,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
   .admin-header h2{font-size:1rem;white-space:nowrap}
   #deployBtn{font-size:.65rem;padding:.28rem .55rem;gap:.25rem}
   .admin-header>div:last-child{display:flex;align-items:center;gap:.4rem;width:100%;justify-content:flex-end;font-size:.72rem}
-  .admin-header .user-email{display:none}
+  .user-email{display:none}
   /* NAV TABS */
   .admin-nav{padding:0 .5rem;gap:0;-webkit-overflow-scrolling:touch}
   .tab{padding:.6rem .65rem;font-size:.7rem;white-space:nowrap}
@@ -143,20 +143,25 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
   .toolbar{flex-direction:column;align-items:stretch;gap:.5rem}
   .toolbar input{width:100%}
   .btn-add{justify-content:center;width:100%}
-  /* TABLA - ocultar columnas secundarias, solo IMG NOMBRE ACCIONES */
+  /* TABLA: ocultar solo MARCA CATEGORÍA, mostrar IMG NOMBRE ESTADO ACCIONES */
   .product-table th:nth-child(3),
   .product-table td:nth-child(3),
   .product-table th:nth-child(4),
-  .product-table td:nth-child(4),
-  .product-table th:nth-child(5),
-  .product-table td:nth-child(5),
-  .product-table th:nth-child(6),
-  .product-table td:nth-child(6){display:none}
-  .product-table th,.product-table td{padding:.5rem .4rem;font-size:.8rem}
-  .actions-cell{display:flex;gap:.3rem;white-space:nowrap}
-  /* MODALES */
+  .product-table td:nth-child(4){display:none}
+  .product-table th,.product-table td{padding:.45rem .35rem;font-size:.75rem}
+  .product-table td:nth-child(7){text-align:left}
+  .actions-cell{display:flex;gap:.25rem;justify-content:flex-start}
+  /* MODALES: sin scroll horizontal */
   .modal-bg{padding:.4rem;align-items:flex-end}
-  .form-modal{max-height:92vh;border-radius:12px 12px 0 0;width:100%;max-width:100%}
+  .form-modal{max-height:92vh;border-radius:12px 12px 0 0;width:100%;max-width:100%;overflow-x:hidden}
+  .form-body{overflow-x:hidden}
+  /* CHECKBOXES DE CATEGORIAS: mas compactos */
+  .cats-checkbox-grid{grid-template-columns:repeat(2,1fr);gap:.35rem;padding:.5rem}
+  .cat-check{padding:.4rem .5rem;font-size:.75rem;gap:.3rem}
+  /* TALLAS: grid mas apretado */
+  .sizes-grid{grid-template-columns:repeat(5,1fr)!important;gap:.3rem!important}
+  /* COLORES: evitar overflow */
+  .color-row{flex-wrap:wrap}
 }
 .draggable-row{cursor:default;transition:background .15s}
 .draggable-row:hover{background:rgba(255,0,0,.03)!important}
