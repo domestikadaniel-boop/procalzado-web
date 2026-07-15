@@ -169,7 +169,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
   <div class="admin-header">
     <div style="display:flex;align-items:center;gap:1rem">
     <h2>PROCALZADO — ADMIN</h2>
-    <button id="deployBtn" onclick="triggerDeploy()" style="display:flex;align-items:center;gap:.4rem;background:#1a1a1a;color:#fff;border:1px solid rgba(255,255,255,.2);padding:.35rem .8rem;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.04em;text-transform:uppercase;transition:background .15s">
+    <button id="deployBtn" onclick="triggerDeploy()" style="display:flex;align-items:center;gap:.4rem;background:#FF0000;color:#fff;border:none;padding:.35rem .8rem;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.04em;text-transform:uppercase;transition:opacity .15s">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
       Publicar cambios
     </button>
@@ -1279,7 +1279,7 @@ async function showAdminWithSettings(email) {
 
 checkAuth();
 
-async function triggerDeploy() {
+window.triggerDeploy = async function() {
   const btn = $('deployBtn');
   btn.disabled = true;
   btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Publicando...';
