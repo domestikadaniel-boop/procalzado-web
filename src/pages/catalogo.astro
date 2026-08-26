@@ -53,15 +53,25 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .catalog-header img{height:28px;width:auto;display:block}
 .catalog-header h1{font-family:var(--fd);font-size:1.5rem;letter-spacing:.06em}
 .catalog-body{max-width:1400px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 4rem}
-.cat-section{margin-bottom:3rem}
-.cat-title{font-family:var(--fd);font-size:2rem;letter-spacing:.05em;margin-bottom:1.2rem;padding-bottom:.5rem;border-bottom:3px solid var(--red);display:inline-block}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+/* Carpeta / acordeón por categoría */
+.cat-section{margin-bottom:1rem;border:1.5px solid var(--grey2);border-radius:10px;overflow:hidden}
+.cat-folder{display:flex;align-items:center;gap:.7rem;padding:.9rem 1.1rem;cursor:pointer;background:var(--black);color:var(--white);user-select:none;border:none;width:100%;text-align:left}
+.cat-folder:hover{background:#111}
+.cat-folder-icon{font-size:1.1rem;transition:transform .2s}
+.cat-folder.open .cat-folder-icon{transform:rotate(90deg)}
+.cat-folder-name{font-family:var(--fd);font-size:1.5rem;letter-spacing:.06em;flex:1}
+.cat-folder-count{font-size:.75rem;background:var(--red);color:#fff;border-radius:20px;padding:.1rem .55rem;font-family:var(--fb);font-weight:700}
+.cat-body{display:none;padding:1rem}
+.cat-body.open{display:block}
+
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem}
 .product-card{background:var(--grey);border-radius:8px;overflow:hidden}
-.product-card-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none}
+/* Carrusel */
+.product-card-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
 .product-card-imgs::-webkit-scrollbar{display:none}
-.product-card-img{flex:0 0 100%;width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--grey2);scroll-snap-align:start}
+.product-card-img{flex:0 0 100%;min-width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--grey2);scroll-snap-align:start;pointer-events:none}
 .product-card-img-placeholder{width:100%;aspect-ratio:1;background:var(--grey2);display:flex;align-items:center;justify-content:center;font-size:3rem}
-.product-card-dots{display:flex;justify-content:center;gap:4px;padding:.3rem 0 .1rem}
+.product-card-dots{display:flex;justify-content:center;gap:4px;padding:.35rem 0 .15rem}
 .product-card-dot{width:6px;height:6px;border-radius:50%;background:var(--grey2);transition:background .15s}
 .product-card-dot.active{background:var(--red)}
 .product-card-body{padding:.6rem .7rem .8rem}
@@ -69,7 +79,8 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .product-card-name{font-family:var(--fd);font-size:1.05rem;letter-spacing:.03em;line-height:1.15}
 @media print{
   .catalog-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .cat-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cat-folder{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cat-body{display:block!important}
   .product-grid{grid-template-columns:repeat(4,1fr)}
 }
 @media(max-width:480px){
@@ -87,9 +98,14 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 <div class="catalog-body">
   {groups.length === 0 ? (
     <p style="text-align:center;padding:4rem;color:var(--muted)">El catálogo está vacío. Agrega productos desde el panel de administración.</p>
-  ) : groups.map(({ cat, items }) => (
+  ) : groups.map(({ cat, items }, gi) => (
     <div class="cat-section">
-      <div class="cat-title">{cat.name}</div>
+      <button class={`cat-folder${gi===0?' open':''}`} data-folder={`folder-${gi}`} type="button">
+        <span class="cat-folder-icon">▶</span>
+        <span class="cat-folder-name">{cat.name}</span>
+        <span class="cat-folder-count">{items.length}</span>
+      </button>
+      <div class={`cat-body${gi===0?' open':''}`} id={`folder-${gi}`}>
       <div class="product-grid">
         {items.map((it: any) => {
           const p = it.products;
@@ -126,19 +142,45 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
           );
         })}
       </div>
+      </div>
     </div>
   ))}
 </div>
 
 <script>
-document.querySelectorAll('.product-card-dots').forEach(dotsEl => {
-  const id = dotsEl.getAttribute('data-for');
-  const strip = document.getElementById(id);
-  if (!strip) return;
-  const dots = dotsEl.querySelectorAll('.product-card-dot');
-  strip.addEventListener('scroll', () => {
-    const idx = Math.round(strip.scrollLeft / strip.clientWidth);
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+// Carpetas colapsables
+document.querySelectorAll('.cat-folder').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-folder');
+    const body = document.getElementById(id);
+    const isOpen = btn.classList.contains('open');
+    btn.classList.toggle('open', !isOpen);
+    body.classList.toggle('open', !isOpen);
+  });
+});
+
+// Carrusel de imágenes con touch
+document.querySelectorAll('.product-card-imgs').forEach(strip => {
+  // dots
+  const id = strip.id;
+  const dotsEl = document.querySelector(`.product-card-dots[data-for="${id}"]`);
+  const dots = dotsEl ? dotsEl.querySelectorAll('.product-card-dot') : [];
+  if (dots.length) {
+    strip.addEventListener('scroll', () => {
+      const idx = Math.round(strip.scrollLeft / strip.clientWidth);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }, { passive: true });
+  }
+  // swipe touch
+  let startX = 0;
+  strip.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  strip.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 30) return;
+    const w = strip.clientWidth;
+    const cur = Math.round(strip.scrollLeft / w);
+    const next = dx < 0 ? cur + 1 : cur - 1;
+    strip.scrollTo({ left: next * w, behavior: 'smooth' });
   }, { passive: true });
 });
 </script>
