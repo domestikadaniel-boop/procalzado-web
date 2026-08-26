@@ -345,7 +345,12 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
       <p style="font-size:.78rem;color:var(--muted);margin-bottom:.3rem" id="sizesHelp">Marca las tallas que tienes disponibles.</p>
       <div class="sizes-grid" id="sizesGrid"></div>
 
-      <div class="section-label">Colores e Imágenes</div>
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+        Colores e Imágenes
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--muted);border-bottom:none;margin:0;padding:0">
+          <input type="checkbox" id="perColorPricesToggle" style="accent-color:var(--red)"/> Precio por color
+        </label>
+      </div>
       <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Por cada color: nombre, color visual e imágenes específicas. Las imágenes del primer color se muestran por defecto.</p>
       <div id="colorsContainer"></div>
       <button type="button" class="add-row-btn" id="addColorBtn">+ Agregar color</button>
@@ -466,6 +471,7 @@ let brands=[],categories=[],products=[],genderCards=[],recommended=[],promos={},
 let formColors=[];
 let activeColorIdx=null;
 let perColorSizes=false;
+let perColorPrices=false;
 
 const $=id=>document.getElementById(id);
 function showToast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
@@ -809,6 +815,12 @@ function renderColors(){
         <button type="button" class="upload-color-btn" data-action="upload" data-idx="${idx}">📷 Subir imagen</button>
       </div>
       ${sizesHtml}
+      ${perColorPrices ? `
+      <div style="margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--grey2);display:flex;align-items:center;gap:.6rem">
+        <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);white-space:nowrap">Precio (COP)</label>
+        <input type="number" placeholder="0" value="${c.price||''}" data-action="price" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:150px"/>
+        <small style="color:var(--muted);font-size:.72rem">Si se deja vacío, se usa el precio general del producto.</small>
+      </div>` : ''}
     </div>`;
   }).join('');
 
@@ -841,6 +853,7 @@ function handleColorChange(e){
   if(action==='name')formColors[idx].name=e.target.value;
   if(action==='hex'){formColors[idx].hex=e.target.value; renderColors();}
   if(action==='hex2color'){formColors[idx].hex2=e.target.value; renderColors();}
+  if(action==='price')formColors[idx].price=e.target.value?parseFloat(e.target.value):null;
 }
 function handleColorClick(e){
   const action=e.target.dataset.action;
@@ -873,7 +886,7 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[]});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null});
   renderColors();
 });
 
@@ -892,6 +905,12 @@ $('perColorSizesToggle').addEventListener('change', () => {
     globalGrid.style.display = '';
     sizesHelp.textContent = 'Marca las tallas que tienes disponibles.';
   }
+  renderColors();
+});
+
+// Per-color prices toggle
+$('perColorPricesToggle').addEventListener('change', () => {
+  perColorPrices = $('perColorPricesToggle').checked;
   renderColors();
 });
 
@@ -957,7 +976,14 @@ function openProductForm(p=null){
   $('perColorSizesToggle').checked = perColorSizes;
   $('sizesGrid').style.display = perColorSizes ? 'none' : '';
   $('sizesHelp').textContent = perColorSizes ? 'Las tallas se configuran dentro de cada color.' : 'Marca las tallas que tienes disponibles.';
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[]});
+
+  perColorPrices = p?.per_color_prices || false;
+  $('perColorPricesToggle').checked = perColorPrices;
+  const colorPricesMap = (p?.color_prices && typeof p.color_prices === 'object') ? p.color_prices : {};
+  // Asignar precio guardado a cada color
+  formColors.forEach(c => { c.price = colorPricesMap[c.name] || null; });
+
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -981,7 +1007,11 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const primaryCatId = selectedCatIds[0] || null; // primera = principal
 
   const selectedGenders = Array.from(document.querySelectorAll('[data-gender]:checked')).map(i=>i.value);
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:$('pSalePrice').value?parseFloat($('pSalePrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,active:true};
+  const colorPricesObj = {};
+  if (perColorPrices) {
+    formColors.filter(c=>c.name.trim()).forEach(c => { if (c.price != null) colorPricesObj[c.name.trim()] = c.price; });
+  }
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:$('pSalePrice').value?parseFloat($('pSalePrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}

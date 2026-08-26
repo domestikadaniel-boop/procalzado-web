@@ -43,6 +43,8 @@ export interface Product {
   meta_title: string | null;
   meta_description: string | null;
   per_color_sizes: boolean;
+  per_color_prices: boolean;
+  color_prices: Record<string, number>;
   featured: boolean;
   active: boolean;
   // Joins

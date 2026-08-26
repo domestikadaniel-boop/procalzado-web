@@ -107,6 +107,9 @@ const schemaProduct = {
         <script type="application/json" id="galleryData" set:html={JSON.stringify(images.map(i => ({ url: i.url, color: i.color, alt: i.alt_text })))}></script>
       )}
       <script type="application/json" id="variantsData" set:html={JSON.stringify(variants.map(v => ({ size: v.size, color: v.color })))}></script>
+      {(product as any).per_color_prices && (
+        <script type="application/json" id="colorPricesData" set:html={JSON.stringify((product as any).color_prices || {})}></script>
+      )}
     </div>
 
     <!-- INFO -->
@@ -115,25 +118,27 @@ const schemaProduct = {
       <h1>{product.name}</h1>
       {catName && <p class="card-cat-tag" style="margin-bottom:1rem">{catName}</p>}
 
-      {product.show_price && product.price ? (
-        <div style="margin-bottom:1rem">
-          {(product as any).sale_price ? (
-            <>
-              <span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${Number(product.price).toLocaleString('es-CO')}</span>
-              <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${Number((product as any).sale_price).toLocaleString('es-CO')}</span>
-              <span style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-{Math.round((1 - (product as any).sale_price / product.price) * 100)}%</span>
-              <span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>
-            </>
-          ) : (
-            <>
-              <span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${Number(product.price).toLocaleString('es-CO')}</span>
-              <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>
-            </>
-          )}
-        </div>
-      ) : (
-        <div style="margin-bottom:1rem;font-style:italic;color:var(--muted)">Precio: consultar por WhatsApp</div>
-      )}
+      <div id="priceDisplay" style="margin-bottom:1rem">
+        {product.show_price && product.price ? (
+          <>
+            {(product as any).sale_price ? (
+              <>
+                <span id="priceOriginal" style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${Number(product.price).toLocaleString('es-CO')}</span>
+                <span id="priceMain" style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${Number((product as any).sale_price).toLocaleString('es-CO')}</span>
+                <span id="priceBadge" style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-{Math.round((1 - (product as any).sale_price / product.price) * 100)}%</span>
+                <span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>
+              </>
+            ) : (
+              <>
+                <span id="priceMain" style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${Number(product.price).toLocaleString('es-CO')}</span>
+                <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>
+              </>
+            )}
+          </>
+        ) : (
+          <div style="font-style:italic;color:var(--muted)">Precio: consultar por WhatsApp</div>
+        )}
+      </div>
 
       {(product as any).notice && (
         <div class={`product-notice notice-${(product as any).notice_type || 'info'}`}>
@@ -236,6 +241,41 @@ const schemaProduct = {
   const variantsEl = document.getElementById('variantsData');
   const allVariants = variantsEl ? JSON.parse(variantsEl.textContent) : [];
 
+  // Precios por color
+  const colorPricesEl = document.getElementById('colorPricesData');
+  const colorPrices = colorPricesEl ? JSON.parse(colorPricesEl.textContent) : null;
+
+  function updatePriceForColor(color) {
+    if (!colorPrices) return;
+    const btnAdd = document.getElementById('btnAddCart');
+    const priceMain = document.getElementById('priceMain');
+    const priceOriginal = document.getElementById('priceOriginal');
+    const priceBadge = document.getElementById('priceBadge');
+    const priceDisplay = document.getElementById('priceDisplay');
+    const colorPrice = colorPrices[color];
+    if (!priceDisplay) return;
+    if (colorPrice != null) {
+      const fmt = '$' + Number(colorPrice).toLocaleString('es-CO');
+      if (priceMain) priceMain.textContent = fmt;
+      if (priceOriginal) priceOriginal.style.display = 'none';
+      if (priceBadge) priceBadge.style.display = 'none';
+      if (btnAdd) btnAdd.dataset.price = String(colorPrice);
+    } else {
+      // Sin precio para este color: volver a "consultar"
+      if (priceMain) priceMain.style.display = 'none';
+      if (priceOriginal) priceOriginal.style.display = 'none';
+      if (priceBadge) priceBadge.style.display = 'none';
+      if (!priceDisplay.querySelector('.no-price-msg')) {
+        const msg = document.createElement('div');
+        msg.className = 'no-price-msg';
+        msg.style.cssText = 'font-style:italic;color:var(--muted)';
+        msg.textContent = 'Precio: consultar por WhatsApp';
+        priceDisplay.appendChild(msg);
+      }
+      if (btnAdd) btnAdd.dataset.price = '';
+    }
+  }
+
   // Precargar TODAS las imágenes al inicio para que el cambio sea instantáneo
   allImages.forEach(imgData => {
     const preload = new Image();
@@ -279,6 +319,7 @@ const schemaProduct = {
     selectedColor = colorBtns[0].dataset.color;
     if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
     updateSizesForColor(selectedColor);
+    updatePriceForColor(selectedColor);
 
     colorBtns.forEach(btn => btn.addEventListener('click', () => {
       colorBtns.forEach(b => b.classList.remove('selected'));
@@ -286,6 +327,7 @@ const schemaProduct = {
       selectedColor = btn.dataset.color;
       if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
       updateSizesForColor(selectedColor);
+      updatePriceForColor(selectedColor);
 
       // Saltar a la primera imagen de ese color (sin filtrar la galería)
       const firstImgIdx = visibleImages.findIndex(img => img.color === selectedColor);
