@@ -86,6 +86,20 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 @media(max-width:480px){
   .product-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}
 }
+/* Modal */
+.pmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:1rem}
+.pmodal-bg.open{display:flex}
+.pmodal{background:var(--white);border-radius:12px;max-width:480px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.pmodal-close{position:absolute;top:.6rem;right:.7rem;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1}
+.pmodal-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.pmodal-imgs::-webkit-scrollbar{display:none}
+.pmodal-img{flex:0 0 100%;min-width:100%;aspect-ratio:1;object-fit:cover;scroll-snap-align:start}
+.pmodal-dots{display:flex;justify-content:center;gap:5px;padding:.45rem 0 .2rem;flex-shrink:0}
+.pmodal-dot{width:7px;height:7px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer}
+.pmodal-dot.active{background:var(--red)}
+.pmodal-body{padding:.8rem 1rem 1.1rem;flex-shrink:0}
+.pmodal-brand{font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:.2rem}
+.pmodal-name{font-family:var(--fd);font-size:1.6rem;letter-spacing:.04em;line-height:1.15}
 </style>
 </head>
 <body>
@@ -113,27 +127,17 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
             ? it.image_urls
             : (it.image_url ? [it.image_url]
               : [p?.product_images?.find((i: any) => i.is_primary)?.url || p?.product_images?.[0]?.url].filter(Boolean));
-          const cardId = `c${it.id.replace(/-/g,'')}`;
+          const encodedUrls = JSON.stringify(urls).replace(/"/g,'&quot;');
           return (
-            <div class="product-card">
-              {urls.length > 0 ? (
-                <>
-                  <div class={`product-card-imgs`} id={cardId}>
-                    {urls.map((u: string, i: number) => (
-                      <img src={u} alt={`${p?.name || ''} ${i+1}`} class="product-card-img" loading="lazy"/>
-                    ))}
-                  </div>
-                  {urls.length > 1 && (
-                    <div class="product-card-dots" data-for={cardId}>
-                      {urls.map((_: string, i: number) => (
-                        <span class={`product-card-dot${i===0?' active':''}`}/>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div class="product-card-img-placeholder">👢</div>
-              )}
+            <div class="product-card" style="cursor:pointer"
+              data-urls={encodedUrls}
+              data-brand={p?.brands?.name || ''}
+              data-name={p?.name || ''}
+              onclick="window.openCatalogModal(this)">
+              {urls.length > 0
+                ? <img src={urls[0]} alt={p?.name || ''} class="product-card-img" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;display:block"/>
+                : <div class="product-card-img-placeholder">👢</div>
+              }
               <div class="product-card-body">
                 {p?.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
                 <div class="product-card-name">{p?.name}</div>
@@ -145,6 +149,19 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
       </div>
     </div>
   ))}
+</div>
+
+<!-- Modal producto -->
+<div class="pmodal-bg" id="pmodal">
+  <div class="pmodal">
+    <button class="pmodal-close" onclick="document.getElementById('pmodal').classList.remove('open')">×</button>
+    <div class="pmodal-imgs" id="pmodalImgs"></div>
+    <div class="pmodal-dots" id="pmodalDots"></div>
+    <div class="pmodal-body">
+      <div class="pmodal-brand" id="pmodalBrand"></div>
+      <div class="pmodal-name" id="pmodalName"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -159,30 +176,56 @@ document.querySelectorAll('.cat-folder').forEach(btn => {
   });
 });
 
-// Carrusel de imágenes con touch
-document.querySelectorAll('.product-card-imgs').forEach(strip => {
-  // dots
-  const id = strip.id;
-  const dotsEl = document.querySelector(`.product-card-dots[data-for="${id}"]`);
-  const dots = dotsEl ? dotsEl.querySelectorAll('.product-card-dot') : [];
-  if (dots.length) {
-    strip.addEventListener('scroll', () => {
-      const idx = Math.round(strip.scrollLeft / strip.clientWidth);
-      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-    }, { passive: true });
-  }
-  // swipe touch
-  let startX = 0;
-  strip.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-  strip.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) < 30) return;
-    const w = strip.clientWidth;
-    const cur = Math.round(strip.scrollLeft / w);
-    const next = dx < 0 ? cur + 1 : cur - 1;
-    strip.scrollTo({ left: next * w, behavior: 'smooth' });
+// Modal de producto
+const pmodal = document.getElementById('pmodal');
+const pmodalImgs = document.getElementById('pmodalImgs');
+const pmodalDots = document.getElementById('pmodalDots');
+const pmodalBrand = document.getElementById('pmodalBrand');
+const pmodalName = document.getElementById('pmodalName');
+let modalStartX = 0;
+
+function setupModalCarousel() {
+  const dots = pmodalDots.querySelectorAll('.pmodal-dot');
+  pmodalImgs.addEventListener('scroll', () => {
+    const idx = Math.round(pmodalImgs.scrollLeft / pmodalImgs.clientWidth);
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
   }, { passive: true });
-});
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      pmodalImgs.scrollTo({ left: i * pmodalImgs.clientWidth, behavior: 'smooth' });
+    });
+  });
+  pmodalImgs.addEventListener('touchstart', e => { modalStartX = e.touches[0].clientX; }, { passive: true });
+  pmodalImgs.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - modalStartX;
+    if (Math.abs(dx) < 30) return;
+    const w = pmodalImgs.clientWidth;
+    const cur = Math.round(pmodalImgs.scrollLeft / w);
+    pmodalImgs.scrollTo({ left: (dx < 0 ? cur + 1 : cur - 1) * w, behavior: 'smooth' });
+  }, { passive: true });
+}
+
+window.openCatalogModal = (card) => {
+  const urls = JSON.parse(card.getAttribute('data-urls') || '[]');
+  const brand = card.getAttribute('data-brand') || '';
+  const name = card.getAttribute('data-name') || '';
+  pmodalBrand.textContent = brand;
+  pmodalName.textContent = name;
+  pmodalImgs.innerHTML = urls.map(u => `<img src="${u}" class="pmodal-img" loading="lazy"/>`).join('');
+  pmodalImgs.scrollLeft = 0;
+  if (urls.length > 1) {
+    pmodalDots.innerHTML = urls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}"></span>`).join('');
+    pmodalDots.style.display = 'flex';
+  } else {
+    pmodalDots.innerHTML = '';
+    pmodalDots.style.display = 'none';
+  }
+  setupModalCarousel();
+  pmodal.classList.add('open');
+};
+
+pmodal.addEventListener('click', e => { if (e.target === pmodal) pmodal.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') pmodal.classList.remove('open'); });
 </script>
 </body>
 </html>
