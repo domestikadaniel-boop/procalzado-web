@@ -329,6 +329,7 @@ export interface CatalogItem {
   id: string;
   product_id: string;
   image_url: string | null;
+  image_urls: string[] | null;
   display_order: number;
   active: boolean;
   products?: Product;

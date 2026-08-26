@@ -427,11 +427,10 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         </div>
       </div>
       <div class="field">
-        <label>Foto del catálogo</label>
-        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Sube la foto que quieres mostrar en el catálogo. Si no subes ninguna se usará la foto principal del producto.</p>
-        <div id="catalogImgPreview" style="margin-bottom:.5rem"></div>
-        <button type="button" class="upload-color-btn" id="catalogUploadBtn">📷 Subir foto</button>
-        <input type="hidden" id="catalogImgUrl"/>
+        <label>Fotos del catálogo</label>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Sube las fotos que quieres mostrar. Arrastra para cambiar el orden. Si no subes ninguna se usará la foto principal del producto.</p>
+        <div id="catalogImgsGrid" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;min-height:10px"></div>
+        <button type="button" class="upload-color-btn" id="catalogUploadBtn">📷 Agregar fotos</button>
       </div>
     </div>
     <div class="form-actions">
@@ -442,7 +441,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 </div>
 
 <input type="file" id="hiddenColorInput" accept="image/*" multiple style="display:none"/>
-<input type="file" id="hiddenCatalogImgInput" accept="image/*" style="display:none"/>
+<input type="file" id="hiddenCatalogImgInput" accept="image/*" multiple style="display:none"/>
 
 <input type="file" id="hiddenPromoImageInput" accept="image/*" style="display:none"/>
 
@@ -1426,12 +1425,13 @@ function renderCatalog() {
   }
   tbody.innerHTML = catalogItems.map((it, idx) => {
     const p = it.products;
-    const img = it.image_url || p?.product_images?.find(i => i.is_primary)?.url || p?.product_images?.[0]?.url;
+    const urls = Array.isArray(it.image_urls) && it.image_urls.length ? it.image_urls : (it.image_url ? [it.image_url] : []);
+    const img = urls[0] || p?.product_images?.find(i => i.is_primary)?.url || p?.product_images?.[0]?.url;
     const catName = p?.categories?.name || '-';
     return `<tr draggable="true" data-id="${it.id}" data-idx="${idx}" class="draggable-row">
       <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center">⋮⋮</td>
       <td style="padding:.5rem">${img ? `<img src="${img}" width="56" height="56" style="width:56px;height:56px;object-fit:cover;border-radius:5px;display:block"/>` : '<span style="font-size:1.5rem">👢</span>'}</td>
-      <td><strong>${p?.name || '(eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name || ''}</span></td>
+      <td><strong>${p?.name || '(eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name || ''} ${urls.length > 1 ? `<span style="color:var(--red)">(${urls.length} fotos)</span>` : ''}</span></td>
       <td style="font-size:.82rem;color:var(--muted)">${catName}</td>
       <td class="actions-cell">
         <button class="action-btn edit" onclick="window.editCatalogItem('${it.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg></button>
@@ -1447,24 +1447,46 @@ function populateCatalogProductSelect() {
   catalogSS = initSearchSelect('catalogProdSearch', 'catalogProdList', 'catalogProdSearchWrap', 'catalogProdProduct', items);
 }
 
-function setCatalogImgPreview(url) {
-  const preview = $('catalogImgPreview');
-  if (!preview) return;
-  if (url) {
-    preview.innerHTML = `<div style="position:relative;display:inline-block">
-      <img src="${url}" style="width:110px;height:110px;object-fit:cover;border-radius:7px;display:block;border:2px solid var(--grey2)"/>
-      <button type="button" id="catalogImgRemove" style="position:absolute;top:3px;right:3px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
-    </div>`;
-    $('catalogImgRemove')?.addEventListener('click', () => { $('catalogImgUrl').value = ''; setCatalogImgPreview(''); });
-  } else {
-    preview.innerHTML = '';
-  }
+// --- Múltiples fotos por ítem de catálogo ---
+let catalogImgUrls = []; // array de URLs en orden actual
+let catalogImgDragIdx = null;
+
+function renderCatalogImgsGrid() {
+  const grid = $('catalogImgsGrid');
+  if (!grid) return;
+  if (!catalogImgUrls.length) { grid.innerHTML = ''; return; }
+  grid.innerHTML = catalogImgUrls.map((url, i) => `
+    <div draggable="true" data-ci="${i}" style="position:relative;cursor:grab;touch-action:none"
+         ondragstart="window._ciDragStart(event,${i})"
+         ondragover="event.preventDefault()"
+         ondrop="window._ciDrop(event,${i})">
+      <img src="${url}" style="width:90px;height:90px;object-fit:cover;border-radius:7px;display:block;border:2px solid var(--grey2);pointer-events:none"/>
+      <button type="button" onclick="window._ciRemove(${i})"
+        style="position:absolute;top:3px;right:3px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;line-height:1">×</button>
+    </div>
+  `).join('');
 }
+
+window._ciDragStart = (e, i) => { catalogImgDragIdx = i; e.dataTransfer.effectAllowed = 'move'; };
+window._ciDrop = (e, i) => {
+  e.preventDefault();
+  if (catalogImgDragIdx === null || catalogImgDragIdx === i) return;
+  const arr = [...catalogImgUrls];
+  const [moved] = arr.splice(catalogImgDragIdx, 1);
+  arr.splice(i, 0, moved);
+  catalogImgUrls = arr;
+  catalogImgDragIdx = null;
+  renderCatalogImgsGrid();
+};
+window._ciRemove = (i) => {
+  catalogImgUrls.splice(i, 1);
+  renderCatalogImgsGrid();
+};
 
 $('addCatalogBtn')?.addEventListener('click', () => {
   $('catalogItemId').value = '';
-  $('catalogImgUrl').value = '';
-  setCatalogImgPreview('');
+  catalogImgUrls = [];
+  renderCatalogImgsGrid();
   populateCatalogProductSelect();
   catalogSS?.clear();
   $('catalogFormTitle').textContent = 'Agregar al catálogo';
@@ -1474,16 +1496,18 @@ $('addCatalogBtn')?.addEventListener('click', () => {
 $('catalogUploadBtn')?.addEventListener('click', () => $('hiddenCatalogImgInput').click());
 
 $('hiddenCatalogImgInput').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const path = `catalog/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
   loading(true);
-  const { error } = await supabase.storage.from('product-images').upload(path, file);
+  for (const file of files) {
+    const path = `catalog/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
+    const { error } = await supabase.storage.from('product-images').upload(path, file);
+    if (error) { alert('Error subiendo ' + file.name + ': ' + error.message); continue; }
+    const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
+    catalogImgUrls.push(publicUrl);
+  }
   loading(false);
-  if (error) { alert('Error: ' + error.message); return; }
-  const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
-  $('catalogImgUrl').value = publicUrl;
-  setCatalogImgPreview(publicUrl);
+  renderCatalogImgsGrid();
   e.target.value = '';
 });
 
@@ -1491,8 +1515,15 @@ window.editCatalogItem = (id) => {
   const it = catalogItems.find(x => x.id === id);
   if (!it) return;
   $('catalogItemId').value = it.id;
-  $('catalogImgUrl').value = it.image_url || '';
-  setCatalogImgPreview(it.image_url || '');
+  // Soporte para image_urls (nuevo) y image_url (legado)
+  if (Array.isArray(it.image_urls) && it.image_urls.length) {
+    catalogImgUrls = [...it.image_urls];
+  } else if (it.image_url) {
+    catalogImgUrls = [it.image_url];
+  } else {
+    catalogImgUrls = [];
+  }
+  renderCatalogImgsGrid();
   populateCatalogProductSelect();
   catalogSS?.setValue(it.product_id || '');
   $('catalogFormTitle').textContent = 'Editar entrada del catálogo';
@@ -1511,7 +1542,7 @@ window.deleteCatalogItem = async (id) => {
 $('catalogSaveBtn')?.addEventListener('click', async () => {
   const product_id = $('catalogProdProduct').value;
   if (!product_id) { alert('Selecciona un producto'); return; }
-  const d = { product_id, image_url: $('catalogImgUrl').value || null, active: true };
+  const d = { product_id, image_urls: catalogImgUrls, active: true };
   loading(true);
   const id = $('catalogItemId').value;
   let error;
