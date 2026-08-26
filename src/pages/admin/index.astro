@@ -426,10 +426,11 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
           <div class="search-select-list" id="catalogProdList"></div>
         </div>
       </div>
-      <div class="field" id="catalogImgPickerWrap" style="display:none">
-        <label>Foto a mostrar</label>
-        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Selecciona una imagen del producto. Si no eliges ninguna se usará la principal.</p>
-        <div id="catalogImgPicker" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+      <div class="field">
+        <label>Foto del catálogo</label>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Sube la foto que quieres mostrar en el catálogo. Si no subes ninguna se usará la foto principal del producto.</p>
+        <div id="catalogImgPreview" style="margin-bottom:.5rem"></div>
+        <button type="button" class="upload-color-btn" id="catalogUploadBtn">📷 Subir foto</button>
         <input type="hidden" id="catalogImgUrl"/>
       </div>
     </div>
@@ -441,6 +442,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 </div>
 
 <input type="file" id="hiddenColorInput" accept="image/*" multiple style="display:none"/>
+<input type="file" id="hiddenCatalogImgInput" accept="image/*" style="display:none"/>
 
 <input type="file" id="hiddenPromoImageInput" accept="image/*" style="display:none"/>
 
@@ -1445,70 +1447,54 @@ function populateCatalogProductSelect() {
   catalogSS = initSearchSelect('catalogProdSearch', 'catalogProdList', 'catalogProdSearchWrap', 'catalogProdProduct', items);
 }
 
-function renderCatalogImgPicker(productId, selectedUrl = '') {
-  const wrap = $('catalogImgPickerWrap');
-  const picker = $('catalogImgPicker');
-  const hidden = $('catalogImgUrl');
-  const p = products.find(x => x.id === productId);
-  if (!p || !p.product_images?.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = '';
-  const imgs = [...p.product_images].sort((a, b) => a.display_order - b.display_order);
-  picker.innerHTML = imgs.map(img => {
-    const sel = img.url === selectedUrl;
-    return `<div class="catalog-img-opt ${sel ? 'selected' : ''}" data-url="${img.url}" style="cursor:pointer;border:3px solid ${sel ? 'var(--red)' : 'var(--grey2)'};border-radius:6px;overflow:hidden;width:80px;height:80px;flex-shrink:0">
-      <img src="${img.url}" width="80" height="80" style="width:80px;height:80px;object-fit:cover;display:block"/>
+function setCatalogImgPreview(url) {
+  const preview = $('catalogImgPreview');
+  if (!preview) return;
+  if (url) {
+    preview.innerHTML = `<div style="position:relative;display:inline-block">
+      <img src="${url}" style="width:110px;height:110px;object-fit:cover;border-radius:7px;display:block;border:2px solid var(--grey2)"/>
+      <button type="button" id="catalogImgRemove" style="position:absolute;top:3px;right:3px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
     </div>`;
-  }).join('');
-  if (selectedUrl) hidden.value = selectedUrl;
-  else { hidden.value = imgs[0]?.url || ''; picker.querySelector('.catalog-img-opt')?.style.setProperty('border-color','var(--red)'); }
-
-  picker.querySelectorAll('.catalog-img-opt').forEach(el => {
-    el.addEventListener('click', () => {
-      picker.querySelectorAll('.catalog-img-opt').forEach(x => { x.style.borderColor = 'var(--grey2)'; x.classList.remove('selected'); });
-      el.style.borderColor = 'var(--red)';
-      el.classList.add('selected');
-      hidden.value = el.dataset.url;
-    });
-  });
+    $('catalogImgRemove')?.addEventListener('click', () => { $('catalogImgUrl').value = ''; setCatalogImgPreview(''); });
+  } else {
+    preview.innerHTML = '';
+  }
 }
 
 $('addCatalogBtn')?.addEventListener('click', () => {
   $('catalogItemId').value = '';
   $('catalogImgUrl').value = '';
-  $('catalogImgPickerWrap').style.display = 'none';
+  setCatalogImgPreview('');
   populateCatalogProductSelect();
   catalogSS?.clear();
   $('catalogFormTitle').textContent = 'Agregar al catálogo';
   $('catalogModal').classList.add('open');
 });
 
-// Cuando se elige un producto, mostrar el picker de imágenes
-document.getElementById('catalogProdProduct')?.addEventListener('change', () => {
-  const pid = $('catalogProdProduct').value;
-  if (pid) renderCatalogImgPicker(pid, '');
-  else $('catalogImgPickerWrap').style.display = 'none';
+$('catalogUploadBtn')?.addEventListener('click', () => $('hiddenCatalogImgInput').click());
+
+$('hiddenCatalogImgInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const path = `catalog/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
+  loading(true);
+  const { error } = await supabase.storage.from('product-images').upload(path, file);
+  loading(false);
+  if (error) { alert('Error: ' + error.message); return; }
+  const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
+  $('catalogImgUrl').value = publicUrl;
+  setCatalogImgPreview(publicUrl);
+  e.target.value = '';
 });
-// MutationObserver para detectar cambio en el hidden input del searchSelect
-(function watchCatalogProduct() {
-  const hidden = $('catalogProdProduct');
-  if (!hidden) return;
-  let last = '';
-  setInterval(() => {
-    if (hidden.value !== last) {
-      last = hidden.value;
-      if (last) renderCatalogImgPicker(last, '');
-      else $('catalogImgPickerWrap').style.display = 'none';
-    }
-  }, 200);
-})();
 
 window.editCatalogItem = (id) => {
   const it = catalogItems.find(x => x.id === id);
   if (!it) return;
   $('catalogItemId').value = it.id;
+  $('catalogImgUrl').value = it.image_url || '';
+  setCatalogImgPreview(it.image_url || '');
   populateCatalogProductSelect();
   catalogSS?.setValue(it.product_id || '');
-  setTimeout(() => renderCatalogImgPicker(it.product_id, it.image_url || ''), 50);
   $('catalogFormTitle').textContent = 'Editar entrada del catálogo';
   $('catalogModal').classList.add('open');
 };
