@@ -216,7 +216,6 @@ pmodalImg.addEventListener('touchend', e => {
 window.openCatalogModal = (card) => {
   const rawUrls = card.getAttribute('data-urls') || '';
   modalUrls = rawUrls.split('|').filter(Boolean);
-  document.getElementById('pmodalDebug').textContent = 'URLs: ' + modalUrls.length + ' | raw len: ' + rawUrls.length;
   pmodalBrand.textContent = card.getAttribute('data-brand') || '';
   pmodalName.textContent = card.getAttribute('data-name') || '';
   modalIdx = 0;
@@ -226,6 +225,7 @@ window.openCatalogModal = (card) => {
     ? modalUrls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}"></span>`).join('')
     : '';
   pmodalDots.style.display = multi ? 'flex' : 'none';
+  document.getElementById('pmodalDebug').textContent = 'URLs:' + modalUrls.length + ' dots en DOM:' + pmodalDots.querySelectorAll('.pmodal-dot').length + ' display:' + pmodalDots.style.display;
   pmodalPrev.style.display = 'none';
   pmodalNext.style.display = multi ? 'flex' : 'none';
   // click en dots
