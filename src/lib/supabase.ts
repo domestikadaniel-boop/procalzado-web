@@ -324,6 +324,35 @@ export async function getPromoProducts(): Promise<RecommendedProduct[]> {
   return (data as RecommendedProduct[]) || [];
 }
 
+// ── Catálogo ──
+export interface CatalogItem {
+  id: string;
+  product_id: string;
+  image_url: string | null;
+  display_order: number;
+  active: boolean;
+  products?: Product;
+}
+
+export async function getCatalogItems(): Promise<CatalogItem[]> {
+  const { data, error } = await supabase
+    .from('catalog_items')
+    .select(`
+      *,
+      products (
+        id, slug, name,
+        brands ( name ),
+        categories!products_category_id_fkey ( id, slug, name, parent_id ),
+        product_categories ( category_id, is_primary, categories ( id, slug, name, parent_id ) ),
+        product_images ( url, is_primary, display_order )
+      )
+    `)
+    .eq('active', true)
+    .order('display_order', { ascending: true });
+  if (error) { console.error('Error fetching catalog:', error); return []; }
+  return (data as CatalogItem[]) || [];
+}
+
 export async function getSettings(keys: string[]): Promise<Record<string,string>> {
   const { data, error } = await supabase.from('site_settings').select('key,value').in('key', keys);
   if (error) { console.error('Error fetching settings:', error); return {}; }

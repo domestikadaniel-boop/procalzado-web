@@ -224,6 +224,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab" data-tab="recommended">Recomendados</button>
     <button class="tab" data-tab="promos">Promos</button>
     <button class="tab" data-tab="promopage">Promoción</button>
+    <button class="tab" data-tab="catalog">Catálogo</button>
     <button class="tab" data-tab="settings">Configuración</button>
   </div>
   <div class="admin-body">
@@ -263,6 +264,14 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
       </div>
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Productos de la página de Promoción, cada uno con su motivo (arrastra para reordenar)</span><button class="btn-add" id="addPromoProdBtn">+ Agregar producto</button></div>
       <div class="product-table"><table><thead><tr><th style="width:24px"></th><th style="width:60px">Img</th><th>Producto</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody id="promoProdTableBody"></tbody></table></div>
+    </div>
+
+    <div id="tab-catalog" style="display:none">
+      <div class="toolbar">
+        <span style="font-size:.85rem;color:var(--muted)">Productos del <strong>catálogo público</strong>. Elige cuáles salen y con qué foto. Arrastra para reordenar. <a href="/catalogo" target="_blank" style="color:var(--red)">Ver catálogo →</a></span>
+        <button class="btn-add" id="addCatalogBtn">+ Agregar producto</button>
+      </div>
+      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th style="width:70px">Foto</th><th>Producto</th><th>Categoría</th><th>Acciones</th></tr></thead><tbody id="catalogTableBody"></tbody></table></div>
     </div>
 
     <div id="tab-settings" style="display:none">
@@ -404,6 +413,33 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
   </div>
 </div>
 
+<!-- CATALOG MODAL -->
+<div class="modal-bg" id="catalogModal">
+  <div class="form-modal" style="max-width:520px">
+    <div class="form-header"><h3 id="catalogFormTitle">Agregar al catálogo</h3><button class="form-close" onclick="document.getElementById('catalogModal').classList.remove('open')">&times;</button></div>
+    <div class="form-body">
+      <input type="hidden" id="catalogItemId"/>
+      <div class="field"><label>Producto *</label>
+        <div class="search-select" id="catalogProdSearchWrap">
+          <input type="text" class="search-select-input" id="catalogProdSearch" placeholder="Buscar producto..." autocomplete="off"/>
+          <input type="hidden" id="catalogProdProduct"/>
+          <div class="search-select-list" id="catalogProdList"></div>
+        </div>
+      </div>
+      <div class="field" id="catalogImgPickerWrap" style="display:none">
+        <label>Foto a mostrar</label>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Selecciona una imagen del producto. Si no eliges ninguna se usará la principal.</p>
+        <div id="catalogImgPicker" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+        <input type="hidden" id="catalogImgUrl"/>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="document.getElementById('catalogModal').classList.remove('open')">Cancelar</button>
+      <button class="btn-save" id="catalogSaveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <input type="file" id="hiddenColorInput" accept="image/*" multiple style="display:none"/>
 
 <input type="file" id="hiddenPromoImageInput" accept="image/*" style="display:none"/>
@@ -537,7 +573,7 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','recommended','promos','promopage','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','recommended','promos','promopage','catalog','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
 }));
 
 // LOAD
@@ -569,7 +605,7 @@ async function loadData(){
     }
   }
 
-  renderProducts();renderBrands();renderCategories();renderRecommended();renderPromoProducts();await loadPromos();await loadPromoPage();populateSelects();loading(false);
+  renderProducts();renderBrands();renderCategories();renderRecommended();renderPromoProducts();await loadPromos();await loadPromoPage();await loadCatalog();populateSelects();loading(false);
 }
 
 function renderProducts(filter=''){
@@ -1366,6 +1402,145 @@ $('settingsSaveBtn')?.addEventListener('click', async () => {
 async function showAdminWithSettings(email) {
   await loadSettings();
 }
+
+// ── CATÁLOGO ──
+let catalogItems = [];
+let catalogSS = null;
+
+async function loadCatalog() {
+  const { data } = await supabase.from('catalog_items')
+    .select('*, products(id,name,brands(name),categories!products_category_id_fkey(name),product_images(url,is_primary,display_order))')
+    .order('display_order', { ascending: true });
+  catalogItems = data || [];
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const tbody = $('catalogTableBody');
+  if (!tbody) return;
+  if (!catalogItems.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos. Click "+ Agregar producto".</td></tr>';
+    return;
+  }
+  tbody.innerHTML = catalogItems.map((it, idx) => {
+    const p = it.products;
+    const img = it.image_url || p?.product_images?.find(i => i.is_primary)?.url || p?.product_images?.[0]?.url;
+    const catName = p?.categories?.name || '-';
+    return `<tr draggable="true" data-id="${it.id}" data-idx="${idx}" class="draggable-row">
+      <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center">⋮⋮</td>
+      <td style="padding:.5rem">${img ? `<img src="${img}" width="56" height="56" style="width:56px;height:56px;object-fit:cover;border-radius:5px;display:block"/>` : '<span style="font-size:1.5rem">👢</span>'}</td>
+      <td><strong>${p?.name || '(eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name || ''}</span></td>
+      <td style="font-size:.82rem;color:var(--muted)">${catName}</td>
+      <td class="actions-cell">
+        <button class="action-btn edit" onclick="window.editCatalogItem('${it.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg></button>
+        <button class="action-btn delete" onclick="window.deleteCatalogItem('${it.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button>
+      </td>
+    </tr>`;
+  }).join('');
+  setupDragAndDrop('catalogTableBody', catalogItems, 'catalog_items');
+}
+
+function populateCatalogProductSelect() {
+  const items = products.map(p => ({ value: p.id, label: p.name, brand: p.brands?.name || '' }));
+  catalogSS = initSearchSelect('catalogProdSearch', 'catalogProdList', 'catalogProdSearchWrap', 'catalogProdProduct', items);
+}
+
+function renderCatalogImgPicker(productId, selectedUrl = '') {
+  const wrap = $('catalogImgPickerWrap');
+  const picker = $('catalogImgPicker');
+  const hidden = $('catalogImgUrl');
+  const p = products.find(x => x.id === productId);
+  if (!p || !p.product_images?.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  const imgs = [...p.product_images].sort((a, b) => a.display_order - b.display_order);
+  picker.innerHTML = imgs.map(img => {
+    const sel = img.url === selectedUrl;
+    return `<div class="catalog-img-opt ${sel ? 'selected' : ''}" data-url="${img.url}" style="cursor:pointer;border:3px solid ${sel ? 'var(--red)' : 'var(--grey2)'};border-radius:6px;overflow:hidden;width:80px;height:80px;flex-shrink:0">
+      <img src="${img.url}" width="80" height="80" style="width:80px;height:80px;object-fit:cover;display:block"/>
+    </div>`;
+  }).join('');
+  if (selectedUrl) hidden.value = selectedUrl;
+  else { hidden.value = imgs[0]?.url || ''; picker.querySelector('.catalog-img-opt')?.style.setProperty('border-color','var(--red)'); }
+
+  picker.querySelectorAll('.catalog-img-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      picker.querySelectorAll('.catalog-img-opt').forEach(x => { x.style.borderColor = 'var(--grey2)'; x.classList.remove('selected'); });
+      el.style.borderColor = 'var(--red)';
+      el.classList.add('selected');
+      hidden.value = el.dataset.url;
+    });
+  });
+}
+
+$('addCatalogBtn')?.addEventListener('click', () => {
+  $('catalogItemId').value = '';
+  $('catalogImgUrl').value = '';
+  $('catalogImgPickerWrap').style.display = 'none';
+  populateCatalogProductSelect();
+  catalogSS?.clear();
+  $('catalogFormTitle').textContent = 'Agregar al catálogo';
+  $('catalogModal').classList.add('open');
+});
+
+// Cuando se elige un producto, mostrar el picker de imágenes
+document.getElementById('catalogProdProduct')?.addEventListener('change', () => {
+  const pid = $('catalogProdProduct').value;
+  if (pid) renderCatalogImgPicker(pid, '');
+  else $('catalogImgPickerWrap').style.display = 'none';
+});
+// MutationObserver para detectar cambio en el hidden input del searchSelect
+(function watchCatalogProduct() {
+  const hidden = $('catalogProdProduct');
+  if (!hidden) return;
+  let last = '';
+  setInterval(() => {
+    if (hidden.value !== last) {
+      last = hidden.value;
+      if (last) renderCatalogImgPicker(last, '');
+      else $('catalogImgPickerWrap').style.display = 'none';
+    }
+  }, 200);
+})();
+
+window.editCatalogItem = (id) => {
+  const it = catalogItems.find(x => x.id === id);
+  if (!it) return;
+  $('catalogItemId').value = it.id;
+  populateCatalogProductSelect();
+  catalogSS?.setValue(it.product_id || '');
+  setTimeout(() => renderCatalogImgPicker(it.product_id, it.image_url || ''), 50);
+  $('catalogFormTitle').textContent = 'Editar entrada del catálogo';
+  $('catalogModal').classList.add('open');
+};
+
+window.deleteCatalogItem = async (id) => {
+  if (!confirm('¿Quitar del catálogo?')) return;
+  loading(true);
+  await supabase.from('catalog_items').delete().eq('id', id);
+  await loadCatalog();
+  loading(false);
+  showToast('Quitado del catálogo');
+};
+
+$('catalogSaveBtn')?.addEventListener('click', async () => {
+  const product_id = $('catalogProdProduct').value;
+  if (!product_id) { alert('Selecciona un producto'); return; }
+  const d = { product_id, image_url: $('catalogImgUrl').value || null, active: true };
+  loading(true);
+  const id = $('catalogItemId').value;
+  let error;
+  if (id) {
+    ({ error } = await supabase.from('catalog_items').update(d).eq('id', id));
+  } else {
+    d.display_order = catalogItems.length;
+    ({ error } = await supabase.from('catalog_items').insert(d));
+  }
+  loading(false);
+  if (error) { alert('No se pudo guardar:\n\n' + error.message); return; }
+  $('catalogModal').classList.remove('open');
+  await loadCatalog();
+  showToast('Catálogo actualizado ✓');
+});
 
 checkAuth();
 

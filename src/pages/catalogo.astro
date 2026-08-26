@@ -1,0 +1,111 @@
+---
+import { getCatalogItems, getCategories } from '../lib/supabase';
+
+const items = await getCatalogItems();
+const allCats = await getCategories();
+
+// Agrupar por categoría madre
+const parentCats = allCats.filter(c => !c.parent_id);
+
+// Para cada ítem, resolver su categoría madre
+function getParentCatId(item: any): string | null {
+  const p = item.products;
+  if (!p) return null;
+  // Buscar en product_categories
+  const pc = p.product_categories?.find((pc: any) => pc.is_primary) || p.product_categories?.[0];
+  const cat = pc?.categories || p.categories;
+  if (!cat) return null;
+  return cat.parent_id || cat.id; // si ya es madre, usar su id
+}
+
+// Grupos: { cat, items[] }
+const groups: { cat: any; items: any[] }[] = parentCats.map(cat => {
+  const children = allCats.filter(c => c.parent_id === cat.id).map(c => c.id);
+  const groupItems = items.filter(it => {
+    const pid = getParentCatId(it);
+    return pid === cat.id || children.includes(pid || '');
+  });
+  return { cat, items: groupItems };
+}).filter(g => g.items.length > 0);
+
+// Items sin categoría reconocida
+const assignedIds = new Set(groups.flatMap(g => g.items.map((i: any) => i.id)));
+const ungrouped = items.filter(i => !assignedIds.has(i.id));
+if (ungrouped.length) groups.push({ cat: { id: '__otros', name: 'Otros' }, items: ungrouped });
+---
+
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Catálogo — Procalzado</title>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600;700&family=Bebas+Neue&display=swap"/>
+<style>
+:root{--red:#FF0000;--black:#000;--white:#fff;--grey:#F2F2F2;--grey2:#E5E5E5;--muted:#4A4A4A;--fd:'Bebas Neue','Barlow',sans-serif;--fb:'Barlow',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fb);background:var(--white);color:var(--black)}
+.catalog-header{background:var(--black);color:var(--white);padding:1.4rem clamp(1rem,4vw,3rem);display:flex;align-items:center;gap:1.2rem;border-bottom:4px solid var(--red)}
+.catalog-header img{height:28px;width:auto;display:block}
+.catalog-header h1{font-family:var(--fd);font-size:1.5rem;letter-spacing:.06em}
+.catalog-body{max-width:1400px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 4rem}
+.cat-section{margin-bottom:3rem}
+.cat-title{font-family:var(--fd);font-size:2rem;letter-spacing:.05em;margin-bottom:1.2rem;padding-bottom:.5rem;border-bottom:3px solid var(--red);display:inline-block}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.product-card{background:var(--grey);border-radius:8px;overflow:hidden}
+.product-card-img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--grey2)}
+.product-card-img-placeholder{width:100%;aspect-ratio:1;background:var(--grey2);display:flex;align-items:center;justify-content:center;font-size:3rem}
+.product-card-body{padding:.6rem .7rem .8rem}
+.product-card-brand{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:.1rem}
+.product-card-name{font-family:var(--fd);font-size:1.05rem;letter-spacing:.03em;line-height:1.15}
+@media print{
+  .catalog-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cat-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .product-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:480px){
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}
+}
+</style>
+</head>
+<body>
+
+<div class="catalog-header">
+  <img src="/logotipo-rojo.png" alt="Procalzado"/>
+  <h1>CATÁLOGO DE PRODUCTOS</h1>
+</div>
+
+<div class="catalog-body">
+  {groups.length === 0 ? (
+    <p style="text-align:center;padding:4rem;color:var(--muted)">El catálogo está vacío. Agrega productos desde el panel de administración.</p>
+  ) : groups.map(({ cat, items }) => (
+    <div class="cat-section">
+      <div class="cat-title">{cat.name}</div>
+      <div class="product-grid">
+        {items.map((it: any) => {
+          const p = it.products;
+          const img = it.image_url || p?.product_images?.find((i: any) => i.is_primary)?.url || p?.product_images?.[0]?.url || null;
+          return (
+            <div class="product-card">
+              {img
+                ? <img src={img} alt={p?.name || ''} class="product-card-img" loading="lazy"/>
+                : <div class="product-card-img-placeholder">👢</div>
+              }
+              <div class="product-card-body">
+                {p?.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
+                <div class="product-card-name">{p?.name}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ))}
+</div>
+
+</body>
+</html>
