@@ -110,6 +110,9 @@ const schemaProduct = {
       {(product as any).per_color_prices && (
         <script type="application/json" id="colorPricesData" set:html={JSON.stringify((product as any).color_prices || {})}></script>
       )}
+      {(product as any).per_color_prices && (
+        <script type="application/json" id="colorSalePricesData" set:html={JSON.stringify((product as any).color_sale_prices || {})}></script>
+      )}
     </div>
 
     <!-- INFO -->
@@ -247,6 +250,8 @@ const schemaProduct = {
   // Precios por color
   const colorPricesEl = document.getElementById('colorPricesData');
   const colorPrices = colorPricesEl ? JSON.parse(colorPricesEl.textContent) : null;
+  const colorSalePricesEl = document.getElementById('colorSalePricesData');
+  const colorSalePrices = colorSalePricesEl ? JSON.parse(colorSalePricesEl.textContent) : null;
 
   function updatePriceForColor(color) {
     if (!colorPrices) return;
@@ -254,10 +259,23 @@ const schemaProduct = {
     const priceDisplay = document.getElementById('priceDisplay');
     if (!priceDisplay) return;
     const colorPrice = colorPrices[color];
+    const colorSale = colorSalePrices ? colorSalePrices[color] : null;
     if (colorPrice != null) {
-      const fmt = '$' + Number(colorPrice).toLocaleString('es-CO');
-      priceDisplay.innerHTML = `<span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${fmt}</span><span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>`;
-      if (btnAdd) btnAdd.dataset.price = String(colorPrice);
+      const fmt = n => '$' + Number(n).toLocaleString('es-CO');
+      if (colorSale != null) {
+        const pct = Math.round((1 - colorSale / colorPrice) * 100);
+        priceDisplay.innerHTML =
+          `<span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${fmt(colorPrice)}</span>` +
+          `<span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${fmt(colorSale)}</span>` +
+          `<span style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-${pct}%</span>` +
+          `<span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>`;
+        if (btnAdd) btnAdd.dataset.price = String(colorSale);
+      } else {
+        priceDisplay.innerHTML =
+          `<span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${fmt(colorPrice)}</span>` +
+          `<span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>`;
+        if (btnAdd) btnAdd.dataset.price = String(colorPrice);
+      }
     } else {
       priceDisplay.innerHTML = '<div style="font-style:italic;color:var(--muted)">Precio: consultar por WhatsApp</div>';
       if (btnAdd) btnAdd.dataset.price = '';

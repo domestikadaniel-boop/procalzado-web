@@ -817,10 +817,18 @@ function renderColors(){
       </div>
       ${sizesHtml}
       ${perColorPrices ? `
-      <div style="margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--grey2);display:flex;align-items:center;gap:.6rem">
-        <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);white-space:nowrap">Precio (COP)</label>
-        <input type="number" placeholder="0" value="${c.price||''}" data-action="price" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:150px"/>
-        <small style="color:var(--muted);font-size:.72rem">Si se deja vacío, se usa el precio general del producto.</small>
+      <div style="margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--grey2)">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem">
+          <div>
+            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.2rem">Precio (COP)</label>
+            <input type="number" placeholder="0" value="${c.price||''}" data-action="price" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:140px"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.2rem">Precio rebajado (oferta)</label>
+            <input type="number" placeholder="Opcional" value="${c.salePrice||''}" data-action="salePrice" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:140px"/>
+          </div>
+          <small style="color:var(--muted);font-size:.72rem;padding-bottom:.5rem">Si se dejan vacíos, se usa el precio general.</small>
+        </div>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -855,6 +863,7 @@ function handleColorChange(e){
   if(action==='hex'){formColors[idx].hex=e.target.value; renderColors();}
   if(action==='hex2color'){formColors[idx].hex2=e.target.value; renderColors();}
   if(action==='price')formColors[idx].price=e.target.value?parseFloat(e.target.value):null;
+  if(action==='salePrice')formColors[idx].salePrice=e.target.value?parseFloat(e.target.value):null;
 }
 function handleColorClick(e){
   const action=e.target.dataset.action;
@@ -887,7 +896,7 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePrice:null});
   renderColors();
 });
 
@@ -990,10 +999,10 @@ function openProductForm(p=null){
   $('perColorPricesToggle').checked = perColorPrices;
   syncGlobalPriceFields();
   const colorPricesMap = (p?.color_prices && typeof p.color_prices === 'object') ? p.color_prices : {};
-  // Asignar precio guardado a cada color
-  formColors.forEach(c => { c.price = colorPricesMap[c.name] || null; });
+  const colorSalePricesMap = (p?.color_sale_prices && typeof p.color_sale_prices === 'object') ? p.color_sale_prices : {};
+  formColors.forEach(c => { c.price = colorPricesMap[c.name] || null; c.salePrice = colorSalePricesMap[c.name] || null; });
 
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null});
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePrice:null});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -1018,10 +1027,14 @@ $('formSaveBtn').addEventListener('click',async()=>{
 
   const selectedGenders = Array.from(document.querySelectorAll('[data-gender]:checked')).map(i=>i.value);
   const colorPricesObj = {};
+  const colorSalePricesObj = {};
   if (perColorPrices) {
-    formColors.filter(c=>c.name.trim()).forEach(c => { if (c.price != null) colorPricesObj[c.name.trim()] = c.price; });
+    formColors.filter(c=>c.name.trim()).forEach(c => {
+      if (c.price != null) colorPricesObj[c.name.trim()] = c.price;
+      if (c.salePrice != null) colorSalePricesObj[c.name.trim()] = c.salePrice;
+    });
   }
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:$('pSalePrice').value?parseFloat($('pSalePrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,disable_buy_button:$('pDisableBuyBtn').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,active:true};
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:$('pSalePrice').value?parseFloat($('pSalePrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,disable_buy_button:$('pDisableBuyBtn').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,color_sale_prices:colorSalePricesObj,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}

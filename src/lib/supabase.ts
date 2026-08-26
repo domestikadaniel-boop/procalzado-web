@@ -45,6 +45,8 @@ export interface Product {
   per_color_sizes: boolean;
   per_color_prices: boolean;
   color_prices: Record<string, number>;
+  color_sale_prices: Record<string, number>;
+  disable_buy_button: boolean;
   featured: boolean;
   active: boolean;
   // Joins
