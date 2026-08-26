@@ -127,10 +127,9 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
             ? it.image_urls
             : (it.image_url ? [it.image_url]
               : [p?.product_images?.find((i: any) => i.is_primary)?.url || p?.product_images?.[0]?.url].filter(Boolean));
-          const encodedUrls = JSON.stringify(urls).replace(/"/g,'&quot;');
           return (
             <div class="product-card" style="cursor:pointer"
-              data-urls={encodedUrls}
+              data-urls={JSON.stringify(urls)}
               data-brand={p?.brands?.name || ''}
               data-name={p?.name || ''}
               onclick="window.openCatalogModal(this)">
@@ -164,7 +163,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
   </div>
 </div>
 
-<script>
+<script is:inline>
 // Carpetas colapsables
 document.querySelectorAll('.cat-folder').forEach(btn => {
   btn.addEventListener('click', () => {
