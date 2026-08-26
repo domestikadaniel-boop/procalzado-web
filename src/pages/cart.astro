@@ -187,7 +187,7 @@ const pageTitle = 'Tu Carrito | Procalzado';
       btn.style.cursor = 'not-allowed';
       if (msgEl) {
         const names = blocked.map(i => `<strong>${i.brand ? i.brand + ' ' : ''}${i.name}</strong>`).join(', ');
-        msgEl.innerHTML = `⚠️ ${names} ${blocked.length === 1 ? 'solo puede' : 'solo pueden'} cotizarse por WhatsApp. Retíralo del carrito para poder comprar el resto en línea.`;
+        msgEl.innerHTML = `${names} ${blocked.length === 1 ? 'solo puede' : 'solo pueden'} cotizarse por WhatsApp. Retíralo del carrito para poder comprar el resto en línea.`;
         msgEl.style.display = '';
       }
     } else {
