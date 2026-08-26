@@ -24,6 +24,7 @@ const pageTitle = 'Tu Carrito | Procalzado';
       </div>
       <p class="cart-note">Para pedidos al por mayor consultar a través de WhatsApp.</p>
       <p class="cart-note cart-note-shipping">El costo de envío no está incluido y lo paga el comprador a la transportadora al recibir el producto, según tarifa de la transportadora.</p>
+      <div id="cartBuyBlockedMsg" style="display:none;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:6px;padding:.7rem .9rem;font-size:.8rem;color:#7c4a03;line-height:1.5;margin-bottom:.8rem"></div>
       <div class="cart-actions">
         <button class="cart-buy-btn cart-buy-btn-online" id="cartPagoOnline">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
@@ -154,6 +155,8 @@ const pageTitle = 'Tu Carrito | Procalzado';
       if (action === 'rm') cart.splice(idx, 1);
       save(); render(); updateBadge();
     }));
+
+    updateBuyButton();
   }
 
   function updateBadge() {
@@ -165,6 +168,36 @@ const pageTitle = 'Tu Carrito | Procalzado';
   document.getElementById('cartPageClear')?.addEventListener('click', () => {
     if (confirm('¿Vaciar todo el carrito?')) { cart = []; save(); render(); updateBadge(); }
   });
+
+  function updateBuyButton() {
+    const btn = document.getElementById('cartPagoOnline');
+    const msgEl = document.getElementById('cartBuyBlockedMsg');
+    if (!btn) return;
+    const blocked = cart.filter(i => i.disableBuy);
+    const allBlocked = blocked.length === cart.length && cart.length > 0;
+    const someBlocked = blocked.length > 0 && !allBlocked;
+
+    if (allBlocked) {
+      btn.style.display = 'none';
+      if (msgEl) msgEl.style.display = 'none';
+    } else if (someBlocked) {
+      btn.style.display = '';
+      btn.disabled = true;
+      btn.style.opacity = '.45';
+      btn.style.cursor = 'not-allowed';
+      if (msgEl) {
+        const names = blocked.map(i => `<strong>${i.brand ? i.brand + ' ' : ''}${i.name}</strong>`).join(', ');
+        msgEl.innerHTML = `⚠️ ${names} ${blocked.length === 1 ? 'solo puede' : 'solo pueden'} cotizarse por WhatsApp. Retíralo del carrito para poder comprar el resto en línea.`;
+        msgEl.style.display = '';
+      }
+    } else {
+      btn.style.display = '';
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.cursor = '';
+      if (msgEl) msgEl.style.display = 'none';
+    }
+  }
 
   document.getElementById('cartPagoOnline')?.addEventListener('click', () => {
     if (cart.length === 0) return;
