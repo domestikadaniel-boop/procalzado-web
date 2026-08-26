@@ -91,10 +91,9 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .pmodal-bg.open{display:flex}
 .pmodal{background:var(--white);border-radius:12px;max-width:480px;width:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
 .pmodal-close{position:absolute;top:.6rem;right:.7rem;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
-/* Carrusel controlado por transform */
-.pmodal-stage{position:relative;width:100%;background:#fff;overflow:hidden;height:min(75vw,400px)}
-.pmodal-track{display:flex;height:100%;transition:transform .3s ease;will-change:transform}
-.pmodal-img{flex:0 0 100%;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+/* Imagen única, navegación por src */
+.pmodal-stage{position:relative;width:100%;background:#fff;height:min(75vw,400px)}
+.pmodal-img{width:100%;height:100%;object-fit:contain;display:block}
 .pmodal-arr{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:1.4rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s}
 .pmodal-arr:hover{background:rgba(0,0,0,.7)}
 .pmodal-arr-prev{left:8px}
@@ -160,7 +159,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
   <div class="pmodal">
     <button class="pmodal-close" onclick="document.getElementById('pmodal').classList.remove('open')">×</button>
     <div class="pmodal-stage">
-      <div class="pmodal-track" id="pmodalTrack"></div>
+      <img class="pmodal-img" id="pmodalImg" src="" alt=""/>
       <button class="pmodal-arr pmodal-arr-prev" id="pmodalPrev">&#8249;</button>
       <button class="pmodal-arr pmodal-arr-next" id="pmodalNext">&#8250;</button>
     </div>
@@ -186,52 +185,49 @@ document.querySelectorAll('.cat-folder').forEach(btn => {
 
 // Modal de producto
 const pmodal = document.getElementById('pmodal');
-const pmodalTrack = document.getElementById('pmodalTrack');
+const pmodalImg = document.getElementById('pmodalImg');
 const pmodalDots = document.getElementById('pmodalDots');
 const pmodalBrand = document.getElementById('pmodalBrand');
 const pmodalName = document.getElementById('pmodalName');
 const pmodalPrev = document.getElementById('pmodalPrev');
 const pmodalNext = document.getElementById('pmodalNext');
+let modalUrls = [];
 let modalIdx = 0;
-let modalTotal = 0;
 let modalTouchX = 0;
 
 function modalGo(idx) {
-  modalIdx = Math.max(0, Math.min(idx, modalTotal - 1));
-  pmodalTrack.style.transform = `translateX(-${modalIdx * 100}%)`;
+  modalIdx = Math.max(0, Math.min(idx, modalUrls.length - 1));
+  pmodalImg.src = modalUrls[modalIdx];
   pmodalDots.querySelectorAll('.pmodal-dot').forEach((d, i) => d.classList.toggle('active', i === modalIdx));
-  pmodalPrev.style.display = modalTotal > 1 && modalIdx > 0 ? 'flex' : 'none';
-  pmodalNext.style.display = modalTotal > 1 && modalIdx < modalTotal - 1 ? 'flex' : 'none';
+  pmodalPrev.style.display = modalIdx > 0 ? 'flex' : 'none';
+  pmodalNext.style.display = modalIdx < modalUrls.length - 1 ? 'flex' : 'none';
 }
 
 pmodalPrev.addEventListener('click', () => modalGo(modalIdx - 1));
 pmodalNext.addEventListener('click', () => modalGo(modalIdx + 1));
 
-pmodalTrack.addEventListener('touchstart', e => { modalTouchX = e.touches[0].clientX; }, { passive: true });
-pmodalTrack.addEventListener('touchend', e => {
+pmodalImg.addEventListener('touchstart', e => { modalTouchX = e.touches[0].clientX; }, { passive: true });
+pmodalImg.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - modalTouchX;
   if (Math.abs(dx) > 40) modalGo(dx < 0 ? modalIdx + 1 : modalIdx - 1);
 }, { passive: true });
 
 window.openCatalogModal = (card) => {
-  const urls = JSON.parse(card.getAttribute('data-urls') || '[]');
+  modalUrls = JSON.parse(card.getAttribute('data-urls') || '[]');
   pmodalBrand.textContent = card.getAttribute('data-brand') || '';
   pmodalName.textContent = card.getAttribute('data-name') || '';
-  pmodalTrack.innerHTML = urls.map(u => `<img src="${u}" class="pmodal-img"/>`).join('');
-  modalTotal = urls.length;
   modalIdx = 0;
-  pmodalTrack.style.transition = 'none';
-  pmodalTrack.style.transform = 'translateX(0)';
-  setTimeout(() => { pmodalTrack.style.transition = 'transform .3s ease'; }, 30);
-  if (urls.length > 1) {
-    pmodalDots.innerHTML = urls.map((_, i) => `<button class="pmodal-dot${i===0?' active':''}" onclick="modalGo(${i})"></button>`).join('');
+  pmodalImg.src = modalUrls[0] || '';
+  if (modalUrls.length > 1) {
+    pmodalDots.innerHTML = modalUrls.map((_, i) => `<button class="pmodal-dot${i===0?' active':''}" onclick="modalGo(${i})"></button>`).join('');
     pmodalDots.style.display = 'flex';
+    pmodalNext.style.display = 'flex';
   } else {
     pmodalDots.innerHTML = '';
     pmodalDots.style.display = 'none';
+    pmodalNext.style.display = 'none';
   }
   pmodalPrev.style.display = 'none';
-  pmodalNext.style.display = urls.length > 1 ? 'flex' : 'none';
   pmodal.classList.add('open');
 };
 
