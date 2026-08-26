@@ -93,7 +93,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .pmodal-close{position:absolute;top:.6rem;right:.7rem;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1}
 .pmodal-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;flex-shrink:0}
 .pmodal-imgs::-webkit-scrollbar{display:none}
-.pmodal-img{flex:0 0 100%;min-width:100%;aspect-ratio:1;object-fit:cover;scroll-snap-align:start}
+.pmodal-img{flex:0 0 100%;min-width:100%;aspect-ratio:1;object-fit:contain;background:#fff;scroll-snap-align:start}
 .pmodal-dots{display:flex;justify-content:center;gap:5px;padding:.45rem 0 .2rem;flex-shrink:0}
 .pmodal-dot{width:7px;height:7px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer}
 .pmodal-dot.active{background:var(--red)}
@@ -134,7 +134,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
               data-name={p?.name || ''}
               onclick="window.openCatalogModal(this)">
               {urls.length > 0
-                ? <img src={urls[0]} alt={p?.name || ''} class="product-card-img" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;display:block"/>
+                ? <img src={urls[0]} alt={p?.name || ''} class="product-card-img" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;background:#fff;display:block"/>
                 : <div class="product-card-img-placeholder">👢</div>
               }
               <div class="product-card-body">
