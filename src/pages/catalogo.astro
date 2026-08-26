@@ -163,6 +163,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
       <button class="pmodal-arr pmodal-arr-prev" id="pmodalPrev">&#8249;</button>
       <button class="pmodal-arr pmodal-arr-next" id="pmodalNext">&#8250;</button>
     </div>
+    <div id="pmodalDebug" style="text-align:center;font-size:.8rem;color:red;padding:.2rem"></div>
     <div class="pmodal-dots" id="pmodalDots"></div>
     <div class="pmodal-body">
       <div class="pmodal-brand" id="pmodalBrand"></div>
@@ -213,7 +214,9 @@ pmodalImg.addEventListener('touchend', e => {
 }, { passive: true });
 
 window.openCatalogModal = (card) => {
-  modalUrls = (card.getAttribute('data-urls') || '').split('|').filter(Boolean);
+  const rawUrls = card.getAttribute('data-urls') || '';
+  modalUrls = rawUrls.split('|').filter(Boolean);
+  document.getElementById('pmodalDebug').textContent = 'URLs: ' + modalUrls.length + ' | raw len: ' + rawUrls.length;
   pmodalBrand.textContent = card.getAttribute('data-brand') || '';
   pmodalName.textContent = card.getAttribute('data-name') || '';
   modalIdx = 0;
