@@ -133,7 +133,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
               : [p?.product_images?.find((i: any) => i.is_primary)?.url || p?.product_images?.[0]?.url].filter(Boolean));
           return (
             <div class="product-card" style="cursor:pointer"
-              data-urls={JSON.stringify(urls)}
+              data-urls={urls.join('|')}
               data-brand={p?.brands?.name || ''}
               data-name={p?.name || ''}
               onclick="window.openCatalogModal(this)">
@@ -213,7 +213,7 @@ pmodalImg.addEventListener('touchend', e => {
 }, { passive: true });
 
 window.openCatalogModal = (card) => {
-  modalUrls = JSON.parse(card.getAttribute('data-urls') || '[]');
+  modalUrls = (card.getAttribute('data-urls') || '').split('|').filter(Boolean);
   pmodalBrand.textContent = card.getAttribute('data-brand') || '';
   pmodalName.textContent = card.getAttribute('data-name') || '';
   modalIdx = 0;
