@@ -199,7 +199,7 @@ let modalTouchX = 0;
 function modalGo(idx) {
   modalIdx = Math.max(0, Math.min(idx, modalUrls.length - 1));
   pmodalImg.src = modalUrls[modalIdx];
-  pmodalDots.querySelectorAll('.pmodal-dot').forEach((d, i) => d.classList.toggle('active', i === modalIdx));
+  pmodalDots.querySelectorAll('span[data-di]').forEach(d => { d.style.background = d.getAttribute('data-di') == modalIdx ? '#FF0000' : '#999'; });
   pmodalPrev.style.display = modalIdx > 0 ? 'flex' : 'none';
   pmodalNext.style.display = modalIdx < modalUrls.length - 1 ? 'flex' : 'none';
 }
@@ -222,14 +222,14 @@ window.openCatalogModal = (card) => {
   pmodalImg.src = modalUrls[0] || '';
   const multi = modalUrls.length > 1;
   pmodalDots.innerHTML = multi
-    ? modalUrls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}"></span>`).join('')
+    ? modalUrls.map((_, i) => `<span data-di="${i}" style="width:12px;height:12px;border-radius:50%;background:${i===0?'#FF0000':'#999'};display:block;flex-shrink:0;cursor:pointer;transition:background .2s"></span>`).join('')
     : '';
   pmodalDots.style.display = multi ? 'flex' : 'none';
   document.getElementById('pmodalDebug').textContent = 'URLs:' + modalUrls.length + ' dots en DOM:' + pmodalDots.querySelectorAll('.pmodal-dot').length + ' display:' + pmodalDots.style.display;
   pmodalPrev.style.display = 'none';
   pmodalNext.style.display = multi ? 'flex' : 'none';
   // click en dots
-  pmodalDots.querySelectorAll('.pmodal-dot').forEach((d, i) => {
+  pmodalDots.querySelectorAll('span[data-di]').forEach((d, i) => {
     d.addEventListener('click', () => modalGo(i));
   });
   pmodal.classList.add('open');
