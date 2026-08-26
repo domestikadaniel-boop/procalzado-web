@@ -99,7 +99,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .pmodal-arr-prev{left:8px}
 .pmodal-arr-next{right:8px}
 .pmodal-dots{display:flex;justify-content:center;gap:5px;padding:.45rem 0 .2rem}
-.pmodal-dot{width:8px;height:8px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer;border:none;padding:0;flex-shrink:0}
+.pmodal-dot{width:8px;height:8px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer;display:inline-block;flex-shrink:0}
 .pmodal-dot.active{background:var(--red)}
 .pmodal-body{padding:.8rem 1rem 1.1rem}
 .pmodal-brand{font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:.2rem}
@@ -219,7 +219,7 @@ window.openCatalogModal = (card) => {
   modalIdx = 0;
   pmodalImg.src = modalUrls[0] || '';
   if (modalUrls.length > 1) {
-    pmodalDots.innerHTML = modalUrls.map((_, i) => `<button class="pmodal-dot${i===0?' active':''}" onclick="modalGo(${i})"></button>`).join('');
+    pmodalDots.innerHTML = modalUrls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}" onclick="modalGo(${i})"></span>`).join('');
     pmodalDots.style.display = 'flex';
     pmodalNext.style.display = 'flex';
   } else {
