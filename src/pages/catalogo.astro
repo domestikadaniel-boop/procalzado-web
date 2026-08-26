@@ -89,15 +89,20 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 /* Modal */
 .pmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:1rem}
 .pmodal-bg.open{display:flex}
-.pmodal{background:var(--white);border-radius:12px;max-width:480px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;position:relative}
-.pmodal-close{position:absolute;top:.6rem;right:.7rem;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1}
-.pmodal-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;flex-shrink:0;height:min(70vw,360px)}
-.pmodal-imgs::-webkit-scrollbar{display:none}
-.pmodal-img{flex:0 0 100%;min-width:100%;width:100%;height:100%;object-fit:contain;background:#fff;scroll-snap-align:start;display:block}
-.pmodal-dots{display:flex;justify-content:center;gap:5px;padding:.45rem 0 .2rem;flex-shrink:0}
-.pmodal-dot{width:7px;height:7px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer}
+.pmodal{background:var(--white);border-radius:12px;max-width:480px;width:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.pmodal-close{position:absolute;top:.6rem;right:.7rem;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1}
+/* Carrusel controlado por transform */
+.pmodal-stage{position:relative;width:100%;background:#fff;overflow:hidden;height:min(75vw,400px)}
+.pmodal-track{display:flex;height:100%;transition:transform .3s ease;will-change:transform}
+.pmodal-img{flex:0 0 100%;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+.pmodal-arr{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:1.4rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s}
+.pmodal-arr:hover{background:rgba(0,0,0,.7)}
+.pmodal-arr-prev{left:8px}
+.pmodal-arr-next{right:8px}
+.pmodal-dots{display:flex;justify-content:center;gap:5px;padding:.45rem 0 .2rem}
+.pmodal-dot{width:7px;height:7px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer;border:none}
 .pmodal-dot.active{background:var(--red)}
-.pmodal-body{padding:.8rem 1rem 1.1rem;flex-shrink:0}
+.pmodal-body{padding:.8rem 1rem 1.1rem}
 .pmodal-brand{font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:.2rem}
 .pmodal-name{font-family:var(--fd);font-size:1.6rem;letter-spacing:.04em;line-height:1.15}
 </style>
@@ -154,7 +159,11 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 <div class="pmodal-bg" id="pmodal">
   <div class="pmodal">
     <button class="pmodal-close" onclick="document.getElementById('pmodal').classList.remove('open')">×</button>
-    <div class="pmodal-imgs" id="pmodalImgs"></div>
+    <div class="pmodal-stage">
+      <div class="pmodal-track" id="pmodalTrack"></div>
+      <button class="pmodal-arr pmodal-arr-prev" id="pmodalPrev">&#8249;</button>
+      <button class="pmodal-arr pmodal-arr-next" id="pmodalNext">&#8250;</button>
+    </div>
     <div class="pmodal-dots" id="pmodalDots"></div>
     <div class="pmodal-body">
       <div class="pmodal-brand" id="pmodalBrand"></div>
@@ -177,54 +186,62 @@ document.querySelectorAll('.cat-folder').forEach(btn => {
 
 // Modal de producto
 const pmodal = document.getElementById('pmodal');
-const pmodalImgs = document.getElementById('pmodalImgs');
+const pmodalTrack = document.getElementById('pmodalTrack');
 const pmodalDots = document.getElementById('pmodalDots');
 const pmodalBrand = document.getElementById('pmodalBrand');
 const pmodalName = document.getElementById('pmodalName');
-let modalStartX = 0;
+const pmodalPrev = document.getElementById('pmodalPrev');
+const pmodalNext = document.getElementById('pmodalNext');
+let modalIdx = 0;
+let modalTotal = 0;
+let modalTouchX = 0;
 
-function setupModalCarousel() {
-  const dots = pmodalDots.querySelectorAll('.pmodal-dot');
-  pmodalImgs.addEventListener('scroll', () => {
-    const idx = Math.round(pmodalImgs.scrollLeft / pmodalImgs.clientWidth);
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-  }, { passive: true });
-  dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => {
-      pmodalImgs.scrollTo({ left: i * pmodalImgs.clientWidth, behavior: 'smooth' });
-    });
-  });
-  pmodalImgs.addEventListener('touchstart', e => { modalStartX = e.touches[0].clientX; }, { passive: true });
-  pmodalImgs.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - modalStartX;
-    if (Math.abs(dx) < 30) return;
-    const w = pmodalImgs.clientWidth;
-    const cur = Math.round(pmodalImgs.scrollLeft / w);
-    pmodalImgs.scrollTo({ left: (dx < 0 ? cur + 1 : cur - 1) * w, behavior: 'smooth' });
-  }, { passive: true });
+function modalGo(idx) {
+  modalIdx = Math.max(0, Math.min(idx, modalTotal - 1));
+  pmodalTrack.style.transform = `translateX(-${modalIdx * 100}%)`;
+  pmodalDots.querySelectorAll('.pmodal-dot').forEach((d, i) => d.classList.toggle('active', i === modalIdx));
+  pmodalPrev.style.display = modalTotal > 1 && modalIdx > 0 ? 'flex' : 'none';
+  pmodalNext.style.display = modalTotal > 1 && modalIdx < modalTotal - 1 ? 'flex' : 'none';
 }
+
+pmodalPrev.addEventListener('click', () => modalGo(modalIdx - 1));
+pmodalNext.addEventListener('click', () => modalGo(modalIdx + 1));
+
+pmodalTrack.addEventListener('touchstart', e => { modalTouchX = e.touches[0].clientX; }, { passive: true });
+pmodalTrack.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - modalTouchX;
+  if (Math.abs(dx) > 40) modalGo(dx < 0 ? modalIdx + 1 : modalIdx - 1);
+}, { passive: true });
 
 window.openCatalogModal = (card) => {
   const urls = JSON.parse(card.getAttribute('data-urls') || '[]');
-  const brand = card.getAttribute('data-brand') || '';
-  const name = card.getAttribute('data-name') || '';
-  pmodalBrand.textContent = brand;
-  pmodalName.textContent = name;
-  pmodalImgs.innerHTML = urls.map(u => `<img src="${u}" class="pmodal-img" loading="lazy"/>`).join('');
-  pmodalImgs.scrollLeft = 0;
+  pmodalBrand.textContent = card.getAttribute('data-brand') || '';
+  pmodalName.textContent = card.getAttribute('data-name') || '';
+  pmodalTrack.innerHTML = urls.map(u => `<img src="${u}" class="pmodal-img"/>`).join('');
+  modalTotal = urls.length;
+  modalIdx = 0;
+  pmodalTrack.style.transition = 'none';
+  pmodalTrack.style.transform = 'translateX(0)';
+  setTimeout(() => { pmodalTrack.style.transition = 'transform .3s ease'; }, 30);
   if (urls.length > 1) {
-    pmodalDots.innerHTML = urls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}"></span>`).join('');
+    pmodalDots.innerHTML = urls.map((_, i) => `<button class="pmodal-dot${i===0?' active':''}" onclick="modalGo(${i})"></button>`).join('');
     pmodalDots.style.display = 'flex';
   } else {
     pmodalDots.innerHTML = '';
     pmodalDots.style.display = 'none';
   }
-  setupModalCarousel();
+  pmodalPrev.style.display = 'none';
+  pmodalNext.style.display = urls.length > 1 ? 'flex' : 'none';
   pmodal.classList.add('open');
 };
 
 pmodal.addEventListener('click', e => { if (e.target === pmodal) pmodal.classList.remove('open'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') pmodal.classList.remove('open'); });
+document.addEventListener('keydown', e => {
+  if (!pmodal.classList.contains('open')) return;
+  if (e.key === 'Escape') pmodal.classList.remove('open');
+  if (e.key === 'ArrowLeft') modalGo(modalIdx - 1);
+  if (e.key === 'ArrowRight') modalGo(modalIdx + 1);
+});
 </script>
 </body>
 </html>
