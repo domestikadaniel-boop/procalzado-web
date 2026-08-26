@@ -98,9 +98,9 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .pmodal-arr:hover{background:rgba(0,0,0,.7)}
 .pmodal-arr-prev{left:8px}
 .pmodal-arr-next{right:8px}
-.pmodal-dots{display:flex;justify-content:center;gap:5px;padding:.45rem 0 .2rem}
-.pmodal-dot{width:8px;height:8px;border-radius:50%;background:var(--grey2);transition:background .15s;cursor:pointer;display:inline-block;flex-shrink:0}
-.pmodal-dot.active{background:var(--red)}
+.pmodal-dots{display:flex;justify-content:center;align-items:center;gap:6px;padding:.55rem 0 .25rem;background:#fff}
+.pmodal-dot{width:9px;height:9px;border-radius:50%;background:#bbb;transition:background .2s;cursor:pointer;display:inline-block;flex-shrink:0}
+.pmodal-dot.active{background:#FF0000}
 .pmodal-body{padding:.8rem 1rem 1.1rem}
 .pmodal-brand{font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:.2rem}
 .pmodal-name{font-family:var(--fd);font-size:1.6rem;letter-spacing:.04em;line-height:1.15}
@@ -218,16 +218,17 @@ window.openCatalogModal = (card) => {
   pmodalName.textContent = card.getAttribute('data-name') || '';
   modalIdx = 0;
   pmodalImg.src = modalUrls[0] || '';
-  if (modalUrls.length > 1) {
-    pmodalDots.innerHTML = modalUrls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}" onclick="modalGo(${i})"></span>`).join('');
-    pmodalDots.style.display = 'flex';
-    pmodalNext.style.display = 'flex';
-  } else {
-    pmodalDots.innerHTML = '';
-    pmodalDots.style.display = 'none';
-    pmodalNext.style.display = 'none';
-  }
+  const multi = modalUrls.length > 1;
+  pmodalDots.innerHTML = multi
+    ? modalUrls.map((_, i) => `<span class="pmodal-dot${i===0?' active':''}"></span>`).join('')
+    : '';
+  pmodalDots.style.display = multi ? 'flex' : 'none';
   pmodalPrev.style.display = 'none';
+  pmodalNext.style.display = multi ? 'flex' : 'none';
+  // click en dots
+  pmodalDots.querySelectorAll('.pmodal-dot').forEach((d, i) => {
+    d.addEventListener('click', () => modalGo(i));
+  });
   pmodal.classList.add('open');
 };
 
