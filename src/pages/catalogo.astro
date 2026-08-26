@@ -98,7 +98,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .pmodal-arr:hover{background:rgba(0,0,0,.7)}
 .pmodal-arr-prev{left:8px}
 .pmodal-arr-next{right:8px}
-.pmodal-dots{display:flex!important;justify-content:center;align-items:center;gap:8px;padding:.6rem 0;background:#f0f0f0;min-height:28px}
+.pmodal-dots{display:flex;justify-content:center;align-items:center;gap:8px;padding:.6rem 0}
 .pmodal-dot{width:12px!important;height:12px!important;border-radius:50%!important;background:#999!important;cursor:pointer;display:block!important;flex-shrink:0}
 .pmodal-dot.active{background:#FF0000!important}
 .pmodal-body{padding:.8rem 1rem 1.1rem}
@@ -163,7 +163,6 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
       <button class="pmodal-arr pmodal-arr-prev" id="pmodalPrev">&#8249;</button>
       <button class="pmodal-arr pmodal-arr-next" id="pmodalNext">&#8250;</button>
     </div>
-    <div id="pmodalDebug" style="text-align:center;font-size:.8rem;color:red;padding:.2rem"></div>
     <div class="pmodal-dots" id="pmodalDots"></div>
     <div class="pmodal-body">
       <div class="pmodal-brand" id="pmodalBrand"></div>
@@ -225,7 +224,6 @@ window.openCatalogModal = (card) => {
     ? modalUrls.map((_, i) => `<span data-di="${i}" style="width:12px;height:12px;border-radius:50%;background:${i===0?'#FF0000':'#999'};display:block;flex-shrink:0;cursor:pointer;transition:background .2s"></span>`).join('')
     : '';
   pmodalDots.style.display = multi ? 'flex' : 'none';
-  document.getElementById('pmodalDebug').textContent = 'URLs:' + modalUrls.length + ' dots en DOM:' + pmodalDots.querySelectorAll('.pmodal-dot').length + ' display:' + pmodalDots.style.display;
   pmodalPrev.style.display = 'none';
   pmodalNext.style.display = multi ? 'flex' : 'none';
   // click en dots
