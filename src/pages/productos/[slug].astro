@@ -211,7 +211,7 @@ const schemaProduct = {
               Comprar
             </button>
           )}
-          <button type="button" class={(product as any).disable_buy_button ? 'btn-add-cart btn-buy-now-wide' : 'btn-add-cart btn-cart-sq'} id="btnAddCart"
+          <button type="button" class={(product as any).disable_buy_button ? 'btn-add-cart btn-buy-now-wide' : 'btn-add-cart btn-cart-sq'} style={(product as any).disable_buy_button ? 'background:var(--red)' : ''} id="btnAddCart"
             data-product-id={product.id}
             data-slug={product.slug}
             data-name={product.name}
