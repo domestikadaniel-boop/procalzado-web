@@ -73,9 +73,11 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 /* BODY */
 .catalog-body{max-width:1400px;margin:0 auto;padding:2.5rem clamp(1.2rem,4vw,3.5rem) 5rem}
 /* GRID DE CARPETAS — 2 por fila */
-.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem 2.5rem}
-.cat-section{min-width:0}
-.cat-section.cat-expanded{grid-column:1/-1}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem 2.5rem;align-items:start}
+/* CARPETA CERRADA — toda la sección actúa como tarjeta */
+.cat-section{min-width:0;border-radius:14px;padding:1.2rem;transition:box-shadow .22s,transform .22s;cursor:pointer}
+.cat-section:not(.cat-expanded):hover{box-shadow:0 8px 28px rgba(0,0,0,.11);transform:translateY(-2px)}
+.cat-section.cat-expanded{grid-column:1/-1;cursor:default;padding:0;border-radius:0}
 /* CABECERA DE CARPETA */
 .cat-folder{display:flex;align-items:center;gap:.6rem;padding:0;cursor:pointer;background:none;color:var(--black);user-select:none;border:none;width:100%;text-align:left;margin-bottom:.6rem}
 .cat-folder-icon{display:inline-block;flex-shrink:0;font-size:1.4rem;line-height:1;color:var(--red);transition:transform .22s;font-weight:300}
@@ -85,11 +87,13 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .cat-folder-title .cat-name-last{color:var(--red)}
 .cat-folder-count{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa;white-space:nowrap}
 .cat-divider{height:2px;background:var(--black);margin-bottom:1rem}
-/* PREVIEW — 3 primeros productos (siempre visible, se oculta al expandir) */
-.cat-preview{display:grid;grid-template-columns:2fr 1fr;gap:.5rem;height:min(38vh,320px)}
-.cat-preview .product-card{height:100%;display:flex;flex-direction:column}
+/* PREVIEW — 3 primeros productos, no clickean individualmente */
+.cat-preview{display:grid;grid-template-columns:2fr 1fr;gap:.5rem;height:min(38vh,320px);pointer-events:none}
+.cat-preview .product-card{height:100%;display:flex;flex-direction:column;cursor:default}
+.cat-preview .product-card:hover{transform:none;box-shadow:none}
 .cat-preview > :first-child{grid-row:span 2}
 .cat-preview .product-card-img-wrap{aspect-ratio:unset;flex:1 1 auto;min-height:0}
+.cat-preview .product-card-img{object-fit:contain;background:#f5f5f5}
 .cat-preview .product-card-body{flex-shrink:0;padding:.4rem .5rem .55rem}
 .cat-preview .product-card-name{font-size:.9rem}
 .cat-section.cat-expanded .cat-preview{display:none}
@@ -155,8 +159,8 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
         const last = words.pop();
         const base = words.join(' ');
         return (
-          <div class="cat-section" id={`cat-${gi}`}>
-            <button class="cat-folder" type="button" onclick={`window.toggleCat(${gi})`}>
+          <div class="cat-section" id={`cat-${gi}`} onclick={`window.toggleCat(${gi})`}>
+            <button class="cat-folder" type="button">
               <span class="cat-folder-icon">›</span>
               <span class="cat-folder-title">
                 {base && <span class="cat-name-base">{base} </span>}
@@ -165,16 +169,12 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
               <span class="cat-folder-count">{items.length} PRODUCTOS</span>
             </button>
             <div class="cat-divider"></div>
-            {/* Preview: primeros 3 siempre visible */}
+            {/* Preview: primeros 3 siempre visible, click abre la carpeta no el modal */}
             <div class="cat-preview">
               {items.slice(0, 3).map((p: any) => {
                 const urls = getUrls(p);
                 return (
-                  <div class="product-card"
-                    data-urls={urls.join('|')}
-                    data-brand={p.brands?.name || ''}
-                    data-name={p.name || ''}
-                    onclick="window.openCatalogModal(this)">
+                  <div class="product-card">
                     {urls.length > 0
                       ? <div class="product-card-img-wrap"><img src={urls[0]} alt={p.name || ''} class="product-card-img" loading="lazy"/></div>
                       : <div class="product-card-img-placeholder">👢</div>
@@ -236,21 +236,22 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 </div>
 
 <script is:inline>
-// Toggle carpeta: expande a ancho completo y muestra todos los productos
 window.toggleCat = function(gi) {
   const section = document.getElementById('cat-' + gi);
   const body = document.getElementById('cat-body-' + gi);
   const isOpen = section.classList.contains('cat-expanded');
-  // Cerrar todas
   document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('cat-expanded'));
   document.querySelectorAll('.cat-body').forEach(b => b.classList.remove('open'));
-  // Abrir la seleccionada (si no estaba abierta)
   if (!isOpen) {
     section.classList.add('cat-expanded');
     body.classList.add('open');
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 };
+// Evitar que el click en una tarjeta expandida cierre la carpeta
+document.querySelectorAll('.cat-body').forEach(body => {
+  body.addEventListener('click', e => e.stopPropagation());
+});
 
 // Modal de producto
 const pmodal = document.getElementById('pmodal');
