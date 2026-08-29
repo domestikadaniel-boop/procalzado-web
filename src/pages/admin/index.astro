@@ -418,9 +418,16 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="form-header"><h3 id="catalogFormTitle">Agregar al catálogo</h3><button class="form-close" onclick="document.getElementById('catalogModal').classList.remove('open')">&times;</button></div>
     <div class="form-body">
       <input type="hidden" id="catalogItemId"/>
+      <!-- Sección 1: fotos del producto con checkbox -->
+      <div class="field" id="catalogProdPhotosSection">
+        <label>Fotos del producto</label>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Marca las que quieres mostrar en el catálogo.</p>
+        <div id="catalogProdPhotosGrid" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+      </div>
+      <!-- Sección 2: fotos personalizadas -->
       <div class="field">
-        <label>Fotos personalizadas para el catálogo</label>
-        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Si no subes ninguna se usarán las fotos del producto. Arrastra para reordenar.</p>
+        <label>Fotos adicionales / personalizadas</label>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Sube fotos propias. Se muestran después de las del producto. Arrastra para reordenar.</p>
         <div id="catalogImgsGrid" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;min-height:10px"></div>
         <button type="button" class="upload-color-btn" id="catalogUploadBtn">📷 Agregar fotos</button>
       </div>
@@ -1435,9 +1442,30 @@ function renderCatalog() {
   }).join('');
 }
 
-// --- Múltiples fotos por ítem de catálogo ---
-let catalogImgUrls = []; // array de URLs en orden actual
+// --- Fotos del catálogo ---
+// catalogProdPhotoState: [{url, included}] — fotos del producto con checkbox
+// catalogImgUrls: [url] — fotos personalizadas subidas
+let catalogProdPhotoState = [];
+let catalogImgUrls = [];
 let catalogImgDragIdx = null;
+
+function renderCatalogProdPhotos() {
+  const grid = $('catalogProdPhotosGrid');
+  if (!grid) return;
+  if (!catalogProdPhotoState.length) { grid.innerHTML = '<span style="font-size:.8rem;color:var(--muted)">Sin fotos en el producto.</span>'; return; }
+  grid.innerHTML = catalogProdPhotoState.map((item, i) => `
+    <div style="position:relative;cursor:pointer" onclick="window._cpToggle(${i})">
+      <img src="${item.url}" style="width:86px;height:86px;object-fit:contain;background:#f5f5f5;border-radius:7px;display:block;border:2px solid ${item.included?'var(--red)':'var(--grey2)'};opacity:${item.included?'1':'0.4'};pointer-events:none"/>
+      <div style="position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:4px;background:${item.included?'var(--red)':'#fff'};border:2px solid ${item.included?'var(--red)':'#bbb'};display:flex;align-items:center;justify-content:center;pointer-events:none">
+        ${item.included?'<svg width="10" height="10" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>':''}
+      </div>
+    </div>
+  `).join('');
+}
+window._cpToggle = (i) => {
+  catalogProdPhotoState[i].included = !catalogProdPhotoState[i].included;
+  renderCatalogProdPhotos();
+};
 
 function renderCatalogImgsGrid() {
   const grid = $('catalogImgsGrid');
@@ -1448,13 +1476,12 @@ function renderCatalogImgsGrid() {
          ondragstart="window._ciDragStart(event,${i})"
          ondragover="event.preventDefault()"
          ondrop="window._ciDrop(event,${i})">
-      <img src="${url}" style="width:90px;height:90px;object-fit:cover;border-radius:7px;display:block;border:2px solid var(--grey2);pointer-events:none"/>
+      <img src="${url}" style="width:86px;height:86px;object-fit:contain;background:#f5f5f5;border-radius:7px;display:block;border:2px solid var(--grey2);pointer-events:none"/>
       <button type="button" onclick="window._ciRemove(${i})"
         style="position:absolute;top:3px;right:3px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;line-height:1">×</button>
     </div>
   `).join('');
 }
-
 window._ciDragStart = (e, i) => { catalogImgDragIdx = i; e.dataTransfer.effectAllowed = 'move'; };
 window._ciDrop = (e, i) => {
   e.preventDefault();
@@ -1466,13 +1493,9 @@ window._ciDrop = (e, i) => {
   catalogImgDragIdx = null;
   renderCatalogImgsGrid();
 };
-window._ciRemove = (i) => {
-  catalogImgUrls.splice(i, 1);
-  renderCatalogImgsGrid();
-};
+window._ciRemove = (i) => { catalogImgUrls.splice(i, 1); renderCatalogImgsGrid(); };
 
 $('catalogUploadBtn')?.addEventListener('click', () => $('hiddenCatalogImgInput').click());
-
 $('hiddenCatalogImgInput').addEventListener('change', async e => {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
@@ -1489,26 +1512,34 @@ $('hiddenCatalogImgInput').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// editCatalogItem ahora recibe product_id
 window.editCatalogItem = (productId) => {
   const p = products.find(x => x.id === productId);
   if (!p) return;
   $('catalogItemId').value = productId;
   const ci = catalogOverrides[productId];
-  if (ci && Array.isArray(ci.image_urls) && ci.image_urls.length) {
-    // Ya tiene fotos personalizadas → mostrarlas
-    catalogImgUrls = [...ci.image_urls];
-  } else if (ci?.image_url) {
-    catalogImgUrls = [ci.image_url];
+  const savedUrls = (ci && Array.isArray(ci.image_urls) && ci.image_urls.length) ? ci.image_urls : (ci?.image_url ? [ci.image_url] : null);
+
+  // Fotos del producto ordenadas
+  const prodImgs = (p.product_images || []).slice().sort((a, b) => (a.display_order||0) - (b.display_order||0));
+  const primary = prodImgs.find(i => i.is_primary);
+  const ordered = primary ? [primary, ...prodImgs.filter(i => !i.is_primary)] : prodImgs;
+  const prodUrls = ordered.map(i => i.url);
+
+  if (savedUrls) {
+    // Tiene configuración guardada: marcar qué fotos del producto están incluidas
+    const savedSet = new Set(savedUrls);
+    catalogProdPhotoState = prodUrls.map(url => ({ url, included: savedSet.has(url) }));
+    // Fotos personalizadas = las guardadas que NO son del producto
+    const prodUrlSet = new Set(prodUrls);
+    catalogImgUrls = savedUrls.filter(u => !prodUrlSet.has(u));
   } else {
-    // Sin personalización → pre-cargar todas las fotos del producto para que el usuario quite las que no quiera
-    const imgs = (p.product_images || []).slice().sort((a, b) => (a.display_order||0) - (b.display_order||0));
-    const primary = imgs.find(i => i.is_primary);
-    const ordered = primary ? [primary, ...imgs.filter(i => !i.is_primary)] : imgs;
-    catalogImgUrls = ordered.map(i => i.url);
+    // Sin configuración: todas las del producto seleccionadas, sin personalizadas
+    catalogProdPhotoState = prodUrls.map(url => ({ url, included: true }));
+    catalogImgUrls = [];
   }
+  renderCatalogProdPhotos();
   renderCatalogImgsGrid();
-  $('catalogFormTitle').textContent = `Fotos de catálogo: ${p.name}`;
+  $('catalogFormTitle').textContent = `Fotos en catálogo: ${p.name}`;
   $('catalogModal').classList.add('open');
 };
 
@@ -1526,9 +1557,12 @@ window.resetCatalogPhotos = async (productId) => {
 $('catalogSaveBtn')?.addEventListener('click', async () => {
   const product_id = $('catalogItemId').value;
   if (!product_id) return;
+  // Combinar: fotos del producto seleccionadas + fotos personalizadas
+  const selectedProd = catalogProdPhotoState.filter(i => i.included).map(i => i.url);
+  const finalUrls = [...selectedProd, ...catalogImgUrls];
   loading(true);
   const { error } = await supabase.from('catalog_items')
-    .upsert({ product_id, image_urls: catalogImgUrls, active: true }, { onConflict: 'product_id' });
+    .upsert({ product_id, image_urls: finalUrls, active: true }, { onConflict: 'product_id' });
   loading(false);
   if (error) { alert('No se pudo guardar:\n\n' + error.message); return; }
   $('catalogModal').classList.remove('open');

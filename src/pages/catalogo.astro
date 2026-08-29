@@ -17,12 +17,13 @@ for (const ci of catalogItems) {
   }
 }
 
-// URLs de fotos para un producto (override o fotos del producto)
+// URLs de fotos para un producto (override o todas las fotos del producto)
 function getUrls(p: any): string[] {
   if (photoOverrides[p.id]) return photoOverrides[p.id];
   const imgs = (p.product_images || []).slice().sort((a: any, b: any) => a.display_order - b.display_order);
-  const primary = imgs.find((i: any) => i.is_primary) || imgs[0];
-  return primary ? [primary.url] : [];
+  const primary = imgs.find((i: any) => i.is_primary);
+  const ordered = primary ? [primary, ...imgs.filter((i: any) => !i.is_primary)] : imgs;
+  return ordered.map((i: any) => i.url);
 }
 
 // Resolver categoría madre de un producto
@@ -67,31 +68,26 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .catalog-header{background:var(--black);color:var(--white);padding:1.4rem clamp(1rem,4vw,3rem);display:flex;align-items:center;gap:1.2rem;border-bottom:4px solid var(--red)}
 .catalog-header img{height:28px;width:auto;display:block}
 .catalog-header h1{font-family:var(--fd);font-size:1.5rem;letter-spacing:.06em}
-.catalog-body{max-width:1400px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 4rem}
-/* Carpeta / acordeón por categoría */
-.cat-section{margin-bottom:1rem;border:1.5px solid var(--grey2);border-radius:10px;overflow:hidden}
-.cat-folder{display:flex;align-items:center;gap:.7rem;padding:.9rem 1.1rem;cursor:pointer;background:var(--black);color:var(--white);user-select:none;border:none;width:100%;text-align:left}
-.cat-folder:hover{background:#111}
-.cat-folder-icon{font-size:1.1rem;transition:transform .2s}
+.catalog-body{max-width:1400px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 4rem;display:flex;flex-direction:column;gap:.6rem}
+/* Carpeta / acordeón */
+.cat-section{border:1.5px solid var(--grey2);border-radius:10px;overflow:hidden}
+.cat-folder{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;cursor:pointer;background:var(--black);color:var(--white);user-select:none;border:none;width:100%;text-align:left;transition:background .15s}
+.cat-folder:hover{background:#1a1a1a}
+.cat-folder-icon{font-size:.9rem;transition:transform .22s;display:inline-block}
 .cat-folder.open .cat-folder-icon{transform:rotate(90deg)}
-.cat-folder-name{font-family:var(--fd);font-size:1.5rem;letter-spacing:.06em;flex:1}
-.cat-folder-count{font-size:.75rem;background:var(--red);color:#fff;border-radius:20px;padding:.1rem .55rem;font-family:var(--fb);font-weight:700}
+.cat-folder-name{font-family:var(--fd);font-size:1.4rem;letter-spacing:.06em;flex:1}
+.cat-folder-count{font-size:.7rem;background:var(--red);color:#fff;border-radius:20px;padding:.1rem .5rem;font-family:var(--fb);font-weight:700;letter-spacing:.03em}
 .cat-body{display:none;padding:1rem}
 .cat-body.open{display:block}
-
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem}
-.product-card{background:var(--grey);border-radius:8px;overflow:hidden}
-/* Carrusel */
-.product-card-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
-.product-card-imgs::-webkit-scrollbar{display:none}
-.product-card-img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:#fff;pointer-events:none}
-.product-card-img-placeholder{width:100%;aspect-ratio:1;background:var(--grey2);display:flex;align-items:center;justify-content:center;font-size:3rem}
-.product-card-dots{display:flex;justify-content:center;gap:4px;padding:.35rem 0 .15rem}
-.product-card-dot{width:6px;height:6px;border-radius:50%;background:var(--grey2);transition:background .15s}
-.product-card-dot.active{background:var(--red)}
-.product-card-body{padding:.6rem .7rem .8rem}
-.product-card-brand{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:.1rem}
-.product-card-name{font-family:var(--fd);font-size:1.05rem;letter-spacing:.03em;line-height:1.15}
+/* Grid de productos — mismo estilo que el frontend */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.75rem}
+.product-card{background:var(--white);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.product-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.13)}
+.product-card-img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:#f8f8f8;pointer-events:none}
+.product-card-img-placeholder{width:100%;aspect-ratio:1;background:var(--grey);display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+.product-card-body{padding:.5rem .65rem .7rem;border-top:1px solid var(--grey)}
+.product-card-brand{font-size:.58rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--red);margin-bottom:.15rem}
+.product-card-name{font-family:var(--fd);font-size:1rem;letter-spacing:.03em;line-height:1.15;color:var(--black)}
 @media print{
   .catalog-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .cat-folder{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -133,12 +129,12 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
     <p style="text-align:center;padding:4rem;color:var(--muted)">El catálogo está vacío. Agrega productos desde el panel de administración.</p>
   ) : groups.map(({ cat, items }, gi) => (
     <div class="cat-section">
-      <button class={`cat-folder${gi===0?' open':''}`} data-folder={`folder-${gi}`} type="button">
+      <button class="cat-folder" data-folder={`folder-${gi}`} type="button">
         <span class="cat-folder-icon">▶</span>
         <span class="cat-folder-name">{cat.name}</span>
         <span class="cat-folder-count">{items.length}</span>
       </button>
-      <div class={`cat-body${gi===0?' open':''}`} id={`folder-${gi}`}>
+      <div class="cat-body" id={`folder-${gi}`}>
       <div class="product-grid">
         {items.map((p: any) => {
           const urls = getUrls(p);
