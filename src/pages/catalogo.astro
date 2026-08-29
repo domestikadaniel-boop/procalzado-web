@@ -71,20 +71,33 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .catalog-header-title{font-family:var(--fd);font-size:clamp(2.8rem,8vw,5.5rem);letter-spacing:.04em;line-height:1;color:#fff;margin-bottom:.4rem}
 .catalog-header-tag{font-family:var(--fb);font-size:clamp(.82rem,1.8vw,1rem);color:rgba(255,255,255,.72);font-weight:300;letter-spacing:.02em}
 /* BODY */
-.catalog-body{max-width:1400px;margin:0 auto;padding:2.5rem clamp(1.2rem,4vw,3.5rem) 5rem;display:flex;flex-direction:column;gap:2.2rem}
-/* CATEGORÍA */
-.cat-section{}
+.catalog-body{max-width:1400px;margin:0 auto;padding:2.5rem clamp(1.2rem,4vw,3.5rem) 5rem}
+/* GRID DE CARPETAS — 2 por fila */
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem 2.5rem}
+.cat-section{min-width:0}
+.cat-section.cat-expanded{grid-column:1/-1}
+/* CABECERA DE CARPETA */
 .cat-folder{display:flex;align-items:center;gap:.6rem;padding:0;cursor:pointer;background:none;color:var(--black);user-select:none;border:none;width:100%;text-align:left;margin-bottom:.6rem}
-.cat-folder:hover .cat-folder-name{opacity:.75}
-.cat-folder-icon{display:inline-block;flex-shrink:0;font-size:1.4rem;line-height:1;color:var(--black);transition:transform .22s;font-weight:300}
-.cat-folder.open .cat-folder-icon{transform:rotate(90deg)}
-.cat-folder-title{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.05em;flex:1;line-height:1}
+.cat-folder-icon{display:inline-block;flex-shrink:0;font-size:1.4rem;line-height:1;color:var(--red);transition:transform .22s;font-weight:300}
+.cat-section.cat-expanded .cat-folder-icon{transform:rotate(90deg)}
+.cat-folder-title{font-family:var(--fd);font-size:clamp(1.4rem,3vw,2rem);letter-spacing:.05em;flex:1;line-height:1}
 .cat-folder-title .cat-name-base{color:var(--black)}
 .cat-folder-title .cat-name-last{color:var(--red)}
-.cat-folder-count{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa;white-space:nowrap}
-.cat-divider{height:2px;background:var(--black);margin-bottom:1.4rem}
+.cat-folder-count{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa;white-space:nowrap}
+.cat-divider{height:2px;background:var(--black);margin-bottom:1rem}
+/* PREVIEW — 3 primeros productos (siempre visible, se oculta al expandir) */
+.cat-preview{display:grid;grid-template-columns:2fr 1fr;gap:.5rem;height:min(38vh,320px)}
+.cat-preview .product-card{height:100%;display:flex;flex-direction:column}
+.cat-preview > :first-child{grid-row:span 2}
+.cat-preview .product-card-img-wrap{aspect-ratio:unset;flex:1 1 auto;min-height:0}
+.cat-preview .product-card-body{flex-shrink:0;padding:.4rem .5rem .55rem}
+.cat-preview .product-card-name{font-size:.9rem}
+.cat-section.cat-expanded .cat-preview{display:none}
+/* PRODUCTOS EXPANDIDOS */
 .cat-body{display:none}
 .cat-body.open{display:block}
+/* GRID PRODUCTOS */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
 /* TARJETAS */
 .product-card{background:var(--white);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column}
 .product-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.13)}
@@ -94,21 +107,17 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .product-card-body{padding:.6rem .7rem .85rem;flex-shrink:0}
 .product-card-brand{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:.1rem}
 .product-card-name{font-family:var(--fd);font-size:1.1rem;letter-spacing:.03em;line-height:1.15;color:var(--black);font-weight:700}
-/* GRID HERO — primeros 3 productos: 1 grande izquierda + 2 apilados derecha */
-.product-grid-hero{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem;height:min(62vh,560px)}
-.product-grid-hero .product-card{height:100%}
-.product-grid-hero > :first-child{grid-row:span 2}
-.product-grid-hero .product-card-img-wrap{aspect-ratio:unset;flex:1 1 auto;min-height:0}
-.product-grid-hero .product-card-body{flex-shrink:0}
-/* GRID RESTO */
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
 @media print{
   .catalog-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cat-grid{grid-template-columns:1fr 1fr}
   .cat-body{display:block!important}
+  .cat-preview{display:grid!important}
   .product-grid{grid-template-columns:repeat(4,1fr)}
 }
-@media(max-width:600px){
-  .product-grid-hero{grid-template-columns:3fr 2fr;height:min(55vw,300px)}
+@media(max-width:700px){
+  .cat-grid{grid-template-columns:1fr}
+  .cat-section.cat-expanded{grid-column:1}
+  .cat-preview{height:min(45vw,240px)}
   .product-grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
 }
 /* Modal */
@@ -139,74 +148,74 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 <div class="catalog-body">
   {groups.length === 0 ? (
     <p style="text-align:center;padding:4rem;color:var(--muted)">El catálogo está vacío. Agrega productos desde el panel de administración.</p>
-  ) : groups.map(({ cat, items }, gi) => (
-    <div class="cat-section">
-      {(() => {
+  ) : (
+    <div class="cat-grid">
+      {groups.map(({ cat, items }, gi) => {
         const words = cat.name.trim().split(' ');
         const last = words.pop();
         const base = words.join(' ');
         return (
-          <button class="cat-folder" data-folder={`folder-${gi}`} type="button">
-            <span class="cat-folder-icon">›</span>
-            <span class="cat-folder-title">
-              {base && <span class="cat-name-base">{base} </span>}
-              <span class="cat-name-last">{last}</span>
-            </span>
-            <span class="cat-folder-count">{items.length} PRODUCTOS</span>
-          </button>
-        );
-      })()}
-      <div class="cat-divider"></div>
-      <div class="cat-body" id={`folder-${gi}`}>
-        {/* Primeros 3: layout hero */}
-        <div class="product-grid-hero">
-          {items.slice(0, 3).map((p: any) => {
-            const urls = getUrls(p);
-            return (
-              <div class="product-card"
-                data-urls={urls.join('|')}
-                data-brand={p.brands?.name || ''}
-                data-name={p.name || ''}
-                onclick="window.openCatalogModal(this)">
-                {urls.length > 0
-                  ? <div class="product-card-img-wrap"><img src={urls[0]} alt={p.name || ''} class="product-card-img" loading="lazy"/></div>
-                  : <div class="product-card-img-placeholder">👢</div>
-                }
-                <div class="product-card-body">
-                  {p.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
-                  <div class="product-card-name">{p.name}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {/* Resto: grid normal */}
-        {items.length > 3 && (
-          <div class="product-grid">
-            {items.slice(3).map((p: any) => {
-              const urls = getUrls(p);
-              return (
-                <div class="product-card"
-                  data-urls={urls.join('|')}
-                  data-brand={p.brands?.name || ''}
-                  data-name={p.name || ''}
-                  onclick="window.openCatalogModal(this)">
-                  {urls.length > 0
-                    ? <div class="product-card-img-wrap"><img src={urls[0]} alt={p.name || ''} class="product-card-img" loading="lazy"/></div>
-                    : <div class="product-card-img-placeholder">👢</div>
-                  }
-                  <div class="product-card-body">
-                    {p.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
-                    <div class="product-card-name">{p.name}</div>
+          <div class="cat-section" id={`cat-${gi}`}>
+            <button class="cat-folder" type="button" onclick={`window.toggleCat(${gi})`}>
+              <span class="cat-folder-icon">›</span>
+              <span class="cat-folder-title">
+                {base && <span class="cat-name-base">{base} </span>}
+                <span class="cat-name-last">{last}</span>
+              </span>
+              <span class="cat-folder-count">{items.length} PRODUCTOS</span>
+            </button>
+            <div class="cat-divider"></div>
+            {/* Preview: primeros 3 siempre visible */}
+            <div class="cat-preview">
+              {items.slice(0, 3).map((p: any) => {
+                const urls = getUrls(p);
+                return (
+                  <div class="product-card"
+                    data-urls={urls.join('|')}
+                    data-brand={p.brands?.name || ''}
+                    data-name={p.name || ''}
+                    onclick="window.openCatalogModal(this)">
+                    {urls.length > 0
+                      ? <div class="product-card-img-wrap"><img src={urls[0]} alt={p.name || ''} class="product-card-img" loading="lazy"/></div>
+                      : <div class="product-card-img-placeholder">👢</div>
+                    }
+                    <div class="product-card-body">
+                      {p.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
+                      <div class="product-card-name">{p.name}</div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            {/* Todos los productos (visible al expandir) */}
+            <div class="cat-body" id={`cat-body-${gi}`}>
+              <div class="product-grid">
+                {items.map((p: any) => {
+                  const urls = getUrls(p);
+                  return (
+                    <div class="product-card"
+                      data-urls={urls.join('|')}
+                      data-brand={p.brands?.name || ''}
+                      data-name={p.name || ''}
+                      onclick="window.openCatalogModal(this)">
+                      {urls.length > 0
+                        ? <div class="product-card-img-wrap"><img src={urls[0]} alt={p.name || ''} class="product-card-img" loading="lazy"/></div>
+                        : <div class="product-card-img-placeholder">👢</div>
+                      }
+                      <div class="product-card-body">
+                        {p.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
+                        <div class="product-card-name">{p.name}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        );
+      })}
     </div>
-  ))}
+  )}
 </div>
 
 <!-- Modal producto -->
@@ -227,16 +236,21 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 </div>
 
 <script is:inline>
-// Carpetas colapsables
-document.querySelectorAll('.cat-folder').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const id = btn.getAttribute('data-folder');
-    const body = document.getElementById(id);
-    const isOpen = btn.classList.contains('open');
-    btn.classList.toggle('open', !isOpen);
-    body.classList.toggle('open', !isOpen);
-  });
-});
+// Toggle carpeta: expande a ancho completo y muestra todos los productos
+window.toggleCat = function(gi) {
+  const section = document.getElementById('cat-' + gi);
+  const body = document.getElementById('cat-body-' + gi);
+  const isOpen = section.classList.contains('cat-expanded');
+  // Cerrar todas
+  document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('cat-expanded'));
+  document.querySelectorAll('.cat-body').forEach(b => b.classList.remove('open'));
+  // Abrir la seleccionada (si no estaba abierta)
+  if (!isOpen) {
+    section.classList.add('cat-expanded');
+    body.classList.add('open');
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
 
 // Modal de producto
 const pmodal = document.getElementById('pmodal');
