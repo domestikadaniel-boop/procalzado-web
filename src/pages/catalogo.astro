@@ -106,16 +106,16 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 /* Modal */
 .pmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:1.2rem}
 .pmodal-bg.open{display:flex}
-.pmodal{background:var(--white);border-radius:20px;max-width:560px;width:100%;overflow:hidden;display:flex;flex-direction:column;position:relative;max-height:92vh}
+.pmodal{background:var(--white);border-radius:20px;width:fit-content;max-width:min(92vw,560px);min-width:300px;overflow:hidden;display:flex;flex-direction:column;position:relative;max-height:92vh}
 .pmodal-close{position:absolute;top:.75rem;right:.75rem;background:rgba(255,255,255,.9);color:var(--black);border:none;border-radius:50%;width:36px;height:36px;font-size:1.2rem;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.18);font-weight:700}
-.pmodal-stage{position:relative;width:100%;background:#fff;height:min(65vmin,420px);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.pmodal-img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+.pmodal-stage{position:relative;flex-shrink:0;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center}
+.pmodal-img{display:block;max-width:min(92vw,560px);max-height:min(65vh,480px);width:auto;height:auto}
 .pmodal-arr{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.9);color:var(--black);border:none;border-radius:50%;width:40px;height:40px;font-size:1.5rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:background .15s;font-weight:300}
 .pmodal-arr:hover{background:#fff}
 .pmodal-arr-prev{left:12px}
 .pmodal-arr-next{right:12px}
 .pmodal-dots{display:flex;justify-content:center;align-items:center;gap:7px;padding:.55rem 0 .2rem}
-.pmodal-body{padding:1rem 1.4rem 1.5rem}
+.pmodal-body{padding:1rem 1.4rem 1.5rem;min-width:280px}
 .pmodal-brand{font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:.25rem}
 .pmodal-name{font-family:var(--fd);font-size:2rem;letter-spacing:.04em;line-height:1.1;color:var(--black)}
 </style>
