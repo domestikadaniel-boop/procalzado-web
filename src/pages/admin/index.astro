@@ -268,10 +268,9 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
 
     <div id="tab-catalog" style="display:none">
       <div class="toolbar">
-        <span style="font-size:.85rem;color:var(--muted)">Productos del <strong>catálogo público</strong>. Elige cuáles salen y con qué foto. Arrastra para reordenar. <a href="/catalogo" target="_blank" style="color:var(--red)">Ver catálogo →</a></span>
-        <button class="btn-add" id="addCatalogBtn">+ Agregar producto</button>
+        <span style="font-size:.85rem;color:var(--muted)">Todos los productos aparecen en el <strong>catálogo público</strong>. Puedes personalizar las fotos de cada uno. <a href="/catalogo" target="_blank" style="color:var(--red)">Ver catálogo →</a></span>
       </div>
-      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th style="width:70px">Foto</th><th>Producto</th><th>Categoría</th><th>Acciones</th></tr></thead><tbody id="catalogTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:70px">Foto</th><th>Producto</th><th>Fotos catálogo</th><th>Acciones</th></tr></thead><tbody id="catalogTableBody"></tbody></table></div>
     </div>
 
     <div id="tab-settings" style="display:none">
@@ -419,16 +418,9 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="form-header"><h3 id="catalogFormTitle">Agregar al catálogo</h3><button class="form-close" onclick="document.getElementById('catalogModal').classList.remove('open')">&times;</button></div>
     <div class="form-body">
       <input type="hidden" id="catalogItemId"/>
-      <div class="field"><label>Producto *</label>
-        <div class="search-select" id="catalogProdSearchWrap">
-          <input type="text" class="search-select-input" id="catalogProdSearch" placeholder="Buscar producto..." autocomplete="off"/>
-          <input type="hidden" id="catalogProdProduct"/>
-          <div class="search-select-list" id="catalogProdList"></div>
-        </div>
-      </div>
       <div class="field">
-        <label>Fotos del catálogo</label>
-        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Sube las fotos que quieres mostrar. Arrastra para cambiar el orden. Si no subes ninguna se usará la foto principal del producto.</p>
+        <label>Fotos personalizadas para el catálogo</label>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Si no subes ninguna se usarán las fotos del producto. Arrastra para reordenar.</p>
         <div id="catalogImgsGrid" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;min-height:10px"></div>
         <button type="button" class="upload-color-btn" id="catalogUploadBtn">📷 Agregar fotos</button>
       </div>
@@ -1408,43 +1400,39 @@ async function showAdminWithSettings(email) {
 let catalogItems = [];
 let catalogSS = null;
 
+// Mapa product_id -> catalog_item (fotos personalizadas)
+let catalogOverrides = {}; // { [product_id]: {id?, image_urls} }
+
 async function loadCatalog() {
-  const { data } = await supabase.from('catalog_items')
-    .select('*, products(id,name,brands(name),categories!products_category_id_fkey(name),product_images(url,is_primary,display_order))')
-    .order('display_order', { ascending: true });
-  catalogItems = data || [];
+  const { data } = await supabase.from('catalog_items').select('id, product_id, image_urls, image_url');
+  catalogOverrides = {};
+  (data || []).forEach(ci => { catalogOverrides[ci.product_id] = ci; });
   renderCatalog();
 }
 
 function renderCatalog() {
   const tbody = $('catalogTableBody');
   if (!tbody) return;
-  if (!catalogItems.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos. Click "+ Agregar producto".</td></tr>';
+  if (!products.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Sin productos.</td></tr>';
     return;
   }
-  tbody.innerHTML = catalogItems.map((it, idx) => {
-    const p = it.products;
-    const urls = Array.isArray(it.image_urls) && it.image_urls.length ? it.image_urls : (it.image_url ? [it.image_url] : []);
-    const img = urls[0] || p?.product_images?.find(i => i.is_primary)?.url || p?.product_images?.[0]?.url;
-    const catName = p?.categories?.name || '-';
-    return `<tr draggable="true" data-id="${it.id}" data-idx="${idx}" class="draggable-row">
-      <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center">⋮⋮</td>
-      <td style="padding:.5rem">${img ? `<img src="${img}" width="56" height="56" style="width:56px;height:56px;object-fit:cover;border-radius:5px;display:block"/>` : '<span style="font-size:1.5rem">👢</span>'}</td>
-      <td><strong>${p?.name || '(eliminado)'}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p?.brands?.name || ''} ${urls.length > 1 ? `<span style="color:var(--red)">(${urls.length} fotos)</span>` : ''}</span></td>
-      <td style="font-size:.82rem;color:var(--muted)">${catName}</td>
+  tbody.innerHTML = products.map((p, idx) => {
+    const ci = catalogOverrides[p.id];
+    const customUrls = ci && Array.isArray(ci.image_urls) && ci.image_urls.length ? ci.image_urls : (ci?.image_url ? [ci.image_url] : []);
+    const defaultImg = p.product_images?.find(i => i.is_primary)?.url || p.product_images?.[0]?.url;
+    const img = customUrls[0] || defaultImg;
+    const hasCustom = customUrls.length > 0;
+    return `<tr>
+      <td style="padding:.5rem"><img src="${img || ''}" width="56" height="56" style="width:56px;height:56px;object-fit:contain;background:#f5f5f5;border-radius:5px;display:block${img?'':';display:none'}"/>${img?'':'<span style="font-size:1.5rem">👢</span>'}</td>
+      <td><strong>${p.name}</strong><br><span style="font-size:.72rem;color:var(--muted)">${p.brands?.name||''}</span></td>
+      <td style="font-size:.8rem">${hasCustom ? `<span style="color:var(--red);font-weight:600">${customUrls.length} foto${customUrls.length>1?'s':''} personalizadas</span>` : '<span style="color:var(--muted)">Fotos del producto</span>'}</td>
       <td class="actions-cell">
-        <button class="action-btn edit" onclick="window.editCatalogItem('${it.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg></button>
-        <button class="action-btn delete" onclick="window.deleteCatalogItem('${it.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/><path d='M10 11v6'/><path d='M14 11v6'/><path d='M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2'/></svg></button>
+        <button class="action-btn edit" onclick="window.editCatalogItem('${p.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg></button>
+        ${hasCustom ? `<button class="action-btn delete" onclick="window.resetCatalogPhotos('${p.id}')" title="Quitar fotos personalizadas"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/></svg></button>` : ''}
       </td>
     </tr>`;
   }).join('');
-  setupDragAndDrop('catalogTableBody', catalogItems, 'catalog_items');
-}
-
-function populateCatalogProductSelect() {
-  const items = products.map(p => ({ value: p.id, label: p.name, brand: p.brands?.name || '' }));
-  catalogSS = initSearchSelect('catalogProdSearch', 'catalogProdList', 'catalogProdSearchWrap', 'catalogProdProduct', items);
 }
 
 // --- Múltiples fotos por ítem de catálogo ---
@@ -1483,16 +1471,6 @@ window._ciRemove = (i) => {
   renderCatalogImgsGrid();
 };
 
-$('addCatalogBtn')?.addEventListener('click', () => {
-  $('catalogItemId').value = '';
-  catalogImgUrls = [];
-  renderCatalogImgsGrid();
-  populateCatalogProductSelect();
-  catalogSS?.clear();
-  $('catalogFormTitle').textContent = 'Agregar al catálogo';
-  $('catalogModal').classList.add('open');
-});
-
 $('catalogUploadBtn')?.addEventListener('click', () => $('hiddenCatalogImgInput').click());
 
 $('hiddenCatalogImgInput').addEventListener('change', async e => {
@@ -1511,52 +1489,51 @@ $('hiddenCatalogImgInput').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-window.editCatalogItem = (id) => {
-  const it = catalogItems.find(x => x.id === id);
-  if (!it) return;
-  $('catalogItemId').value = it.id;
-  // Soporte para image_urls (nuevo) y image_url (legado)
-  if (Array.isArray(it.image_urls) && it.image_urls.length) {
-    catalogImgUrls = [...it.image_urls];
-  } else if (it.image_url) {
-    catalogImgUrls = [it.image_url];
+// editCatalogItem ahora recibe product_id
+window.editCatalogItem = (productId) => {
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+  $('catalogItemId').value = productId;
+  const ci = catalogOverrides[productId];
+  if (ci && Array.isArray(ci.image_urls) && ci.image_urls.length) {
+    // Ya tiene fotos personalizadas → mostrarlas
+    catalogImgUrls = [...ci.image_urls];
+  } else if (ci?.image_url) {
+    catalogImgUrls = [ci.image_url];
   } else {
-    catalogImgUrls = [];
+    // Sin personalización → pre-cargar todas las fotos del producto para que el usuario quite las que no quiera
+    const imgs = (p.product_images || []).slice().sort((a, b) => (a.display_order||0) - (b.display_order||0));
+    const primary = imgs.find(i => i.is_primary);
+    const ordered = primary ? [primary, ...imgs.filter(i => !i.is_primary)] : imgs;
+    catalogImgUrls = ordered.map(i => i.url);
   }
   renderCatalogImgsGrid();
-  populateCatalogProductSelect();
-  catalogSS?.setValue(it.product_id || '');
-  $('catalogFormTitle').textContent = 'Editar entrada del catálogo';
+  $('catalogFormTitle').textContent = `Fotos de catálogo: ${p.name}`;
   $('catalogModal').classList.add('open');
 };
 
-window.deleteCatalogItem = async (id) => {
-  if (!confirm('¿Quitar del catálogo?')) return;
+window.resetCatalogPhotos = async (productId) => {
+  if (!confirm('¿Quitar las fotos personalizadas y usar las del producto?')) return;
+  const ci = catalogOverrides[productId];
+  if (!ci?.id) return;
   loading(true);
-  await supabase.from('catalog_items').delete().eq('id', id);
+  await supabase.from('catalog_items').update({ image_urls: [] }).eq('id', ci.id);
   await loadCatalog();
   loading(false);
-  showToast('Quitado del catálogo');
+  showToast('Fotos restablecidas');
 };
 
 $('catalogSaveBtn')?.addEventListener('click', async () => {
-  const product_id = $('catalogProdProduct').value;
-  if (!product_id) { alert('Selecciona un producto'); return; }
-  const d = { product_id, image_urls: catalogImgUrls, active: true };
+  const product_id = $('catalogItemId').value;
+  if (!product_id) return;
   loading(true);
-  const id = $('catalogItemId').value;
-  let error;
-  if (id) {
-    ({ error } = await supabase.from('catalog_items').update(d).eq('id', id));
-  } else {
-    d.display_order = catalogItems.length;
-    ({ error } = await supabase.from('catalog_items').insert(d));
-  }
+  const { error } = await supabase.from('catalog_items')
+    .upsert({ product_id, image_urls: catalogImgUrls, active: true }, { onConflict: 'product_id' });
   loading(false);
   if (error) { alert('No se pudo guardar:\n\n' + error.message); return; }
   $('catalogModal').classList.remove('open');
   await loadCatalog();
-  showToast('Catálogo actualizado ✓');
+  showToast('Fotos de catálogo guardadas ✓');
 });
 
 checkAuth();

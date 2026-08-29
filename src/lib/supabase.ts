@@ -338,19 +338,8 @@ export interface CatalogItem {
 export async function getCatalogItems(): Promise<CatalogItem[]> {
   const { data, error } = await supabase
     .from('catalog_items')
-    .select(`
-      *,
-      products (
-        id, slug, name,
-        brands ( name ),
-        categories!products_category_id_fkey ( id, slug, name, parent_id ),
-        product_categories ( category_id, is_primary, categories ( id, slug, name, parent_id ) ),
-        product_images ( url, is_primary, display_order )
-      )
-    `)
-    .eq('active', true)
-    .order('display_order', { ascending: true });
-  if (error) { console.error('Error fetching catalog:', error); return []; }
+    .select('product_id, image_url, image_urls');
+  if (error) { console.error('Error fetching catalog items:', error); return []; }
   return (data as CatalogItem[]) || [];
 }
 

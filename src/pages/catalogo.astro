@@ -1,36 +1,51 @@
 ---
-import { getCatalogItems, getCategories } from '../lib/supabase';
+import { getCatalogItems, getProducts, getCategories } from '../lib/supabase';
 
-const items = await getCatalogItems();
-const allCats = await getCategories();
+const [products, catalogItems, allCats] = await Promise.all([
+  getProducts(),
+  getCatalogItems(),
+  getCategories(),
+]);
 
-// Agrupar por categoría madre
-const parentCats = allCats.filter(c => !c.parent_id);
-
-// Para cada ítem, resolver su categoría madre
-function getParentCatId(item: any): string | null {
-  const p = item.products;
-  if (!p) return null;
-  // Buscar en product_categories
-  const pc = p.product_categories?.find((pc: any) => pc.is_primary) || p.product_categories?.[0];
-  const cat = pc?.categories || p.categories;
-  if (!cat) return null;
-  return cat.parent_id || cat.id; // si ya es madre, usar su id
+// Mapa de fotos personalizadas por product_id
+const photoOverrides: Record<string, string[]> = {};
+for (const ci of catalogItems) {
+  if (Array.isArray((ci as any).image_urls) && (ci as any).image_urls.length) {
+    photoOverrides[ci.product_id] = (ci as any).image_urls;
+  } else if ((ci as any).image_url) {
+    photoOverrides[ci.product_id] = [(ci as any).image_url];
+  }
 }
 
-// Grupos: { cat, items[] }
+// URLs de fotos para un producto (override o fotos del producto)
+function getUrls(p: any): string[] {
+  if (photoOverrides[p.id]) return photoOverrides[p.id];
+  const imgs = (p.product_images || []).slice().sort((a: any, b: any) => a.display_order - b.display_order);
+  const primary = imgs.find((i: any) => i.is_primary) || imgs[0];
+  return primary ? [primary.url] : [];
+}
+
+// Resolver categoría madre de un producto
+const parentCats = allCats.filter(c => !c.parent_id);
+function getParentCatId(p: any): string | null {
+  const pc = p.product_categories?.find((x: any) => x.is_primary) || p.product_categories?.[0];
+  const cat = pc?.categories || p.categories;
+  if (!cat) return null;
+  return cat.parent_id || cat.id;
+}
+
+// Agrupar por categoría madre
 const groups: { cat: any; items: any[] }[] = parentCats.map(cat => {
-  const children = allCats.filter(c => c.parent_id === cat.id).map(c => c.id);
-  const groupItems = items.filter(it => {
-    const pid = getParentCatId(it);
-    return pid === cat.id || children.includes(pid || '');
+  const childIds = allCats.filter(c => c.parent_id === cat.id).map(c => c.id);
+  const grouped = products.filter(p => {
+    const pid = getParentCatId(p);
+    return pid === cat.id || childIds.includes(pid || '');
   });
-  return { cat, items: groupItems };
+  return { cat, items: grouped };
 }).filter(g => g.items.length > 0);
 
-// Items sin categoría reconocida
-const assignedIds = new Set(groups.flatMap(g => g.items.map((i: any) => i.id)));
-const ungrouped = items.filter(i => !assignedIds.has(i.id));
+const assignedIds = new Set(groups.flatMap(g => g.items.map((p: any) => p.id)));
+const ungrouped = products.filter(p => !assignedIds.has(p.id));
 if (ungrouped.length) groups.push({ cat: { id: '__otros', name: 'Otros' }, items: ungrouped });
 ---
 
@@ -125,25 +140,21 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
       </button>
       <div class={`cat-body${gi===0?' open':''}`} id={`folder-${gi}`}>
       <div class="product-grid">
-        {items.map((it: any) => {
-          const p = it.products;
-          const urls: string[] = (Array.isArray(it.image_urls) && it.image_urls.length)
-            ? it.image_urls
-            : (it.image_url ? [it.image_url]
-              : [p?.product_images?.find((i: any) => i.is_primary)?.url || p?.product_images?.[0]?.url].filter(Boolean));
+        {items.map((p: any) => {
+          const urls = getUrls(p);
           return (
             <div class="product-card" style="cursor:pointer"
               data-urls={urls.join('|')}
-              data-brand={p?.brands?.name || ''}
-              data-name={p?.name || ''}
+              data-brand={p.brands?.name || ''}
+              data-name={p.name || ''}
               onclick="window.openCatalogModal(this)">
               {urls.length > 0
-                ? <img src={urls[0]} alt={p?.name || ''} class="product-card-img" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;background:#fff;display:block"/>
+                ? <img src={urls[0]} alt={p.name || ''} class="product-card-img" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;background:#fff;display:block"/>
                 : <div class="product-card-img-placeholder">👢</div>
               }
               <div class="product-card-body">
-                {p?.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
-                <div class="product-card-name">{p?.name}</div>
+                {p.brands?.name && <div class="product-card-brand">{p.brands.name}</div>}
+                <div class="product-card-name">{p.name}</div>
               </div>
             </div>
           );
