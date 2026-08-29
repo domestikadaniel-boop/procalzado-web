@@ -66,22 +66,18 @@ if (ungrouped.length) groups.push({ cat: { id: '__otros', name: 'Otros' }, items
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--fb);background:var(--white);color:var(--black)}
 /* HEADER */
-.catalog-header{background:linear-gradient(to right,#3a0000 0%,#8a0000 25%,#cc0000 55%,#ff0000 80%,#ff1a00 100%);color:var(--white);padding:clamp(1.8rem,5vw,3.2rem) clamp(1.5rem,5vw,4rem)}
-.catalog-header-logo{height:22px;width:auto;display:block;margin-bottom:1.2rem;opacity:.92}
-.catalog-header-title{font-family:var(--fd);font-size:clamp(2.8rem,8vw,5.5rem);letter-spacing:.04em;line-height:1;color:#fff;margin-bottom:.35rem}
-.catalog-header-tag{font-family:var(--fb);font-size:clamp(.8rem,2vw,1rem);color:rgba(255,255,255,.75);font-weight:300;letter-spacing:.03em}
+.catalog-header{background:linear-gradient(to right,#3a0000 0%,#8a0000 25%,#cc0000 55%,#ff0000 80%,#ff1a00 100%);color:var(--white);padding:clamp(1.8rem,5vw,3rem) clamp(1.5rem,5vw,4rem) clamp(2rem,5vw,3.2rem);display:flex;flex-direction:column;align-items:flex-start}
+.catalog-header-logo{height:20px;width:auto;display:block;margin-bottom:1.4rem;opacity:.9}
+.catalog-header-title{font-family:var(--fd);font-size:clamp(2.8rem,8vw,5.5rem);letter-spacing:.04em;line-height:1;color:#fff;margin-bottom:.4rem}
+.catalog-header-tag{font-family:var(--fb);font-size:clamp(.82rem,1.8vw,1rem);color:rgba(255,255,255,.72);font-weight:300;letter-spacing:.02em}
 /* BODY */
 .catalog-body{max-width:1400px;margin:0 auto;padding:2.5rem clamp(1.2rem,4vw,3.5rem) 5rem;display:flex;flex-direction:column;gap:2.2rem}
 /* CATEGORÍA */
 .cat-section{}
 .cat-folder{display:flex;align-items:center;gap:.6rem;padding:0;cursor:pointer;background:none;color:var(--black);user-select:none;border:none;width:100%;text-align:left;margin-bottom:.6rem}
 .cat-folder:hover .cat-folder-name{opacity:.75}
-.cat-folder-icon{width:18px;height:18px;display:inline-block;flex-shrink:0;position:relative;transition:transform .22s}
-.cat-folder-icon::before,.cat-folder-icon::after{content:'';position:absolute;background:var(--black);border-radius:2px;transition:transform .22s}
-.cat-folder-icon::before{width:2px;height:11px;top:1px;left:9px;transform:rotate(45deg) translateY(0)}
-.cat-folder-icon::after{width:2px;height:11px;bottom:1px;left:9px;transform:rotate(-45deg) translateY(0)}
-.cat-folder.open .cat-folder-icon::before{transform:rotate(-45deg)}
-.cat-folder.open .cat-folder-icon::after{transform:rotate(45deg)}
+.cat-folder-icon{display:inline-block;flex-shrink:0;font-size:1.4rem;line-height:1;color:var(--black);transition:transform .22s;font-weight:300}
+.cat-folder.open .cat-folder-icon{transform:rotate(90deg)}
 .cat-folder-title{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.05em;flex:1;line-height:1}
 .cat-folder-title .cat-name-base{color:var(--black)}
 .cat-folder-title .cat-name-last{color:var(--red)}
@@ -143,7 +139,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
         const base = words.join(' ');
         return (
           <button class="cat-folder" data-folder={`folder-${gi}`} type="button">
-            <span class="cat-folder-icon">▶</span>
+            <span class="cat-folder-icon">›</span>
             <span class="cat-folder-title">
               {base && <span class="cat-name-base">{base} </span>}
               <span class="cat-name-last">{last}</span>
