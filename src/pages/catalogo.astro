@@ -65,37 +65,40 @@ if (ungrouped.length) groups.push({ cat: { id: '__otros', name: 'Otros' }, items
 :root{--red:#FF0000;--black:#000;--white:#fff;--grey:#F2F2F2;--grey2:#E5E5E5;--muted:#4A4A4A;--fd:'Bebas Neue','Barlow',sans-serif;--fb:'Barlow',sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--fb);background:var(--white);color:var(--black)}
-.catalog-header{background:var(--black);color:var(--white);padding:1.4rem clamp(1rem,4vw,3rem);display:flex;align-items:center;gap:1.2rem;border-bottom:4px solid var(--red)}
-.catalog-header img{height:28px;width:auto;display:block}
-.catalog-header h1{font-family:var(--fd);font-size:1.5rem;letter-spacing:.06em}
-.catalog-body{max-width:1400px;margin:0 auto;padding:2rem clamp(1rem,4vw,3rem) 4rem;display:flex;flex-direction:column;gap:.6rem}
-/* Carpeta / acordeón */
-.cat-section{border:1.5px solid var(--grey2);border-radius:10px;overflow:hidden}
-.cat-folder{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;cursor:pointer;background:var(--black);color:var(--white);user-select:none;border:none;width:100%;text-align:left;transition:background .15s}
-.cat-folder:hover{background:#1a1a1a}
-.cat-folder-icon{font-size:.9rem;transition:transform .22s;display:inline-block}
+/* HEADER */
+.catalog-header{background:linear-gradient(135deg,#cc0000 0%,#ff0000 45%,#7a0000 100%);color:var(--white);padding:clamp(2rem,6vw,4rem) clamp(1.5rem,5vw,4rem) clamp(2.5rem,7vw,5rem)}
+.catalog-header h1{font-family:var(--fd);font-size:clamp(3.5rem,10vw,7rem);letter-spacing:.04em;line-height:1;color:#fff}
+/* BODY */
+.catalog-body{max-width:1400px;margin:0 auto;padding:2.5rem clamp(1.2rem,4vw,3.5rem) 5rem;display:flex;flex-direction:column;gap:2.2rem}
+/* CATEGORÍA */
+.cat-section{}
+.cat-folder{display:flex;align-items:center;gap:.6rem;padding:0;cursor:pointer;background:none;color:var(--black);user-select:none;border:none;width:100%;text-align:left;margin-bottom:.6rem}
+.cat-folder:hover .cat-folder-name{opacity:.75}
+.cat-folder-icon{font-size:1rem;transition:transform .22s;display:inline-block;color:var(--black);flex-shrink:0}
 .cat-folder.open .cat-folder-icon{transform:rotate(90deg)}
-.cat-folder-name{font-family:var(--fd);font-size:1.4rem;letter-spacing:.06em;flex:1}
-.cat-folder-count{font-size:.7rem;background:var(--red);color:#fff;border-radius:20px;padding:.1rem .5rem;font-family:var(--fb);font-weight:700;letter-spacing:.03em}
-.cat-body{display:none;padding:1rem}
+.cat-folder-title{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.05em;flex:1;line-height:1}
+.cat-folder-title .cat-name-base{color:var(--black)}
+.cat-folder-title .cat-name-last{color:var(--red)}
+.cat-folder-count{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa;white-space:nowrap}
+.cat-divider{height:2px;background:var(--black);margin-bottom:1.4rem}
+.cat-body{display:none}
 .cat-body.open{display:block}
-/* Grid de productos — mismo estilo que el frontend */
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.75rem}
-.product-card{background:var(--white);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;transition:transform .15s,box-shadow .15s}
-.product-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.13)}
-.product-card-img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:#f8f8f8;pointer-events:none}
-.product-card-img-placeholder{width:100%;aspect-ratio:1;background:var(--grey);display:flex;align-items:center;justify-content:center;font-size:2.5rem}
-.product-card-body{padding:.5rem .65rem .7rem;border-top:1px solid var(--grey)}
-.product-card-brand{font-size:.58rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--red);margin-bottom:.15rem}
-.product-card-name{font-family:var(--fd);font-size:1rem;letter-spacing:.03em;line-height:1.15;color:var(--black)}
+/* GRID */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.2rem}
+.product-card{background:var(--white);border-radius:8px;overflow:hidden;border:1px solid #ececec;cursor:pointer;transition:box-shadow .18s,transform .18s}
+.product-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.12);transform:translateY(-3px)}
+.product-card-img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:#f6f6f6;pointer-events:none}
+.product-card-img-placeholder{width:100%;aspect-ratio:1;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+.product-card-body{padding:.55rem .7rem .75rem}
+.product-card-brand{font-size:.58rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:.12rem}
+.product-card-name{font-family:var(--fd);font-size:1.05rem;letter-spacing:.03em;line-height:1.15;color:var(--black)}
 @media print{
   .catalog-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .cat-folder{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .cat-body{display:block!important}
   .product-grid{grid-template-columns:repeat(4,1fr)}
 }
-@media(max-width:480px){
-  .product-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}
+@media(max-width:600px){
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
 }
 /* Modal */
 .pmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:1rem}
@@ -120,8 +123,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 <body>
 
 <div class="catalog-header">
-  <img src="/logotipo-rojo.png" alt="Procalzado"/>
-  <h1>CATÁLOGO DE PRODUCTOS</h1>
+  <h1>CATÁLOGO</h1>
 </div>
 
 <div class="catalog-body">
@@ -129,11 +131,22 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
     <p style="text-align:center;padding:4rem;color:var(--muted)">El catálogo está vacío. Agrega productos desde el panel de administración.</p>
   ) : groups.map(({ cat, items }, gi) => (
     <div class="cat-section">
-      <button class="cat-folder" data-folder={`folder-${gi}`} type="button">
-        <span class="cat-folder-icon">▶</span>
-        <span class="cat-folder-name">{cat.name}</span>
-        <span class="cat-folder-count">{items.length}</span>
-      </button>
+      {(() => {
+        const words = cat.name.trim().split(' ');
+        const last = words.pop();
+        const base = words.join(' ');
+        return (
+          <button class="cat-folder" data-folder={`folder-${gi}`} type="button">
+            <span class="cat-folder-icon">▶</span>
+            <span class="cat-folder-title">
+              {base && <span class="cat-name-base">{base} </span>}
+              <span class="cat-name-last">{last}</span>
+            </span>
+            <span class="cat-folder-count">{items.length} PRODUCTOS</span>
+          </button>
+        );
+      })()}
+      <div class="cat-divider"></div>
       <div class="cat-body" id={`folder-${gi}`}>
       <div class="product-grid">
         {items.map((p: any) => {
