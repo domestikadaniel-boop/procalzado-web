@@ -67,7 +67,7 @@ if (ungrouped.length) groups.push({ cat: { id: '__otros', name: 'Otros' }, items
 body{font-family:var(--fb);background:var(--white);color:var(--black)}
 /* HEADER */
 .catalog-header{background:linear-gradient(to right,#3a0000 0%,#8a0000 25%,#cc0000 55%,#ff0000 80%,#ff1a00 100%);color:var(--white);padding:clamp(1.8rem,5vw,3rem) clamp(1.5rem,5vw,4rem) clamp(2rem,5vw,3.2rem);display:flex;flex-direction:column;align-items:flex-start}
-.catalog-header-logo{height:20px;width:auto;display:block;margin-bottom:1.4rem;opacity:.9}
+.catalog-header-logo{height:26px;width:auto;display:block;margin-bottom:1.2rem}
 .catalog-header-title{font-family:var(--fd);font-size:clamp(2.8rem,8vw,5.5rem);letter-spacing:.04em;line-height:1;color:#fff;margin-bottom:.4rem}
 .catalog-header-tag{font-family:var(--fb);font-size:clamp(.82rem,1.8vw,1rem);color:rgba(255,255,255,.72);font-weight:300;letter-spacing:.02em}
 /* BODY */
@@ -108,7 +108,7 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .pmodal-bg.open{display:flex}
 .pmodal{background:var(--white);border-radius:20px;max-width:560px;width:100%;overflow:hidden;display:flex;flex-direction:column;position:relative;max-height:92vh}
 .pmodal-close{position:absolute;top:.75rem;right:.75rem;background:rgba(255,255,255,.9);color:var(--black);border:none;border-radius:50%;width:36px;height:36px;font-size:1.2rem;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.18);font-weight:700}
-.pmodal-stage{position:relative;width:100%;background:#fff;aspect-ratio:1;max-height:460px;flex-shrink:0}
+.pmodal-stage{position:relative;width:100%;background:#fff;height:min(60vmin,400px);flex-shrink:0}
 .pmodal-img{width:100%;height:100%;object-fit:contain;display:block}
 .pmodal-arr{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.9);color:var(--black);border:none;border-radius:50%;width:40px;height:40px;font-size:1.5rem;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:background .15s;font-weight:300}
 .pmodal-arr:hover{background:#fff}
