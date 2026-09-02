@@ -1043,11 +1043,13 @@ function openProductForm(p=null){
   renderColors();
 
   $('productModal').classList.add('open');
+  document.body.style.overflow='hidden';
 }
+function closeProductModal(){$('productModal').classList.remove('open');document.body.style.overflow='';}
 
 $('addProductBtn').addEventListener('click',()=>openProductForm());
-$('formClose').addEventListener('click',()=>$('productModal').classList.remove('open'));
-$('formCancelBtn').addEventListener('click',()=>$('productModal').classList.remove('open'));
+$('formClose').addEventListener('click',closeProductModal);
+$('formCancelBtn').addEventListener('click',closeProductModal);
 $('pName').addEventListener('input',()=>{if(!editingProduct){const b=brands.find(x=>x.id===$('pBrand').value);$('pSlug').value=slugify((b?.name||'')+' '+$('pName').value)}});
 $('pBrand').addEventListener('change',()=>{if(!editingProduct&&$('pName').value){const b=brands.find(x=>x.id===$('pBrand').value);$('pSlug').value=slugify((b?.name||'')+' '+$('pName').value)}});
 
@@ -1150,7 +1152,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
     await supabase.from('product_images').update({is_primary:true}).eq('id', allCurrentImgIds[0]);
   }
 
-  $('productModal').classList.remove('open');await loadData();loading(false);showToast('Producto guardado ✓');
+  closeProductModal();await loadData();loading(false);showToast('Producto guardado ✓');
 });
 
 window.editProduct=id=>{const p=products.find(x=>x.id===id);if(p)openProductForm(p)};
