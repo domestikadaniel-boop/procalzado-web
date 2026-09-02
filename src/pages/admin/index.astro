@@ -305,7 +305,13 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
       <div class="form-grid">
         <div class="field"><label>Nombre *</label><input type="text" id="pName" placeholder="Ej: Dakar"/></div>
         <div class="field"><label>Slug (URL) *</label><input type="text" id="pSlug" placeholder="auto-generado"/></div>
-        <div class="field"><label>Marca</label><select id="pBrand"><option value="">Seleccionar...</option></select></div>
+        <div class="field"><label>Marca</label>
+          <div class="search-select" id="pBrandWrap">
+            <input type="text" class="search-select-input" id="pBrandInput" placeholder="Buscar marca..." autocomplete="off"/>
+            <div class="search-select-list" id="pBrandList"></div>
+          </div>
+          <input type="hidden" id="pBrand"/>
+        </div>
         <div class="field full"><label>Géneros (puedes elegir varios)</label>
           <div class="genders-checkbox-row">
             <label class="gender-check"><input type="checkbox" value="hombre" data-gender/> <span>Hombre</span></label>
@@ -781,8 +787,10 @@ $('recSaveBtn')?.addEventListener('click',async()=>{
   $('recModal').classList.remove('open');await loadData();showToast('Recomendado guardado ✓');
 });
 
+let brandSearchSelect=null;
 function populateSelects(){
-  $('pBrand').innerHTML='<option value="">Seleccionar...</option>'+brands.filter(b=>b.active).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+  const brandItems=brands.filter(b=>b.active).map(b=>({value:b.id,label:b.name}));
+  brandSearchSelect=initSearchSelect('pBrandInput','pBrandList','pBrandWrap','pBrand',brandItems);
 }
 
 function renderCategoriesCheckboxes(selectedIds=[], primaryId=null){
@@ -974,7 +982,7 @@ function openProductForm(p=null){
   editingProduct=p;formColors=[];
   $('formTitle').textContent=p?'Editar Producto':'Nuevo Producto';
   $('productId').value=p?.id||'';$('pName').value=p?.name||'';$('pSlug').value=p?.slug||'';
-  $('pBrand').value=p?.brand_id||'';
+  if(brandSearchSelect){if(p?.brand_id)brandSearchSelect.setValue(p.brand_id);else brandSearchSelect.clear();}else{$('pBrand').value=p?.brand_id||''}
   // Cargar géneros (de array nuevo o del campo viejo single)
   const productGenders = (p?.genders && p.genders.length > 0) ? p.genders : (p?.gender ? [p.gender] : []);
   document.querySelectorAll('[data-gender]').forEach(inp => {
@@ -1050,8 +1058,10 @@ function closeProductModal(){$('productModal').classList.remove('open');document
 $('addProductBtn').addEventListener('click',()=>openProductForm());
 $('formClose').addEventListener('click',closeProductModal);
 $('formCancelBtn').addEventListener('click',closeProductModal);
-$('pName').addEventListener('input',()=>{if(!editingProduct){const b=brands.find(x=>x.id===$('pBrand').value);$('pSlug').value=slugify((b?.name||'')+' '+$('pName').value)}});
-$('pBrand').addEventListener('change',()=>{if(!editingProduct&&$('pName').value){const b=brands.find(x=>x.id===$('pBrand').value);$('pSlug').value=slugify((b?.name||'')+' '+$('pName').value)}});
+function updateSlug(){if(!editingProduct&&$('pName').value){const b=brands.find(x=>x.id===$('pBrand').value);$('pSlug').value=slugify((b?.name||'')+' '+$('pName').value)}}
+$('pName').addEventListener('input',updateSlug);
+$('pBrandInput').addEventListener('change',updateSlug);
+document.getElementById('pBrandList').addEventListener('click',()=>setTimeout(updateSlug,0));
 
 // SAVE
 $('formSaveBtn').addEventListener('click',async()=>{
