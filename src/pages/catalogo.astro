@@ -107,11 +107,11 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
 .cat-body{display:none}
 .cat-body.open{display:block}
 /* GRID PRODUCTOS */
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
+.product-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
 /* TARJETAS */
-.product-card{background:var(--white);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;isolation:isolate}
+.product-card{background:var(--white);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;isolation:isolate;box-shadow:0 2px 8px rgba(0,0,0,.07)}
 .product-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.13)}
-.product-card-img-wrap{width:100%;aspect-ratio:3/4;background:var(--grey);overflow:hidden;position:relative;flex-shrink:0}
+.product-card-img-wrap{width:100%;aspect-ratio:1;background:var(--grey);overflow:hidden;position:relative;flex-shrink:0}
 .product-card-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .product-card-img-placeholder{width:100%;aspect-ratio:3/4;background:var(--grey);display:flex;align-items:center;justify-content:center;font-size:2.5rem}
 .product-card-body{padding:.6rem .7rem .85rem;flex-shrink:0;background:var(--white)}
@@ -123,6 +123,9 @@ body{font-family:var(--fb);background:var(--white);color:var(--black)}
   .cat-body{display:block!important}
   .cat-preview{display:grid!important}
   .product-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:1024px){
+  .product-grid{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:700px){
   .cat-grid{grid-template-columns:1fr}
