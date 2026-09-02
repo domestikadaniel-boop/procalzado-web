@@ -392,10 +392,6 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         <select id="cParent"><option value="">— Es una categoría principal —</option></select>
         <small style="color:var(--muted);font-size:.72rem">Si la categoría es una subcategoría, elige aquí su categoría padre.</small>
       </div>
-      <div class="field"><label>Título aspiracional (opcional)</label>
-        <input type="text" id="cDisplayTitle" placeholder="Ej: Para el trabajo más duro"/>
-        <small style="color:var(--muted);font-size:.72rem">Texto llamativo que se muestra en el menú. Si lo dejas vacío se usa el nombre normal.</small>
-      </div>
       <div class="field"><label>Meta Title (SEO)</label><input type="text" id="cMetaTitle" placeholder="Botas de Caucho en Colombia | Procalzado"/></div>
       <div class="field"><label>Meta Description (SEO)</label><textarea id="cMetaDesc" rows="2" maxlength="160" placeholder="Descripción para Google (máx 160 chars)"></textarea></div>
       <div class="field"><label><input type="checkbox" id="cActive" checked/> Categoría activa</label></div>
@@ -568,7 +564,7 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','recommended','promos','promopage','catalog','settings'].forEach(t=>$(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none');
+  ['products','brands','categories','recommended','promos','promopage','catalog'].forEach(t=>$(`tab-${t}`)&&($(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none'));
 }));
 
 // LOAD
