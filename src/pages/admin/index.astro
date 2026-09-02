@@ -325,7 +325,14 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
           <div class="cats-checkbox-grid" id="pCategoriesGrid"></div>
         </div>
         <div class="field"><label>Precio (COP)</label><input type="number" id="pPrice" placeholder="0"/></div>
-        <div class="field"><label>Precio rebajado (oferta)</label><input type="number" id="pSalePrice" placeholder="Opcional"/><small style="color:var(--muted);font-size:.72rem">Si lo llenas, el precio normal se muestra tachado.</small></div>
+        <div class="field"><label>Descuento (%)</label>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <input type="number" id="pSalePrice" placeholder="Ej: 20" min="1" max="99" style="width:100px"/>
+            <span style="font-size:.85rem;color:var(--muted)">%</span>
+            <span id="pSalePricePreview" style="font-size:.82rem;color:var(--red);font-weight:600"></span>
+          </div>
+          <small style="color:var(--muted);font-size:.72rem">Porcentaje de descuento sobre el precio normal. Deja vacío para sin descuento.</small>
+        </div>
         <div class="field"><label><input type="checkbox" id="pShowPrice"/> Mostrar precio en el sitio</label></div>
         <div class="field"><label><input type="checkbox" id="pFeatured"/> Producto destacado</label></div>
         <div class="field"><label><input type="checkbox" id="pDisableBuyBtn"/> Desactivar botón "Comprar" (solo WhatsApp y carrito)</label></div>
@@ -988,7 +995,10 @@ function openProductForm(p=null){
   document.querySelectorAll('[data-gender]').forEach(inp => {
     inp.checked = productGenders.includes(inp.value);
   });
-  $('pPrice').value=p?.price||'';$('pSalePrice').value=p?.sale_price||'';$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;$('pDisableBuyBtn').checked=p?.disable_buy_button||false;
+  $('pPrice').value=p?.price||'';
+  const pct=(p?.sale_price&&p?.price)?Math.round((1-p.sale_price/p.price)*100):'';
+  $('pSalePrice').value=pct;
+  updateSalePricePreview();$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;$('pDisableBuyBtn').checked=p?.disable_buy_button||false;
   $('pShortDesc').value=p?.short_description||'';$('pDesc').value=p?.description||'';
   $('pNotice').value=p?.notice||'';$('pNoticeType').value=p?.notice_type||'info';
 
@@ -1059,7 +1069,10 @@ $('addProductBtn').addEventListener('click',()=>openProductForm());
 $('formClose').addEventListener('click',closeProductModal);
 $('formCancelBtn').addEventListener('click',closeProductModal);
 function updateSlug(){if(!editingProduct&&$('pName').value){const b=brands.find(x=>x.id===$('pBrand').value);$('pSlug').value=slugify((b?.name||'')+' '+$('pName').value)}}
+function updateSalePricePreview(){const pct=parseFloat($('pSalePrice').value);const pr=parseFloat($('pPrice').value);const el=$('pSalePricePreview');if(pct>0&&pr>0){el.textContent='→ $'+Math.round(pr*(1-pct/100)).toLocaleString('es-CO')}else{el.textContent=''}}
 $('pName').addEventListener('input',updateSlug);
+$('pSalePrice').addEventListener('input',updateSalePricePreview);
+$('pPrice').addEventListener('input',updateSalePricePreview);
 $('pBrandInput').addEventListener('change',updateSlug);
 document.getElementById('pBrandList').addEventListener('click',()=>setTimeout(updateSlug,0));
 
@@ -1083,7 +1096,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
       if (c.salePrice != null) colorSalePricesObj[c.name.trim()] = c.salePrice;
     });
   }
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:$('pSalePrice').value?parseFloat($('pSalePrice').value):null,show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,disable_buy_button:$('pDisableBuyBtn').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,color_sale_prices:colorSalePricesObj,active:true};
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:(()=>{const pct=$('pSalePrice').value?parseFloat($('pSalePrice').value):null;const pr=$('pPrice').value?parseFloat($('pPrice').value):null;return(pct&&pr)?Math.round(pr*(1-pct/100)):null})(),show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,disable_buy_button:$('pDisableBuyBtn').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,color_sale_prices:colorSalePricesObj,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}
