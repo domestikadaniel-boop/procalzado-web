@@ -327,8 +327,10 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         <div class="field"><label>Precio (COP)</label><input type="number" id="pPrice" placeholder="0"/></div>
         <div class="field"><label>Descuento (%)</label>
           <div style="display:flex;align-items:center;gap:.5rem">
-            <input type="number" id="pSalePrice" placeholder="Ej: 20" min="1" max="99" style="width:100px"/>
-            <span style="font-size:.85rem;color:var(--muted)">%</span>
+            <div style="position:relative;display:inline-flex;align-items:center">
+              <input type="number" id="pSalePrice" placeholder="0" min="1" max="99" style="width:90px;padding-right:1.8rem"/>
+              <span style="position:absolute;right:.55rem;font-size:.88rem;font-weight:700;color:var(--muted);pointer-events:none">%</span>
+            </div>
             <span id="pSalePricePreview" style="font-size:.82rem;color:var(--red);font-weight:600"></span>
           </div>
           <small style="color:var(--muted);font-size:.72rem">Porcentaje de descuento sobre el precio normal. Deja vacío para sin descuento.</small>
