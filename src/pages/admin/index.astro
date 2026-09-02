@@ -238,7 +238,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     </div>
     <div id="tab-categories" style="display:none">
       <div class="toolbar"><span style="font-size:.85rem;color:var(--muted)">Gestiona las categorías (arrastra para reordenar)</span><button class="btn-add" id="addCatBtn">+ Nueva categoría</button></div>
-      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th style="width:130px">Menú (título/img)</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="catTableBody"></tbody></table></div>
+      <div class="product-table"><table><thead><tr><th style="width:24px"></th><th>Nombre</th><th>Slug</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="catTableBody"></tbody></table></div>
     </div>
 
     <div id="tab-recommended" style="display:none">
@@ -697,7 +697,6 @@ function renderCategories(){
       <td style="width:24px;cursor:grab;color:var(--muted);user-select:none;text-align:center" title="Arrastra para reordenar">⋮⋮</td>
       <td>${isChild?'<span style="color:var(--muted);margin-right:.4rem">↳</span>':''}<strong>${c.name}</strong>${parent?`<br><span style="font-size:.7rem;color:var(--muted)">en ${parent.name}</span>`:''}</td>
       <td><code style="font-size:.78rem;color:var(--muted)">${c.slug}</code></td>
-      <td style="font-size:.75rem">${c.image_url?'<span title="Tiene imagen">🖼️</span>':'<span style="color:var(--grey2)">—</span>'} ${c.display_title?`<span style="color:var(--muted)">${c.display_title}</span>`:'<span style="color:var(--grey2)">sin título</span>'}</td>
       <td><span class="badge ${c.active?'badge-active':'badge-inactive'}">${c.active?'Activa':'Off'}</span></td>
       <td class="actions-cell">
         <button class="action-btn edit" onclick="window.editCategory('${c.id}')"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/></svg></button>
