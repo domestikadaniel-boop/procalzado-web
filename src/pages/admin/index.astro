@@ -1649,7 +1649,7 @@ function renderBilling() {
     const sc = statusColors[o.status] || 'background:#F2F2F2;color:#666';
     const sl = statusLabels[o.status] || o.status;
     return `<tr>
-      <td style="font-size:.78rem;font-weight:700;color:var(--muted)">${o.order_number||o.wompi_reference||o.id.slice(0,8)}</td>
+      <td style="font-size:.72rem;font-weight:600;color:var(--muted);font-family:monospace;word-break:break-all;max-width:160px">${o.id}</td>
       <td style="font-size:.82rem;white-space:nowrap">${date}</td>
       <td style="font-size:.85rem"><div style="font-weight:600">${o.buyer_name||'—'}</div><div style="font-size:.76rem;color:var(--muted)">${o.buyer_email||''}</div></td>
       <td style="font-size:.82rem">${o.buyer_document_type||''} ${o.buyer_document_number||'—'}</td>
