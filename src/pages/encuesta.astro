@@ -1,8 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// URL de reseña en Google — reemplaza con el link de tu perfil de Google Business
 const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
+
+const svgFace = (mouth: string) =>
+  `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:52px;display:block"><circle cx="50" cy="50" r="43"/><circle cx="36" cy="38" r="5.5" fill="currentColor" stroke="none"/><circle cx="64" cy="38" r="5.5" fill="currentColor" stroke="none"/>${mouth}</svg>`;
+
+const F = {
+  bigSmile:    svgFace('<path d="M24,62 Q50,86 76,62"/>'),
+  smallSmile:  svgFace('<path d="M32,64 Q50,75 68,64"/>'),
+  neutral:     svgFace('<line x1="28" y1="65" x2="72" y2="65"/>'),
+  slightFrown: svgFace('<path d="M32,68 Q50,57 68,68"/>'),
+  bigFrown:    svgFace('<path d="M24,70 Q50,52 76,70"/>'),
+};
 ---
 
 <Layout title="Encuesta de Satisfacción | Procalzado">
@@ -23,12 +33,11 @@ const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
   .field textarea{resize:vertical;min-height:100px}
   .field{margin-bottom:1.2rem}
   .faces-row{display:flex;gap:.6rem;justify-content:center;margin-bottom:.5rem}
-  .face-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.7rem .3rem;border:2px solid #e5e5e5;border-radius:12px;cursor:pointer;background:#fff;transition:border-color .15s,background .15s;font-family:inherit}
-  .face-btn:hover{border-color:#FF0000;background:#fff5f5}
-  .face-btn.selected{border-color:#FF0000;background:#fff0f0}
-  .face-emoji{font-size:2rem;line-height:1}
-  .face-label{font-size:.62rem;font-weight:600;color:#888;text-align:center;line-height:1.2}
-  .face-btn.selected .face-label{color:#FF0000}
+  .face-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.7rem .3rem;border:2px solid #e5e5e5;border-radius:12px;cursor:pointer;background:#fff;transition:border-color .15s,background .15s,color .15s;font-family:inherit;color:#ddd}
+  .face-btn:hover{border-color:#FF0000;background:#fff5f5;color:#FF0000}
+  .face-btn.selected{border-color:#FF0000;background:#fff0f0;color:#FF0000}
+  .face-label{font-size:.62rem;font-weight:600;color:#aaa;text-align:center;line-height:1.2;transition:color .15s}
+  .face-btn:hover .face-label,.face-btn.selected .face-label{color:#FF0000}
   .yn-row{display:flex;gap:.8rem;margin-bottom:1.2rem}
   .yn-btn{flex:1;padding:.85rem;border:2px solid #e5e5e5;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;background:#fff;font-family:inherit;transition:border-color .15s,background .15s}
   .yn-btn:hover{border-color:#FF0000;background:#fff5f5}
@@ -91,19 +100,19 @@ const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
       <div class="step-q">¿Encontraste lo que buscabas de manera fácil?</div>
       <div class="faces-row">
         <button class="face-btn" data-val="1" data-group="found" onclick="selectFace('found',1)">
-          <span class="face-emoji">😞</span><span class="face-label">Muy<br/>difícil</span>
+          <Fragment set:html={F.bigFrown}/><span class="face-label">Muy<br/>difícil</span>
         </button>
         <button class="face-btn" data-val="2" data-group="found" onclick="selectFace('found',2)">
-          <span class="face-emoji">😕</span><span class="face-label">Difícil</span>
+          <Fragment set:html={F.slightFrown}/><span class="face-label">Difícil</span>
         </button>
         <button class="face-btn" data-val="3" data-group="found" onclick="selectFace('found',3)">
-          <span class="face-emoji">😐</span><span class="face-label">Regular</span>
+          <Fragment set:html={F.neutral}/><span class="face-label">Regular</span>
         </button>
         <button class="face-btn" data-val="4" data-group="found" onclick="selectFace('found',4)">
-          <span class="face-emoji">🙂</span><span class="face-label">Fácil</span>
+          <Fragment set:html={F.smallSmile}/><span class="face-label">Fácil</span>
         </button>
         <button class="face-btn" data-val="5" data-group="found" onclick="selectFace('found',5)">
-          <span class="face-emoji">😄</span><span class="face-label">Muy<br/>fácil</span>
+          <Fragment set:html={F.bigSmile}/><span class="face-label">Muy<br/>fácil</span>
         </button>
       </div>
       <div class="error-msg" id="errFound">Por favor selecciona una opción.</div>
@@ -140,19 +149,19 @@ const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
       <div class="step-q">¿Qué tan satisfecho/a te sentiste con tu compra en general?</div>
       <div class="faces-row">
         <button class="face-btn" data-val="1" data-group="sat" onclick="selectFace('sat',1)">
-          <span class="face-emoji">😞</span><span class="face-label">Muy insa-<br/>tisfecho/a</span>
+          <Fragment set:html={F.bigFrown}/><span class="face-label">Muy insa-<br/>tisfecho/a</span>
         </button>
         <button class="face-btn" data-val="2" data-group="sat" onclick="selectFace('sat',2)">
-          <span class="face-emoji">😕</span><span class="face-label">Insa-<br/>tisfecho/a</span>
+          <Fragment set:html={F.slightFrown}/><span class="face-label">Insa-<br/>tisfecho/a</span>
         </button>
         <button class="face-btn" data-val="3" data-group="sat" onclick="selectFace('sat',3)">
-          <span class="face-emoji">😐</span><span class="face-label">Regular</span>
+          <Fragment set:html={F.neutral}/><span class="face-label">Regular</span>
         </button>
         <button class="face-btn" data-val="4" data-group="sat" onclick="selectFace('sat',4)">
-          <span class="face-emoji">🙂</span><span class="face-label">Satisfecho/a</span>
+          <Fragment set:html={F.smallSmile}/><span class="face-label">Satisfecho/a</span>
         </button>
         <button class="face-btn" data-val="5" data-group="sat" onclick="selectFace('sat',5)">
-          <span class="face-emoji">😄</span><span class="face-label">Muy satis-<br/>fecho/a</span>
+          <Fragment set:html={F.bigSmile}/><span class="face-label">Muy satis-<br/>fecho/a</span>
         </button>
       </div>
       <div class="error-msg" id="errSat">Por favor selecciona una opción.</div>
