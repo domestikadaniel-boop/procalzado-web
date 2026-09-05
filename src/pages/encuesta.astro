@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
+const GOOGLE_REVIEW_URL = 'https://g.page/r/CSjmWaSPHaKlEAI/review';
 
 const svgFace = (mouth: string) =>
   `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:52px;display:block"><circle cx="50" cy="50" r="43"/><circle cx="36" cy="38" r="5.5" fill="currentColor" stroke="none"/><circle cx="64" cy="38" r="5.5" fill="currentColor" stroke="none"/>${mouth}</svg>`;
@@ -263,7 +263,7 @@ const F = {
     var w = 520, h = 680;
     var left = Math.round(window.screenX + (window.outerWidth - w) / 2);
     var top = Math.round(window.screenY + (window.outerHeight - h) / 2);
-    window.open('https://share.google/aZ1lLNvbqJZXBpYWG', 'google_review',
+    window.open('https://g.page/r/CSjmWaSPHaKlEAI/review', 'google_review',
       'width='+w+',height='+h+',left='+left+',top='+top+',toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
   };
 
