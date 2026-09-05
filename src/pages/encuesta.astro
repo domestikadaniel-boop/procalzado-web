@@ -280,7 +280,7 @@ const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
     if (error) {
       btn.disabled = false;
       btn.textContent = 'Enviar encuesta ✓';
-      alert('Hubo un error al enviar. Intenta de nuevo.');
+      alert('Error: ' + (error.message || error.code || JSON.stringify(error)));
       console.error(error);
       return;
     }
