@@ -1712,7 +1712,10 @@ function exportSurveys() {
   const a = document.createElement('a');
   const from = $('surveyFrom').value||'inicio';
   const to = $('surveyTo').value||'hoy';
-  a.href=url; a.download=`encuestas_${from}_${to}.csv`; a.click();
+  a.href=url; a.download=`encuestas_${from}_${to}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
