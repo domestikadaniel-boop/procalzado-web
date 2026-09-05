@@ -168,6 +168,7 @@ const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
       <div class="step-q">¿Qué podríamos haber hecho para mejorar tu experiencia de compra?</div>
       <div class="field">
         <textarea id="sImprovement" placeholder="Tu opinión es muy valiosa para nosotros. Escribe aquí cualquier sugerencia..."></textarea>
+        <div class="error-msg" id="errImprovement">Por favor escribe tu sugerencia antes de enviar.</div>
       </div>
       <div class="nav-row">
         <button class="btn-back" onclick="goBack(5)">← Atrás</button>
@@ -261,6 +262,12 @@ const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
   }
 
   window.submitSurvey = async function() {
+    var improvement = document.getElementById('sImprovement').value.trim();
+    if (!improvement) {
+      document.getElementById('errImprovement').classList.add('show');
+      return;
+    }
+    document.getElementById('errImprovement').classList.remove('show');
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.textContent = 'Enviando...';
