@@ -876,6 +876,10 @@ function renderColors(){
         ${(c.images||[]).map((img,i)=>`<div class="color-img-thumb" style="width:70px;height:70px"><img src="${img.url}" width="70" height="70" style="width:70px;height:70px;object-fit:cover;display:block"/><button type="button" class="x" data-rmimg="${idx}-${i}">×</button></div>`).join('')}
         <button type="button" class="upload-color-btn" data-action="upload" data-idx="${idx}">📷 Subir imagen</button>
       </div>
+      <div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--grey2);display:flex;align-items:center;gap:.4rem">
+        <input type="radio" name="indexColor" id="indexColor-${idx}" value="${idx}" ${c.showInIndex?'checked':''} data-action="indexColor" data-idx="${idx}" style="cursor:pointer;accent-color:var(--red)"/>
+        <label for="indexColor-${idx}" style="font-size:.78rem;font-weight:600;color:${c.showInIndex?'var(--red)':'var(--muted)'};cursor:pointer">Mostrar en index</label>
+      </div>
       ${sizesHtml}
       ${perColorPrices ? `
       <div style="margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--grey2)">
@@ -925,6 +929,7 @@ function handleColorChange(e){
   if(action==='hex2color'){formColors[idx].hex2=e.target.value; renderColors();}
   if(action==='price')formColors[idx].price=e.target.value?parseFloat(e.target.value):null;
   if(action==='salePrice')formColors[idx].salePrice=e.target.value?parseFloat(e.target.value):null;
+  if(action==='indexColor'){formColors.forEach((c,i)=>c.showInIndex=i===idx);renderColors();}
 }
 function handleColorClick(e){
   const action=e.target.dataset.action;
@@ -1041,6 +1046,7 @@ function openProductForm(p=null){
       });
       perColorSizes = !sizeSets.every(s => s === sizeSets[0]);
     }
+    const primaryImgColor=(p.product_images||[]).find(i=>i.is_primary)?.color;
     formColors=uniqueColors.map(cname=>{
       const variant=p.product_variants.find(v=>v.color===cname);
       const colorImages=(p.product_images||[]).filter(i=>i.color===cname);
@@ -1051,9 +1057,11 @@ function openProductForm(p=null){
         hex2:variant?.color_hex_2||'#FFFFFF',
         dual:!!variant?.color_hex_2,
         images:colorImages.map(i=>({url:i.url,id:i.id,existing:true})),
-        sizes:colorSizes
+        sizes:colorSizes,
+        showInIndex:cname===primaryImgColor
       };
     });
+    if(!formColors.some(c=>c.showInIndex)&&formColors.length)formColors[0].showInIndex=true;
   }
   $('perColorSizesToggle').checked = perColorSizes;
   $('sizesGrid').style.display = perColorSizes ? 'none' : '';
@@ -1179,9 +1187,14 @@ $('formSaveBtn').addEventListener('click',async()=>{
   });
   if(newImgs.length)await supabase.from('product_images').insert(newImgs);
 
-  // Si no hay primary, asignar la primera
-  if (existingImgs.length && !existingImgs.some(i=>i.is_primary) && allCurrentImgIds.length) {
-    await supabase.from('product_images').update({is_primary:true}).eq('id', allCurrentImgIds[0]);
+  // Actualizar is_primary según el color seleccionado para el index
+  const indexColorIdx=formColors.findIndex(c=>c.showInIndex);
+  const targetColorName=(formColors[indexColorIdx>=0?indexColorIdx:0]?.name||'').trim();
+  const{data:allProdImgs}=await supabase.from('product_images').select('id,color').eq('product_id',pid);
+  if(allProdImgs&&allProdImgs.length){
+    await supabase.from('product_images').update({is_primary:false}).eq('product_id',pid);
+    const targetImg=allProdImgs.find(i=>i.color===targetColorName)||allProdImgs[0];
+    if(targetImg)await supabase.from('product_images').update({is_primary:true}).eq('id',targetImg.id);
   }
 
   closeProductModal();await loadData();loading(false);showToast('Producto guardado ✓');
