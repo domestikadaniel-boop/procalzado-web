@@ -1760,8 +1760,7 @@ table.items thead th.c{text-align:center}
   </table>
   <div class="totals">
     <table>
-      <tr><td style="color:#666">Subtotal</td><td>${fmt(subtotal)}</td></tr>
-      ${shipping>0?`<tr><td style="color:#666">Envío</td><td>${fmt(shipping)}</td></tr>`:''}
+      ${shipping>0?`<tr><td style="color:#666">Subtotal</td><td>${fmt(subtotal)}</td></tr><tr><td style="color:#666">Envío</td><td>${fmt(shipping)}</td></tr>`:''}
       <tr class="total-row"><td>TOTAL</td><td>${fmt(total)}</td></tr>
     </table>
   </div>
