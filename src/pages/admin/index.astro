@@ -889,8 +889,8 @@ function renderColors(){
             <input type="number" placeholder="0" value="${c.price||''}" data-action="price" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:140px"/>
           </div>
           <div>
-            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.2rem">Precio rebajado (oferta)</label>
-            <input type="number" placeholder="Opcional" value="${c.salePrice||''}" data-action="salePrice" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:140px"/>
+            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.2rem">Descuento (%)</label>
+            <input type="number" placeholder="Ej: 20" min="1" max="99" value="${c.salePct||''}" data-action="salePrice" data-idx="${idx}" style="padding:.45rem .6rem;border:1px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;width:140px"/>
           </div>
           <small style="color:var(--muted);font-size:.72rem;padding-bottom:.5rem">Si se dejan vacíos, se usa el precio general.</small>
         </div>
@@ -928,7 +928,7 @@ function handleColorChange(e){
   if(action==='hex'){formColors[idx].hex=e.target.value; renderColors();}
   if(action==='hex2color'){formColors[idx].hex2=e.target.value; renderColors();}
   if(action==='price')formColors[idx].price=e.target.value?parseFloat(e.target.value):null;
-  if(action==='salePrice')formColors[idx].salePrice=e.target.value?parseFloat(e.target.value):null;
+  if(action==='salePrice')formColors[idx].salePct=e.target.value?parseFloat(e.target.value):null;
   if(action==='indexColor'){formColors.forEach((c,i)=>c.showInIndex=i===idx);renderColors();}
 }
 function handleColorClick(e){
@@ -962,7 +962,7 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePrice:null});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null});
   renderColors();
 });
 
@@ -1072,9 +1072,14 @@ function openProductForm(p=null){
   syncGlobalPriceFields();
   const colorPricesMap = (p?.color_prices && typeof p.color_prices === 'object') ? p.color_prices : {};
   const colorSalePricesMap = (p?.color_sale_prices && typeof p.color_sale_prices === 'object') ? p.color_sale_prices : {};
-  formColors.forEach(c => { c.price = colorPricesMap[c.name] || null; c.salePrice = colorSalePricesMap[c.name] || null; });
+  formColors.forEach(c => {
+    c.price = colorPricesMap[c.name] || null;
+    const rawSale = colorSalePricesMap[c.name] || null;
+    const basePrice = c.price || p?.price || null;
+    c.salePct = (rawSale && basePrice) ? Math.round((1 - rawSale/basePrice) * 100) : null;
+  });
 
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePrice:null});
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -1108,9 +1113,13 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const colorPricesObj = {};
   const colorSalePricesObj = {};
   if (perColorPrices) {
+    const globalPrice = $('pPrice').value ? parseFloat($('pPrice').value) : null;
     formColors.filter(c=>c.name.trim()).forEach(c => {
       if (c.price != null) colorPricesObj[c.name.trim()] = c.price;
-      if (c.salePrice != null) colorSalePricesObj[c.name.trim()] = c.salePrice;
+      if (c.salePct != null) {
+        const base = c.price || globalPrice;
+        if (base) colorSalePricesObj[c.name.trim()] = Math.round(base * (1 - c.salePct/100));
+      }
     });
   }
   const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:(()=>{const pct=$('pSalePrice').value?parseFloat($('pSalePrice').value):null;const pr=$('pPrice').value?parseFloat($('pPrice').value):null;return(pct&&pr)?Math.round(pr*(1-pct/100)):null})(),show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,disable_buy_button:$('pDisableBuyBtn').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,color_sale_prices:colorSalePricesObj,active:true};
@@ -1205,7 +1214,7 @@ window.deleteProduct=async(id,name)=>{if(!confirm(`¿Eliminar "${name}"?`))retur
 window.toggleProductActive=async(id,checked)=>{await supabase.from('products').update({active:checked}).eq('id',id);const p=products.find(x=>x.id===id);if(p)p.active=checked;showToast(checked?'Producto activado':'Producto desactivado')};
 window.toggleBrandActive=async(id,checked)=>{await supabase.from('brands').update({active:checked}).eq('id',id);const b=brands.find(x=>x.id===id);if(b)b.active=checked;showToast(checked?'Marca activada':'Marca desactivada')};
 window.toggleCatActive=async(id,checked)=>{await supabase.from('categories').update({active:checked}).eq('id',id);const c=categories.find(x=>x.id===id);if(c)c.active=checked;showToast(checked?'Categoría activada':'Categoría desactivada')};
-window.removeDiscount=async(id)=>{if(!confirm('¿Quitar el descuento de este producto?'))return;loading(true);await supabase.from('products').update({sale_price:null}).eq('id',id);await loadData();loading(false);showToast('Descuento eliminado')};
+window.removeDiscount=async(id)=>{if(!confirm('¿Quitar el descuento de este producto?'))return;loading(true);await supabase.from('products').update({sale_price:null,color_sale_prices:{}}).eq('id',id);await loadData();loading(false);showToast('Descuento eliminado')};
 
 // BRANDS
 $('addBrandBtn').addEventListener('click',()=>{$('brandId').value='';$('bName').value='';$('bSlug').value='';$('bAuthorized').checked=false;$('brandFormTitle').textContent='Nueva Marca';$('brandModal').classList.add('open')});
