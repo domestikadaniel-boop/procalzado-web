@@ -1752,6 +1752,14 @@ window.exportSurveys = async function exportSurveys() {
         cell.alignment = { vertical:'middle', horizontal:'center' };
       });
     }
+    if (r.found_easily && SAT_FILL[r.found_easily]) {
+      ['found_num','found_txt'].forEach(k => {
+        const cell = row.getCell(k);
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:SAT_FILL[r.found_easily] } };
+        cell.font = { bold:true, color:{ argb:SAT_FONT[r.found_easily] } };
+        cell.alignment = { vertical:'middle', horizontal:'center' };
+      });
+    }
     if (r.technical_problem) {
       row.getCell('prob').font = { bold:true, color:{ argb:'FFCC0000' } };
     }
