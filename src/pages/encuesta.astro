@@ -62,14 +62,13 @@ const F = {
   .google-stars{display:flex;gap:3px}
   .google-stars span{font-size:1.4rem;color:#FBBC05}
   .google-cta-desc{font-size:.78rem;color:#888;text-align:left}
-  .google-inline-box{display:block;border:1.5px solid #e5e5e5;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;text-decoration:none;transition:border-color .15s,box-shadow .15s;background:#fff}
-  .google-inline-box:hover{border-color:#4285F4;box-shadow:0 2px 10px rgba(66,133,244,.15)}
-  .google-inline-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
-  .google-inline-title{font-size:.85rem;font-weight:700;color:#111;flex:1}
-  .google-inline-hint{font-size:.7rem;color:#aaa;white-space:nowrap}
-  .google-inline-stars{display:flex;gap:3px;margin-bottom:.3rem}
-  .google-inline-stars span{font-size:1.6rem;color:#FBBC05;line-height:1}
-  .google-inline-sub{font-size:.75rem;color:#aaa}
+  .star-box{border:1.5px solid #e5e5e5;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;background:#fff;text-align:center}
+  .star-box-title{font-size:.85rem;font-weight:700;color:#111;margin-bottom:.7rem}
+  .star-row{display:flex;justify-content:center;gap:.2rem;margin-bottom:.4rem}
+  .star-btn{background:none;border:none;cursor:pointer;font-size:2.2rem;color:#e0e0e0;padding:.1rem .2rem;line-height:1;transition:color .1s,transform .1s}
+  .star-btn:hover,.star-btn.active{color:#FBBC05}
+  .star-btn.active{transform:scale(1.15)}
+  .star-label{font-size:.78rem;color:#aaa;min-height:1.2em;transition:color .15s}
   .skip-link{font-size:.78rem;color:#aaa;cursor:pointer;text-decoration:underline;display:inline-block;margin-top:.5rem}
   .error-msg{font-size:.78rem;color:#CC0000;margin-top:.4rem;display:none}
   .error-msg.show{display:block}
@@ -188,22 +187,17 @@ const F = {
         <div class="error-msg" id="errImprovement">Por favor escribe tu sugerencia antes de enviar.</div>
       </div>
 
-      <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener" class="google-inline-box">
-        <div class="google-inline-top">
-          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          <span class="google-inline-title">¿Nos dejas una reseña en Google?</span>
-          <span class="google-inline-hint">Abre en pestaña nueva</span>
+      <div class="star-box">
+        <div class="star-box-title">¿Cómo nos calificarías en general?</div>
+        <div class="star-row" id="starRow">
+          <button class="star-btn" data-star="1" onclick="selectStar(1)" onmouseenter="hoverStar(1)" onmouseleave="hoverStar(0)">★</button>
+          <button class="star-btn" data-star="2" onclick="selectStar(2)" onmouseenter="hoverStar(2)" onmouseleave="hoverStar(0)">★</button>
+          <button class="star-btn" data-star="3" onclick="selectStar(3)" onmouseenter="hoverStar(3)" onmouseleave="hoverStar(0)">★</button>
+          <button class="star-btn" data-star="4" onclick="selectStar(4)" onmouseenter="hoverStar(4)" onmouseleave="hoverStar(0)">★</button>
+          <button class="star-btn" data-star="5" onclick="selectStar(5)" onmouseenter="hoverStar(5)" onmouseleave="hoverStar(0)">★</button>
         </div>
-        <div class="google-inline-stars">
-          <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-        </div>
-        <div class="google-inline-sub">Solo toma un momento y nos ayuda mucho</div>
-      </a>
+        <div class="star-label" id="starLabel"> </div>
+      </div>
 
       <div class="nav-row">
         <button class="btn-back" onclick="goBack(5)">← Atrás</button>
@@ -245,7 +239,27 @@ const F = {
   if (!window.__sb) { setTimeout(waitSb, 80); return; }
 
   var sb = window.__sb;
-  var answers = { found: null, yn: null };
+  var answers = { found: null, yn: null, stars: null };
+  var starLabels = ['','Muy malo','Malo','Regular','Bueno','Excelente'];
+
+  window.hoverStar = function(n) {
+    document.querySelectorAll('.star-btn').forEach(function(b) {
+      var v = parseInt(b.dataset.star);
+      b.style.color = n > 0 ? (v <= n ? '#FBBC05' : '#e0e0e0') : (answers.stars && v <= answers.stars ? '#FBBC05' : '#e0e0e0');
+    });
+    document.getElementById('starLabel').textContent = n > 0 ? starLabels[n] : (answers.stars ? starLabels[answers.stars] : '');
+  };
+
+  window.selectStar = function(n) {
+    answers.stars = n;
+    document.querySelectorAll('.star-btn').forEach(function(b) {
+      var v = parseInt(b.dataset.star);
+      b.classList.toggle('active', v === n);
+      b.style.color = v <= n ? '#FBBC05' : '#e0e0e0';
+    });
+    document.getElementById('starLabel').textContent = starLabels[n];
+    document.getElementById('starLabel').style.color = '#FBBC05';
+  };
 
   window.selectFace = function(group, val) {
     answers[group] = val;
@@ -315,6 +329,7 @@ const F = {
       problem_description: answers.yn ? (document.getElementById('sProblem').value.trim() || null) : null,
       satisfaction: answers.sat,
       improvement: document.getElementById('sImprovement').value.trim() || null,
+      star_rating: answers.stars || null,
     };
 
     var { error } = await sb.from('survey_responses').insert(payload);
