@@ -1698,12 +1698,12 @@ window.createInvoice = async function(orderId) {
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#111;background:#fff}
-@media print{@page{margin:1.5cm 1.8cm;size:A4}}
+@media print{@page{margin:0;size:A4}.page{padding:1.5cm 1.8cm}}
 .page{max-width:760px;margin:0 auto;padding:2rem 2.5rem}
 .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:1.2rem;border-bottom:3px solid #FF0000;margin-bottom:1.5rem}
 .logo{height:38px;object-fit:contain}
 .invoice-title{text-align:right}
-.invoice-title h1{font-size:1.6rem;font-weight:900;letter-spacing:.04em;color:#FF0000;text-transform:uppercase}
+.invoice-title h1{font-size:1.05rem;font-weight:900;letter-spacing:.06em;color:#FF0000;text-transform:uppercase}
 .invoice-title p{font-size:.8rem;color:#666;margin-top:.2rem}
 .invoice-meta{display:flex;justify-content:space-between;gap:2rem;margin-bottom:1.5rem}
 .meta-block h3{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#999;margin-bottom:.5rem}
@@ -1728,7 +1728,6 @@ table.items thead th.c{text-align:center}
     <img src="${logoUrl}" class="logo" alt="Procalzado"/>
     <div class="invoice-title">
       <h1>Factura de Venta</h1>
-      <p><strong># ${orderNum}</strong></p>
       <p>${date}</p>
     </div>
   </div>
@@ -1762,7 +1761,7 @@ table.items thead th.c{text-align:center}
   <div class="totals">
     <table>
       <tr><td style="color:#666">Subtotal</td><td>${fmt(subtotal)}</td></tr>
-      <tr><td style="color:#666">Envío</td><td>${shipping>0?fmt(shipping):'Por definir'}</td></tr>
+      ${shipping>0?`<tr><td style="color:#666">Envío</td><td>${fmt(shipping)}</td></tr>`:''}
       <tr class="total-row"><td>TOTAL</td><td>${fmt(total)}</td></tr>
     </table>
   </div>
