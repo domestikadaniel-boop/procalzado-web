@@ -188,7 +188,8 @@ const F = {
       </div>
 
       <div class="star-box">
-        <div class="star-box-title">¿Cómo nos calificarías en general?</div>
+        <div class="star-box-title">¿Nos dejas una reseña en Google?</div>
+        <div style="font-size:.75rem;color:#aaa;margin-bottom:.6rem">Haz clic en las estrellas — se abre una ventanita de Google</div>
         <div class="star-row" id="starRow">
           <button class="star-btn" data-star="1" onclick="selectStar(1)" onmouseenter="hoverStar(1)" onmouseleave="hoverStar(0)">★</button>
           <button class="star-btn" data-star="2" onclick="selectStar(2)" onmouseenter="hoverStar(2)" onmouseleave="hoverStar(0)">★</button>
@@ -259,6 +260,11 @@ const F = {
     });
     document.getElementById('starLabel').textContent = starLabels[n];
     document.getElementById('starLabel').style.color = '#FBBC05';
+    var w = 520, h = 680;
+    var left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+    var top = Math.round(window.screenY + (window.outerHeight - h) / 2);
+    window.open('https://share.google/aZ1lLNvbqJZXBpYWG', 'google_review',
+      'width='+w+',height='+h+',left='+left+',top='+top+',toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
   };
 
   window.selectFace = function(group, val) {
