@@ -580,7 +580,8 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','recommended','promos','promopage','catalog'].forEach(t=>$(`tab-${t}`)&&($(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none'));
+  ['products','brands','categories','recommended','promos','promopage','catalog','billing'].forEach(t=>$(`tab-${t}`)&&($(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none'));
+  if(tab.dataset.tab==='billing'&&!allOrders.length)loadBilling();
 }));
 
 // LOAD
@@ -1665,10 +1666,6 @@ function renderBilling() {
 
 $('billingSearch').addEventListener('input', renderBilling);
 $('billingStatusFilter').addEventListener('change', renderBilling);
-
-document.querySelector('[data-tab="billing"]').addEventListener('click', () => {
-  if (!allOrders.length) loadBilling();
-});
 
 window.createInvoice = async function(orderId) {
   const o = allOrders.find(x => x.id === orderId);
