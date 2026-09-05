@@ -1645,7 +1645,7 @@ async function loadSurveys() {
   renderSurveys();
 }
 
-function filterSurveys() {
+window.filterSurveys = function filterSurveys() {
   const from = $('surveyFrom').value;
   const to = $('surveyTo').value;
   filteredSurveys = allSurveys.filter(r => {
@@ -1690,7 +1690,7 @@ function renderSurveys() {
   }).join('');
 }
 
-function exportSurveys() {
+window.exportSurveys = function exportSurveys() {
   if (!filteredSurveys.length) { showToast('No hay datos para exportar'); return; }
   const BOM = '﻿';
   const headers = ['Fecha','Nombre','Cédula','Encontró fácilmente (1-5)','Encontró fácilmente (texto)','Problema técnico','Descripción del problema','Satisfacción (1-5)','Satisfacción (texto)','Mejora sugerida'];
