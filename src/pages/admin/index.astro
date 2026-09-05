@@ -227,6 +227,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <button class="tab" data-tab="promopage">Promoción</button>
     <button class="tab" data-tab="catalog">Catálogo</button>
     <button class="tab" data-tab="billing">Facturación</button>
+    <button class="tab" data-tab="surveys">Encuestas</button>
   </div>
   <div class="admin-body">
     <div id="tab-products">
@@ -272,6 +273,21 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         <span style="font-size:.85rem;color:var(--muted)">Todos los productos aparecen en el <strong>catálogo público</strong>. Puedes personalizar las fotos de cada uno. <a href="/catalogo" target="_blank" style="color:var(--red)">Ver catálogo →</a></span>
       </div>
       <div class="product-table"><table><thead><tr><th style="width:70px">Foto</th><th>Producto</th><th>Fotos catálogo</th><th>Acciones</th></tr></thead><tbody id="catalogTableBody"></tbody></table></div>
+    </div>
+
+    <div id="tab-surveys" style="display:none">
+      <div class="toolbar" style="flex-wrap:wrap;gap:.5rem">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <label style="font-size:.8rem;font-weight:600;color:var(--muted)">Desde</label>
+          <input type="date" id="surveyFrom" style="padding:.45rem .7rem;border:2px solid var(--grey2);border-radius:6px;font-size:.85rem;font-family:inherit;outline:none"/>
+          <label style="font-size:.8rem;font-weight:600;color:var(--muted)">Hasta</label>
+          <input type="date" id="surveyTo" style="padding:.45rem .7rem;border:2px solid var(--grey2);border-radius:6px;font-size:.85rem;font-family:inherit;outline:none"/>
+          <button class="btn-add" style="background:var(--black)" onclick="filterSurveys()">Filtrar</button>
+        </div>
+        <button class="btn-add" style="background:#1a6e3c" onclick="exportSurveys()">↓ Exportar Excel</button>
+      </div>
+      <div id="surveyStats" style="display:flex;gap:.8rem;margin-bottom:1rem;flex-wrap:wrap"></div>
+      <div class="product-table"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Cédula</th><th style="text-align:center">Encontró fácil</th><th style="text-align:center">Prob. técnico</th><th>Descripción</th><th style="text-align:center">Satisfacción</th><th>Mejora sugerida</th></tr></thead><tbody id="surveyTableBody"></tbody></table></div>
     </div>
 
     <div id="tab-billing" style="display:none">
@@ -580,8 +596,9 @@ async function showAdmin(email){$('loginWrap').style.display='none';$('adminPane
 // TABS
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  ['products','brands','categories','recommended','promos','promopage','catalog','billing'].forEach(t=>$(`tab-${t}`)&&($(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none'));
+  ['products','brands','categories','recommended','promos','promopage','catalog','billing','surveys'].forEach(t=>$(`tab-${t}`)&&($(`tab-${t}`).style.display=t===tab.dataset.tab?'':'none'));
   if(tab.dataset.tab==='billing'&&!allOrders.length)loadBilling();
+  if(tab.dataset.tab==='surveys'&&!allSurveys.length)loadSurveys();
 }));
 
 // LOAD
@@ -1613,6 +1630,90 @@ window.triggerDeploy = async function() {
   }
   btn.disabled = false;
   btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Publicar cambios';
+}
+
+// ── ENCUESTAS ──
+let allSurveys = [], filteredSurveys = [];
+const FACES = ['','😞','😕','😐','🙂','😄'];
+const FACE_LABELS = ['','Muy difícil','Difícil','Regular','Fácil','Muy fácil'];
+const SAT_LABELS = ['','Muy insatisfecho/a','Insatisfecho/a','Regular','Satisfecho/a','Muy satisfecho/a'];
+
+async function loadSurveys() {
+  const { data } = await supabase.from('survey_responses').select('*').order('created_at', { ascending: false });
+  allSurveys = data || [];
+  filteredSurveys = allSurveys;
+  renderSurveys();
+}
+
+function filterSurveys() {
+  const from = $('surveyFrom').value;
+  const to = $('surveyTo').value;
+  filteredSurveys = allSurveys.filter(r => {
+    const d = r.created_at.slice(0,10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
+  renderSurveys();
+}
+
+function renderSurveys() {
+  const tbody = $('surveyTableBody');
+  const stats = $('surveyStats');
+  if (!filteredSurveys.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No hay encuestas en este rango</td></tr>`;
+    stats.innerHTML = '';
+    return;
+  }
+  const avgFound = (filteredSurveys.reduce((s,r)=>s+(r.found_easily||0),0)/filteredSurveys.length).toFixed(1);
+  const avgSat = (filteredSurveys.reduce((s,r)=>s+(r.satisfaction||0),0)/filteredSurveys.length).toFixed(1);
+  const withProb = filteredSurveys.filter(r=>r.technical_problem).length;
+  const statStyle = 'background:var(--white);border-radius:8px;padding:.6rem 1rem;box-shadow:0 2px 6px rgba(0,0,0,.06);font-size:.82rem';
+  stats.innerHTML = `
+    <div style="${statStyle}"><span style="font-weight:700;font-size:1.1rem">${filteredSurveys.length}</span> <span style="color:var(--muted)">respuestas</span></div>
+    <div style="${statStyle}"><span style="font-weight:700;font-size:1.1rem">${FACES[Math.round(avgFound)]} ${avgFound}</span> <span style="color:var(--muted)">facilidad promedio</span></div>
+    <div style="${statStyle}"><span style="font-weight:700;font-size:1.1rem">${FACES[Math.round(avgSat)]} ${avgSat}</span> <span style="color:var(--muted)">satisfacción promedio</span></div>
+    <div style="${statStyle}"><span style="font-weight:700;font-size:1.1rem;color:${withProb>0?'#CC0000':'#006600'}">${withProb}</span> <span style="color:var(--muted)">con problema técnico</span></div>
+  `;
+  tbody.innerHTML = filteredSurveys.map(r => {
+    const date = new Date(r.created_at).toLocaleDateString('es-CO', { day:'2-digit', month:'2-digit', year:'numeric' });
+    return `<tr>
+      <td style="font-size:.8rem;white-space:nowrap">${date}</td>
+      <td style="font-size:.85rem;font-weight:600">${r.name||'—'}</td>
+      <td style="font-size:.82rem">${r.cedula||'—'}</td>
+      <td style="text-align:center;font-size:1.1rem" title="${FACE_LABELS[r.found_easily]||''}">${FACES[r.found_easily]||'—'}</td>
+      <td style="text-align:center"><span style="font-size:.72rem;font-weight:700;padding:.2rem .5rem;border-radius:20px;${r.technical_problem?'background:#FFF0F0;color:#CC0000':'background:#E6F9E6;color:#006600'}">${r.technical_problem?'Sí':'No'}</span></td>
+      <td style="font-size:.8rem;color:var(--muted);max-width:160px;word-break:break-word">${r.problem_description||'—'}</td>
+      <td style="text-align:center;font-size:1.1rem" title="${SAT_LABELS[r.satisfaction]||''}">${FACES[r.satisfaction]||'—'}</td>
+      <td style="font-size:.8rem;color:var(--muted);max-width:200px;word-break:break-word">${r.improvement||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportSurveys() {
+  if (!filteredSurveys.length) { showToast('No hay datos para exportar'); return; }
+  const BOM = '﻿';
+  const headers = ['Fecha','Nombre','Cédula','Encontró fácilmente (1-5)','Encontró fácilmente (texto)','Problema técnico','Descripción del problema','Satisfacción (1-5)','Satisfacción (texto)','Mejora sugerida'];
+  const rows = filteredSurveys.map(r => [
+    new Date(r.created_at).toLocaleString('es-CO'),
+    r.name||'',
+    r.cedula||'',
+    r.found_easily||'',
+    FACE_LABELS[r.found_easily]||'',
+    r.technical_problem?'Sí':'No',
+    r.problem_description||'',
+    r.satisfaction||'',
+    SAT_LABELS[r.satisfaction]||'',
+    r.improvement||''
+  ]);
+  const csv = BOM + [headers,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const from = $('surveyFrom').value||'inicio';
+  const to = $('surveyTo').value||'hoy';
+  a.href=url; a.download=`encuestas_${from}_${to}.csv`; a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── FACTURACIÓN ──

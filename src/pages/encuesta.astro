@@ -1,0 +1,293 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// URL de reseña en Google — reemplaza con el link de tu perfil de Google Business
+const GOOGLE_REVIEW_URL = 'https://share.google/aZ1lLNvbqJZXBpYWG';
+---
+
+<Layout title="Encuesta de Satisfacción | Procalzado">
+
+<style>
+  .survey-wrap{min-height:100vh;background:#f9f9f9;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 4rem}
+  .survey-logo{height:36px;margin-bottom:2rem;object-fit:contain}
+  .survey-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);width:100%;max-width:520px;overflow:hidden}
+  .survey-progress{height:4px;background:#f0f0f0;position:relative}
+  .survey-progress-bar{height:100%;background:#FF0000;transition:width .4s ease;border-radius:0 4px 4px 0}
+  .survey-step{padding:2rem 2rem 2.5rem;display:none}
+  .survey-step.active{display:block}
+  .step-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#FF0000;margin-bottom:.4rem}
+  .step-q{font-size:1.15rem;font-weight:800;color:#111;line-height:1.4;margin-bottom:1.6rem}
+  .field label{display:block;font-size:.8rem;font-weight:600;color:#555;margin-bottom:.4rem}
+  .field input,.field textarea{width:100%;padding:.75rem 1rem;border:1.5px solid #e5e5e5;border-radius:8px;font-size:.92rem;font-family:inherit;outline:none;transition:border-color .15s;color:#111;background:#fff}
+  .field input:focus,.field textarea:focus{border-color:#FF0000}
+  .field textarea{resize:vertical;min-height:100px}
+  .field{margin-bottom:1.2rem}
+  .faces-row{display:flex;gap:.6rem;justify-content:center;margin-bottom:.5rem}
+  .face-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.7rem .3rem;border:2px solid #e5e5e5;border-radius:12px;cursor:pointer;background:#fff;transition:border-color .15s,background .15s;font-family:inherit}
+  .face-btn:hover{border-color:#FF0000;background:#fff5f5}
+  .face-btn.selected{border-color:#FF0000;background:#fff0f0}
+  .face-emoji{font-size:2rem;line-height:1}
+  .face-label{font-size:.62rem;font-weight:600;color:#888;text-align:center;line-height:1.2}
+  .face-btn.selected .face-label{color:#FF0000}
+  .yn-row{display:flex;gap:.8rem;margin-bottom:1.2rem}
+  .yn-btn{flex:1;padding:.85rem;border:2px solid #e5e5e5;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;background:#fff;font-family:inherit;transition:border-color .15s,background .15s}
+  .yn-btn:hover{border-color:#FF0000;background:#fff5f5}
+  .yn-btn.selected{border-color:#FF0000;background:#fff0f0;color:#FF0000}
+  .problem-field{display:none;margin-top:.8rem}
+  .problem-field.show{display:block}
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;gap:.8rem}
+  .btn-back{padding:.7rem 1.4rem;border:2px solid #e5e5e5;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;background:#fff;font-family:inherit;color:#666;transition:border-color .15s}
+  .btn-back:hover{border-color:#ccc}
+  .btn-next{flex:1;padding:.8rem 1.4rem;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.03em;transition:opacity .15s}
+  .btn-next:hover{opacity:.88}
+  .btn-next:disabled{opacity:.45;cursor:not-allowed}
+  .thanks-wrap{padding:2.5rem 2rem;text-align:center}
+  .thanks-icon{width:72px;height:72px;background:#fff0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;font-size:2rem}
+  .thanks-title{font-size:1.5rem;font-weight:900;color:#111;margin-bottom:.5rem}
+  .thanks-sub{font-size:.9rem;color:#666;line-height:1.6;margin-bottom:1.8rem}
+  .google-cta{background:#fff;border:2px solid #e5e5e5;border-radius:14px;padding:1.2rem 1.4rem;margin-bottom:1rem;cursor:pointer;text-decoration:none;display:block;transition:border-color .15s,box-shadow .15s}
+  .google-cta:hover{border-color:#4285F4;box-shadow:0 2px 12px rgba(66,133,244,.15)}
+  .google-cta-top{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+  .google-logo{width:22px;height:22px;flex-shrink:0}
+  .google-cta-title{font-size:.85rem;font-weight:800;color:#111}
+  .google-stars{display:flex;gap:3px}
+  .google-stars span{font-size:1.4rem;color:#FBBC05}
+  .google-cta-desc{font-size:.78rem;color:#888;text-align:left}
+  .skip-link{font-size:.78rem;color:#aaa;cursor:pointer;text-decoration:underline;display:inline-block;margin-top:.5rem}
+  .error-msg{font-size:.78rem;color:#CC0000;margin-top:.4rem;display:none}
+  .error-msg.show{display:block}
+  @media(max-width:480px){.survey-wrap{padding:1.2rem .6rem 3rem}.survey-step{padding:1.5rem 1.2rem 2rem}.face-emoji{font-size:1.6rem}.faces-row{gap:.4rem}}
+</style>
+
+<div class="survey-wrap">
+  <img src="/logotipo-rojo.png" class="survey-logo" alt="Procalzado"/>
+
+  <div class="survey-card" id="surveyCard">
+    <div class="survey-progress"><div class="survey-progress-bar" id="progressBar" style="width:20%"></div></div>
+
+    <!-- PASO 1: Datos personales -->
+    <div class="survey-step active" id="step1">
+      <div class="step-label">Paso 1 de 5</div>
+      <div class="step-q">¡Hola! Cuéntanos quién eres</div>
+      <div class="field">
+        <label>Nombre completo *</label>
+        <input type="text" id="sName" placeholder="Ej: Jennifer Villalba"/>
+        <div class="error-msg" id="errName">Por favor ingresa tu nombre.</div>
+      </div>
+      <div class="field">
+        <label>Cédula *</label>
+        <input type="text" id="sCedula" inputmode="numeric" placeholder="Ej: 1015434334"/>
+        <div class="error-msg" id="errCedula">Por favor ingresa tu cédula.</div>
+      </div>
+      <div class="nav-row">
+        <div></div>
+        <button class="btn-next" onclick="goNext(1)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: Encontró lo que buscaba -->
+    <div class="survey-step" id="step2">
+      <div class="step-label">Paso 2 de 5</div>
+      <div class="step-q">¿Encontraste lo que buscabas de manera fácil?</div>
+      <div class="faces-row">
+        <button class="face-btn" data-val="1" data-group="found" onclick="selectFace('found',1)">
+          <span class="face-emoji">😞</span><span class="face-label">Muy<br/>difícil</span>
+        </button>
+        <button class="face-btn" data-val="2" data-group="found" onclick="selectFace('found',2)">
+          <span class="face-emoji">😕</span><span class="face-label">Difícil</span>
+        </button>
+        <button class="face-btn" data-val="3" data-group="found" onclick="selectFace('found',3)">
+          <span class="face-emoji">😐</span><span class="face-label">Regular</span>
+        </button>
+        <button class="face-btn" data-val="4" data-group="found" onclick="selectFace('found',4)">
+          <span class="face-emoji">🙂</span><span class="face-label">Fácil</span>
+        </button>
+        <button class="face-btn" data-val="5" data-group="found" onclick="selectFace('found',5)">
+          <span class="face-emoji">😄</span><span class="face-label">Muy<br/>fácil</span>
+        </button>
+      </div>
+      <div class="error-msg" id="errFound">Por favor selecciona una opción.</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goBack(2)">← Atrás</button>
+        <button class="btn-next" onclick="goNext(2)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Problema técnico -->
+    <div class="survey-step" id="step3">
+      <div class="step-label">Paso 3 de 5</div>
+      <div class="step-q">¿Tuviste algún problema técnico durante tu navegación o proceso de pago?</div>
+      <div class="yn-row">
+        <button class="yn-btn" id="ynNo" onclick="selectYN(false)">No</button>
+        <button class="yn-btn" id="ynSi" onclick="selectYN(true)">Sí</button>
+      </div>
+      <div class="problem-field" id="problemField">
+        <div class="field">
+          <label>¿Cuál fue el problema?</label>
+          <input type="text" id="sProblem" placeholder="Describe brevemente el problema..."/>
+        </div>
+      </div>
+      <div class="error-msg" id="errYN">Por favor selecciona una opción.</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goBack(3)">← Atrás</button>
+        <button class="btn-next" onclick="goNext(3)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 4: Satisfacción general -->
+    <div class="survey-step" id="step4">
+      <div class="step-label">Paso 4 de 5</div>
+      <div class="step-q">¿Qué tan satisfecho/a te sentiste con tu compra en general?</div>
+      <div class="faces-row">
+        <button class="face-btn" data-val="1" data-group="sat" onclick="selectFace('sat',1)">
+          <span class="face-emoji">😞</span><span class="face-label">Muy insa-<br/>tisfecho/a</span>
+        </button>
+        <button class="face-btn" data-val="2" data-group="sat" onclick="selectFace('sat',2)">
+          <span class="face-emoji">😕</span><span class="face-label">Insa-<br/>tisfecho/a</span>
+        </button>
+        <button class="face-btn" data-val="3" data-group="sat" onclick="selectFace('sat',3)">
+          <span class="face-emoji">😐</span><span class="face-label">Regular</span>
+        </button>
+        <button class="face-btn" data-val="4" data-group="sat" onclick="selectFace('sat',4)">
+          <span class="face-emoji">🙂</span><span class="face-label">Satisfecho/a</span>
+        </button>
+        <button class="face-btn" data-val="5" data-group="sat" onclick="selectFace('sat',5)">
+          <span class="face-emoji">😄</span><span class="face-label">Muy satis-<br/>fecho/a</span>
+        </button>
+      </div>
+      <div class="error-msg" id="errSat">Por favor selecciona una opción.</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goBack(4)">← Atrás</button>
+        <button class="btn-next" onclick="goNext(4)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- PASO 5: Mejora -->
+    <div class="survey-step" id="step5">
+      <div class="step-label">Paso 5 de 5</div>
+      <div class="step-q">¿Qué podríamos haber hecho para mejorar tu experiencia de compra?</div>
+      <div class="field">
+        <textarea id="sImprovement" placeholder="Tu opinión es muy valiosa para nosotros. Escribe aquí cualquier sugerencia..."></textarea>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goBack(5)">← Atrás</button>
+        <button class="btn-next" id="submitBtn" onclick="submitSurvey()">Enviar encuesta ✓</button>
+      </div>
+    </div>
+
+    <!-- GRACIAS -->
+    <div class="survey-step" id="stepThanks">
+      <div class="thanks-wrap">
+        <div class="thanks-icon">🎉</div>
+        <div class="thanks-title">¡Gracias por tu opinión!</div>
+        <div class="thanks-sub">Tu respuesta nos ayuda a mejorar cada día. Significa mucho para nosotros que hayas tomado el tiempo de completar esta encuesta.</div>
+
+        <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener" class="google-cta">
+          <div class="google-cta-top">
+            <svg class="google-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span class="google-cta-title">¿Nos dejas una reseña en Google?</span>
+          </div>
+          <div class="google-stars">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <div class="google-cta-desc" style="margin-top:.5rem">Solo toma 1 minuto y nos ayuda a llegar a más personas.</div>
+        </a>
+
+        <span class="skip-link" onclick="this.parentElement.parentElement.parentElement.style.display='none'">No gracias, volver al inicio</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+(function waitSb() {
+  if (!window.__sb) { setTimeout(waitSb, 80); return; }
+
+  var sb = window.__sb;
+  var answers = { found: null, yn: null };
+
+  window.selectFace = function(group, val) {
+    answers[group] = val;
+    document.querySelectorAll('[data-group="' + group + '"]').forEach(function(b) {
+      b.classList.toggle('selected', parseInt(b.dataset.val) === val);
+    });
+  };
+
+  window.selectYN = function(isSi) {
+    answers.yn = isSi;
+    document.getElementById('ynNo').classList.toggle('selected', !isSi);
+    document.getElementById('ynSi').classList.toggle('selected', isSi);
+    document.getElementById('problemField').classList.toggle('show', isSi);
+  };
+
+  window.goNext = function(step) {
+    if (step === 1) {
+      var name = document.getElementById('sName').value.trim();
+      var ced = document.getElementById('sCedula').value.trim();
+      var ok = true;
+      document.getElementById('errName').classList.toggle('show', !name); if (!name) ok = false;
+      document.getElementById('errCedula').classList.toggle('show', !ced); if (!ced) ok = false;
+      if (!ok) return;
+    }
+    if (step === 2) {
+      if (!answers.found) { document.getElementById('errFound').classList.add('show'); return; }
+      document.getElementById('errFound').classList.remove('show');
+    }
+    if (step === 3) {
+      if (answers.yn === null) { document.getElementById('errYN').classList.add('show'); return; }
+      document.getElementById('errYN').classList.remove('show');
+    }
+    if (step === 4) {
+      if (!answers.sat) { document.getElementById('errSat').classList.add('show'); return; }
+      document.getElementById('errSat').classList.remove('show');
+    }
+    showStep(step + 1);
+  };
+
+  window.goBack = function(step) { showStep(step - 1); };
+
+  function showStep(n) {
+    document.querySelectorAll('.survey-step').forEach(function(s) { s.classList.remove('active'); });
+    var el = document.getElementById('step' + n) || document.getElementById('stepThanks');
+    if (el) el.classList.add('active');
+    var pct = Math.min(n * 20, 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  window.submitSurvey = async function() {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    var payload = {
+      name: document.getElementById('sName').value.trim(),
+      cedula: document.getElementById('sCedula').value.trim(),
+      found_easily: answers.found,
+      technical_problem: answers.yn,
+      problem_description: answers.yn ? (document.getElementById('sProblem').value.trim() || null) : null,
+      satisfaction: answers.sat,
+      improvement: document.getElementById('sImprovement').value.trim() || null,
+    };
+
+    var { error } = await sb.from('survey_responses').insert(payload);
+
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Enviar encuesta ✓';
+      alert('Hubo un error al enviar. Intenta de nuevo.');
+      console.error(error);
+      return;
+    }
+
+    showStep('Thanks');
+  };
+})();
+</script>
+
+</Layout>
