@@ -1690,32 +1690,80 @@ function renderSurveys() {
   }).join('');
 }
 
-window.exportSurveys = function exportSurveys() {
+window.exportSurveys = async function exportSurveys() {
   if (!filteredSurveys.length) { showToast('No hay datos para exportar'); return; }
-  const BOM = '﻿';
-  const headers = ['Fecha','Nombre','Cédula','Encontró fácilmente (1-5)','Encontró fácilmente (texto)','Problema técnico','Descripción del problema','Satisfacción (1-5)','Satisfacción (texto)','Mejora sugerida'];
-  const rows = filteredSurveys.map(r => [
-    new Date(r.created_at).toLocaleString('es-CO'),
-    r.name||'',
-    r.cedula||'',
-    r.found_easily||'',
-    FACE_LABELS[r.found_easily]||'',
-    r.technical_problem?'Sí':'No',
-    r.problem_description||'',
-    r.satisfaction||'',
-    SAT_LABELS[r.satisfaction]||'',
-    r.improvement||''
-  ]);
-  const csv = 'sep=;\r\n' + BOM + [headers,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  showToast('Generando Excel…');
+  if (!window.ExcelJS) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Encuestas');
+  ws.columns = [
+    { header:'Fecha',                        key:'fecha',      width:22 },
+    { header:'Nombre',                       key:'nombre',     width:22 },
+    { header:'Cédula',                       key:'cedula',     width:15 },
+    { header:'Encontró fácilmente (1-5)',    key:'found_num',  width:12 },
+    { header:'Encontró fácilmente (texto)',  key:'found_txt',  width:18 },
+    { header:'Problema técnico',             key:'prob',       width:14 },
+    { header:'Descripción del problema',     key:'prob_desc',  width:28 },
+    { header:'Satisfacción (1-5)',           key:'sat_num',    width:12 },
+    { header:'Satisfacción (texto)',         key:'sat_txt',    width:20 },
+    { header:'Mejora sugerida',              key:'mejora',     width:35 },
+  ];
+  const hdr = ws.getRow(1);
+  hdr.height = 32;
+  hdr.eachCell(cell => {
+    cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF1A56DB' } };
+    cell.font = { bold:true, color:{ argb:'FFFFFFFF' }, size:11 };
+    cell.alignment = { vertical:'middle', horizontal:'center', wrapText:true };
+    cell.border = { bottom:{ style:'medium', color:{ argb:'FF0F3A8A' } } };
+  });
+  const SAT_FILL = { 1:'FFCC0000', 2:'FFFF6600', 3:'FFFFC200', 4:'FF92D050', 5:'FF00B050' };
+  const SAT_FONT = { 1:'FFFFFFFF', 2:'FFFFFFFF', 3:'FF333333', 4:'FF333333', 5:'FFFFFFFF' };
+  filteredSurveys.forEach((r, i) => {
+    const row = ws.addRow({
+      fecha:     new Date(r.created_at).toLocaleString('es-CO'),
+      nombre:    r.name||'',
+      cedula:    r.cedula||'',
+      found_num: r.found_easily||'',
+      found_txt: FACE_LABELS[r.found_easily]||'',
+      prob:      r.technical_problem?'Sí':'No',
+      prob_desc: r.problem_description||'',
+      sat_num:   r.satisfaction||'',
+      sat_txt:   SAT_LABELS[r.satisfaction]||'',
+      mejora:    r.improvement||'',
+    });
+    row.height = 20;
+    const bg = i%2===0 ? 'FFFAFAFA' : 'FFFFFFFF';
+    row.eachCell(cell => {
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:bg } };
+      cell.alignment = { vertical:'middle' };
+    });
+    if (r.satisfaction && SAT_FILL[r.satisfaction]) {
+      ['sat_num','sat_txt'].forEach(k => {
+        const cell = row.getCell(k);
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:SAT_FILL[r.satisfaction] } };
+        cell.font = { bold:true, color:{ argb:SAT_FONT[r.satisfaction] } };
+        cell.alignment = { vertical:'middle', horizontal:'center' };
+      });
+    }
+    if (r.technical_problem) {
+      row.getCell('prob').font = { bold:true, color:{ argb:'FFCC0000' } };
+    }
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const from = $('surveyFrom').value||'inicio';
   const to = $('surveyTo').value||'hoy';
-  a.href=url; a.download=`encuestas_${from}_${to}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.href=url; a.download=`encuestas_${from}_${to}.xlsx`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
