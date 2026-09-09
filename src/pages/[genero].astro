@@ -65,7 +65,7 @@ function productData(p: Product) {
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
   const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
   const variants = (p.product_variants || []).filter(v => v.active);
-  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))].sort((a, b) => { const na = parseFloat(a), nb = parseFloat(b); return (!isNaN(na) && !isNaN(nb)) ? na - nb : a.localeCompare(b); });
   const colors = [...new Set(variants.map(v => v.color).filter(c => c && c !== 'Único'))];
   const colorHexes = variants.reduce((acc, v) => {
     if (v.color && v.color !== 'Único' && v.color_hex) acc[v.color] = v.color_hex;

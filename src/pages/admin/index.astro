@@ -1032,7 +1032,7 @@ function openProductForm(p=null){
   const specs=p?.specs||{};Object.entries(specs).forEach(([k,v])=>addSpecRow(k,String(v)));if(!Object.keys(specs).length)addSpecRow();
 
   // Sizes
-  const allSizes = p?.product_variants ? [...new Set(p.product_variants.map(v=>v.size))] : [];
+  const allSizes = p?.product_variants ? [...new Set(p.product_variants.map(v=>v.size))].sort((a,b)=>{const na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b)}) : [];
   renderSizesGrid(allSizes);
 
   // Detect per-color sizes: check if different colors have different size sets
