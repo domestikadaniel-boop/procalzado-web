@@ -26,7 +26,10 @@ const images = product.product_images?.sort((a, b) => a.display_order - b.displa
 const variants = product.product_variants?.filter(v => v.active) || [];
 
 // Extraer tallas y colores únicos de las variantes
-const sizes = [...new Set(variants.map(v => v.size))];
+const sizes = [...new Set(variants.map(v => v.size))].sort((a, b) => {
+  const na = parseFloat(a), nb = parseFloat(b);
+  return (!isNaN(na) && !isNaN(nb)) ? na - nb : a.localeCompare(b);
+});
 const colors = [...new Set(variants.map(v => v.color))].map(colorName => {
   const variant = variants.find(v => v.color === colorName);
   return { 
