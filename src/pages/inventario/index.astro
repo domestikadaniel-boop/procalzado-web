@@ -109,9 +109,9 @@ tbody tr:hover td{filter:brightness(.96)}
 .bcomb{position:relative;min-width:140px}
 .bcomb-inp{width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none}
 .bcomb-inp:focus{border-color:#f00}
-.bcomb-dd{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 3px 3px;max-height:160px;overflow-y:auto;z-index:400;display:none;box-shadow:0 4px 8px rgba(0,0,0,.12)}
+.bcomb-dd{position:fixed;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 3px 3px;max-height:200px;overflow-y:auto;z-index:9990;display:none;box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .bcomb-dd.open{display:block}
-.bcomb-opt{padding:.3rem .45rem;cursor:pointer;font-size:.74rem;border-bottom:1px solid #f0f0f0}
+.bcomb-opt{padding:.32rem .5rem;cursor:pointer;font-size:.75rem;border-bottom:1px solid #f0f0f0}
 .bcomb-opt:last-child{border-bottom:none}
 .bcomb-opt:hover{background:#f5f5f5}
 
@@ -578,8 +578,15 @@ function addBR(tbodyId,emptyId){
     });
   }
 
-  pInp.addEventListener('focus',()=>{renderPOpts(pInp.value);pDd.classList.add('open');});
-  pInp.addEventListener('input',()=>{selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;renderPOpts(pInp.value);pDd.classList.add('open');});
+  function openPDd(){
+    const r=pInp.getBoundingClientRect();
+    pDd.style.top=(r.bottom+window.scrollY)+'px';
+    pDd.style.left=(r.left+window.scrollX)+'px';
+    pDd.style.width=r.width+'px';
+    pDd.classList.add('open');
+  }
+  pInp.addEventListener('focus',()=>{renderPOpts(pInp.value);openPDd();});
+  pInp.addEventListener('input',()=>{selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;renderPOpts(pInp.value);openPDd();});
   pInp.addEventListener('blur',()=>setTimeout(()=>pDd.classList.remove('open'),160));
   renderPOpts('');
 
