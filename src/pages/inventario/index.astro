@@ -10,7 +10,6 @@
 <meta name="robots" content="noindex,nofollow"/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
 <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style is:global>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -416,49 +415,35 @@ function render(){
 
 ['sq','fst','fbr'].forEach(id=>$(id).addEventListener('input',render));
 
-// EXCEL
-$('exBtn').addEventListener('click',async()=>{
+// EXCEL — genera HTML que Excel abre con colores (sin librería externa)
+$('exBtn').addEventListener('click',()=>{
   if(!allD){toast('Sin datos',false);return;}
-  ld(true);
-  try{
-    const{products,byP}=allD;
-    const wb=new ExcelJS.Workbook();
-    const ws=wb.addWorksheet('Inventario');
-    ws.columns=[
-      {header:'Marca',key:'brand',width:16},{header:'Producto',key:'name',width:22},
-      {header:'Color',key:'color',width:20},{header:'Talla',key:'size',width:8},{header:'Stock',key:'stock',width:9},
-    ];
-    ws.getRow(1).eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF000000'}};c.font={color:{argb:'FFFFFFFF'},bold:true};});
-
-    const sp=[...products].sort((a,b)=>{
-      const ba=a.brands?.name||'',bb=b.brands?.name||'';
-      if(a.name!==b.name)return a.name.localeCompare(b.name);
-      return ba.localeCompare(bb);
-    });
-    for(const p of sp){
-      for(const[color,vs]of Object.entries(byP[p.id]||{})){
-        for(const v of vs){
-          const s=v.stock||0;
-          const row=ws.addRow({brand:p.brands?.name||'',name:p.name,color,size:v.size,stock:s});
-          const sc=row.getCell('stock');
-          if(s===0){sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFECACA'}};sc.font={color:{argb:'FF991B1B'},bold:true};}
-          else if(s<LOW){sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEF08A'}};sc.font={color:{argb:'FF713F12'},bold:true};}
-          else{sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFBBF7D0'}};sc.font={color:{argb:'FF14532D'},bold:true};}
-        }
+  const{products,byP}=allD;
+  const sp=[...products].sort((a,b)=>{
+    if(a.name!==b.name)return a.name.localeCompare(b.name);
+    return(a.brands?.name||'').localeCompare(b.brands?.name||'');
+  });
+  let filas='';
+  for(const p of sp){
+    for(const[color,vs]of Object.entries(byP[p.id]||{})){
+      for(const v of vs){
+        const s=v.stock||0;
+        let bg,fg;
+        if(s<=0){bg='#FECACA';fg='#991B1B';}
+        else if(s<LOW){bg='#FEF08A';fg='#713F12';}
+        else{bg='#BBF7D0';fg='#14532D';}
+        filas+=`<tr><td>${p.brands?.name||''}</td><td>${p.name}</td><td>${color}</td><td>${v.size}</td><td style="background:${bg};color:${fg};font-weight:bold">${s}</td></tr>`;
       }
     }
-    const buf=await wb.xlsx.writeBuffer();
-    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=`inventario-${new Date().toISOString().slice(0,10)}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},200);
-    toast('Excel descargado');
-  }catch(e){toast('Error al generar Excel',false);console.error(e);}
-  finally{ld(false);}
+  }
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"><style>th{background:#000;color:#fff;font-weight:bold;padding:4px 8px;border:1px solid #444}td{padding:3px 8px;border:1px solid #ccc}</style></head><body><table><thead><tr><th>Marca</th><th>Producto</th><th>Color</th><th>Talla</th><th>Stock</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
+  const blob=new Blob(['﻿'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`inventario-${new Date().toISOString().slice(0,10)}.xls`;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},200);
+  toast('Excel descargado');
 });
 
 // UPDATE STOCK
