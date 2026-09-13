@@ -286,7 +286,7 @@ $('lbtn').addEventListener('click',async()=>{
   if(!em||!pw){se('Completa los campos');return;}
   $('lbtn').disabled=true;
   const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
-  if(error){se('Email o contrasena incorrectos');$('lbtn').disabled=false;return;}
+  if(error){se(error.message||'Email o contrasena incorrectos');$('lbtn').disabled=false;return;}
   go(data.user.email);
 });
 $('lpw').addEventListener('keydown',e=>{if(e.key==='Enter')$('lbtn').click();});
