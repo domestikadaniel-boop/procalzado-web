@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
 <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style is:global>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13px}
@@ -140,6 +141,7 @@ tbody tr:hover td{filter:brightness(.96)}
     <div class="emsg" id="lerr"></div>
     <div class="fl"><label>Email</label><input type="email" id="lem" autocomplete="email" placeholder="tu@email.com"/></div>
     <div class="fl"><label>Contrasena</label><input type="password" id="lpw" autocomplete="current-password" placeholder="••••••••"/></div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAADnyx1B9r_FPdBeB" data-callback="onTurnstileSuccess" style="margin-bottom:.8rem"></div>
     <button class="btn btn-r btn-w" id="lbtn">Entrar</button>
   </div>
 </div>
@@ -280,13 +282,22 @@ function toast(m,ok=true){
 function scls(s){return s<=0?'s0':s<LOW?'slow':'sok';}
 
 // AUTH
+window.__tsToken=null;
+window.onTurnstileSuccess=function(t){window.__tsToken=t;};
+
 async function init(){const{data:{session}}=await sb.auth.getSession();if(session)go(session.user.email);}
 $('lbtn').addEventListener('click',async()=>{
   const em=$('lem').value.trim(),pw=$('lpw').value;
   if(!em||!pw){se('Completa los campos');return;}
+  if(!window.__tsToken){se('Completa la verificacion de seguridad');return;}
   $('lbtn').disabled=true;
-  const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
-  if(error){se(error.message||'Email o contrasena incorrectos');$('lbtn').disabled=false;return;}
+  const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw,options:{captchaToken:window.__tsToken}});
+  if(error){
+    se(error.message||'Email o contrasena incorrectos');
+    if(window.turnstile)window.turnstile.reset();
+    window.__tsToken=null;
+    $('lbtn').disabled=false;return;
+  }
   go(data.user.email);
 });
 $('lpw').addEventListener('keydown',e=>{if(e.key==='Enter')$('lbtn').click();});
