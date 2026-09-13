@@ -109,7 +109,7 @@ const schemaProduct = {
       {images.length > 0 && (
         <script type="application/json" id="galleryData" set:html={JSON.stringify(images.map(i => ({ url: i.url, color: i.color, alt: i.alt_text })))}></script>
       )}
-      <script type="application/json" id="variantsData" set:html={JSON.stringify(variants.map(v => ({ size: v.size, color: v.color })))}></script>
+      <script type="application/json" id="variantsData" set:html={JSON.stringify(variants.map(v => ({ size: v.size, color: v.color, stock: (v as any).stock ?? null })))}></script>
       {(product as any).per_color_prices && (
         <script type="application/json" id="colorPricesData" set:html={JSON.stringify((product as any).color_prices || {})}></script>
       )}
@@ -296,26 +296,50 @@ const schemaProduct = {
   const sizeBtns = document.querySelectorAll('.size-tag-btn');
   function updateSizesForColor(color) {
     if (!sizeBtns.length || !allVariants.length) return;
-    const sizesForColor = allVariants.filter(v => v.color === color).map(v => v.size);
+    const variantsForColor = allVariants.filter(v => v.color === color);
+    const sizesForColor = variantsForColor.map(v => v.size);
     if (!sizesForColor.length) return;
-    let currentSizeAvailable = false;
+    let currentSizeSelectable = false;
     sizeBtns.forEach(btn => {
       const s = btn.dataset.size;
-      const available = sizesForColor.includes(s);
-      btn.style.display = available ? '' : 'none';
-      if (available && s === selectedSize) currentSizeAvailable = true;
+      if (!sizesForColor.includes(s)) { btn.style.display = 'none'; return; }
+      btn.style.display = '';
+      const variant = variantsForColor.find(v => v.size === s);
+      const hasStock = variant && (variant.stock === null || variant.stock > 0);
+      if (hasStock) {
+        btn.classList.remove('no-stock');
+        btn.disabled = false;
+        if (s === selectedSize) currentSizeSelectable = true;
+      } else {
+        btn.classList.add('no-stock');
+        btn.disabled = true;
+      }
     });
-    if (!currentSizeAvailable) {
+    if (!currentSizeSelectable) {
       sizeBtns.forEach(b => b.classList.remove('selected'));
-      const first = [...sizeBtns].find(b => b.style.display !== 'none');
+      const first = [...sizeBtns].find(b => b.style.display !== 'none' && !b.classList.contains('no-stock'));
       if (first) { first.classList.add('selected'); selectedSize = first.dataset.size; }
+      else { const anyVisible = [...sizeBtns].find(b => b.style.display !== 'none'); if (anyVisible) { anyVisible.classList.add('selected'); selectedSize = anyVisible.dataset.size; } }
     }
   }
 
-  // Inicializar tallas
+  // Inicializar tallas (sin filtro de color: marcar sin-stock globalmente)
   if (sizeBtns.length > 0) {
-    selectedSize = sizeBtns[0].dataset.size;
+    // Si no hay colores, marcar tallas con stock=0
+    if (!document.querySelector('.color-dot-btn')) {
+      sizeBtns.forEach(btn => {
+        const s = btn.dataset.size;
+        const v = allVariants.find(x => x.size === s);
+        if (v && v.stock !== null && v.stock === 0) {
+          btn.classList.add('no-stock');
+          btn.disabled = true;
+        }
+      });
+    }
+    const firstSelectable = [...sizeBtns].find(b => !b.classList.contains('no-stock'));
+    selectedSize = (firstSelectable || sizeBtns[0]).dataset.size;
     sizeBtns.forEach(btn => btn.addEventListener('click', () => {
+      if (btn.classList.contains('no-stock')) return;
       sizeBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedSize = btn.dataset.size;
