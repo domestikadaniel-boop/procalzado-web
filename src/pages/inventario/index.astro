@@ -12,149 +12,129 @@
 <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <style>
-:root{--red:#FF0000;--black:#000;--white:#fff;--grey:#F4F4F4;--grey2:#E5E5E5;--muted:#666}
+:root{--red:#FF0000;--black:#000;--white:#fff;--grey:#F4F4F4;--grey2:#E0E0E0;--muted:#666;
+  --c0-bg:#FECACA;--c0-tx:#991B1B;
+  --clow-bg:#FEF08A;--clow-tx:#713F12;
+  --cok-bg:#BBF7D0;--cok-tx:#14532D;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);min-height:100vh;font-size:14px}
 
-/* ── LOGIN ── */
+/* LOGIN */
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
-.login-box{background:var(--white);border-radius:12px;padding:2.5rem;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.1);border-top:4px solid var(--red)}
-.login-box h1{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;margin-bottom:.25rem}
-.login-box p{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem}
-.field label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
-.field{margin-bottom:.9rem}
-.field input{width:100%;padding:.65rem .85rem;border:2px solid var(--grey2);border-radius:6px;font-size:.9rem;font-family:inherit;outline:none;transition:border-color .15s}
-.field input:focus{border-color:var(--red)}
-.error-msg{background:#ffe6e6;color:#c00;padding:.5rem .8rem;border-radius:6px;font-size:.8rem;margin-bottom:.8rem;display:none}
+.login-box{background:var(--white);border-radius:10px;padding:2rem;width:100%;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.1);border-top:4px solid var(--red)}
+.login-box h1{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;margin-bottom:.2rem}
+.login-box p{font-size:.8rem;color:var(--muted);margin-bottom:1.2rem}
+.field{margin-bottom:.8rem}
+.field label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
+.field input,.field select{width:100%;padding:.6rem .8rem;border:2px solid var(--grey2);border-radius:5px;font-size:.88rem;font-family:inherit;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus{border-color:var(--red)}
+.err-msg{background:#fee2e2;color:#991b1b;padding:.45rem .7rem;border-radius:5px;font-size:.78rem;margin-bottom:.7rem;display:none}
 
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border:none;border-radius:6px;font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:opacity .15s;white-space:nowrap}
-.btn:hover{opacity:.85}.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn-red{background:var(--red);color:var(--white)}
-.btn-black{background:var(--black);color:var(--white)}
-.btn-outline{background:transparent;color:var(--black);border:2px solid var(--grey2)}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem 1rem;border:none;border-radius:5px;font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.85}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:var(--red);color:#fff}
+.btn-black{background:var(--black);color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-outline{background:transparent;border:2px solid var(--grey2);color:var(--black)}
 .btn-outline:hover{border-color:#999;opacity:1}
-.btn-green{background:#16a34a;color:var(--white)}
 .btn-w{width:100%;justify-content:center}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 .inv{display:none;flex-direction:column;min-height:100vh}
-.inv-header{background:var(--black);color:var(--white);padding:.75rem 1.2rem;display:flex;align-items:center;gap:1rem}
-.inv-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:.04em;flex:1}
-.inv-header-right{display:flex;align-items:center;gap:.6rem}
-.user-email{font-size:.78rem;opacity:.6}
+.inv-header{background:var(--black);color:#fff;padding:.7rem 1.2rem;display:flex;align-items:center;gap:1rem}
+.inv-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;flex:1}
+.inv-header .ue{font-size:.75rem;opacity:.55}
 
-/* ── TABS ── */
-.tabs{background:var(--white);border-bottom:2px solid var(--grey2);display:flex;padding:0 1.2rem}
-.tab{padding:.65rem 1rem;font-weight:600;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--muted);transition:all .15s}
+/* TABS */
+.tabs{background:#fff;border-bottom:2px solid var(--grey2);display:flex;padding:0 1.2rem}
+.tab{padding:.6rem 1rem;font-weight:600;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--muted);transition:all .15s}
 .tab.active{color:var(--red);border-bottom-color:var(--red)}
 
-/* ── PANEL ── */
+/* PANEL */
 .panel{padding:1.2rem;max-width:1600px;margin:0 auto;width:100%}
-.panel-section{display:none}
-.panel-section.active{display:block}
+.sec{display:none}
+.sec.active{display:block}
 
-/* ── TOOLBAR ── */
-.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
-.search-box{position:relative}
-.search-box input{padding:.55rem .85rem .55rem 2rem;border:2px solid var(--grey2);border-radius:6px;font-size:.85rem;font-family:inherit;outline:none;width:240px;transition:border-color .15s}
-.search-box input:focus{border-color:var(--red)}
-.search-box svg{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted)}
-.flt{padding:.55rem .75rem;border:2px solid var(--grey2);border-radius:6px;font-size:.82rem;font-family:inherit;outline:none;background:var(--white);cursor:pointer}
-.legend{display:flex;gap:.7rem;margin-left:auto;align-items:center}
-.leg{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--muted)}
-.dot{width:9px;height:9px;border-radius:50%}
+/* TOOLBAR */
+.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.9rem}
+.toolbar input[type=text]{padding:.5rem .8rem;border:2px solid var(--grey2);border-radius:5px;font-size:.82rem;font-family:inherit;outline:none;width:220px}
+.toolbar input[type=text]:focus{border-color:var(--red)}
+.toolbar select{padding:.5rem .7rem;border:2px solid var(--grey2);border-radius:5px;font-size:.8rem;font-family:inherit;outline:none;background:#fff}
+.legend{display:flex;gap:.6rem;margin-left:auto;align-items:center}
+.leg{display:flex;align-items:center;gap:.28rem;font-size:.72rem;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,.1)}
 
-/* ── TABLE ── */
-.tbl-wrap{border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow-x:auto}
-table{width:100%;border-collapse:collapse;background:var(--white)}
-thead th{background:var(--black);color:var(--white);padding:.55rem .8rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
-thead th:first-child{width:64px}
-thead th:last-child{width:70px;text-align:center}
-tbody tr:hover td{background:#fafafa}
-tbody td{padding:.5rem .8rem;border-bottom:1px solid var(--grey2);vertical-align:middle}
+/* SUMMARY */
+.sumbar{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem}
+.sum-chip{padding:.25rem .65rem;border-radius:4px;font-size:.73rem;font-weight:600;border:1px solid rgba(0,0,0,.08)}
+
+/* TABLE */
+.tbl-wrap{border:1px solid var(--grey2);border-radius:7px;overflow:hidden;overflow-x:auto;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead th{background:var(--black);color:#fff;padding:.5rem .75rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+thead th:last-child{text-align:center;width:80px}
+tbody td{padding:.45rem .75rem;border-bottom:1px solid var(--grey2);vertical-align:middle}
 tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fafafa}
+.p-name{font-weight:600}
+.p-brand{font-size:.7rem;color:var(--muted)}
 
-/* ── PRODUCT CELL ── */
-.p-img{width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--grey2);display:block;flex-shrink:0}
-.p-img-ph{width:52px;height:52px;border-radius:6px;background:var(--grey2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
-.p-name{font-weight:600;font-size:.85rem;line-height:1.2}
-.p-brand{font-size:.72rem;color:var(--muted);margin-bottom:.1rem}
+/* TALLAS */
+.sizes-row{display:flex;flex-wrap:wrap;gap:.25rem}
+.sz{display:inline-flex;flex-direction:column;align-items:center;border-radius:4px;padding:.18rem .38rem;font-size:.68rem;line-height:1.25;border:1px solid rgba(0,0,0,.1);min-width:30px}
+.sz .n{font-weight:700;font-size:.72rem}
+.sz .u{font-size:.62rem}
+.sz.s0{background:var(--c0-bg);color:var(--c0-tx)}
+.sz.slow{background:var(--clow-bg);color:var(--clow-tx)}
+.sz.sok{background:var(--cok-bg);color:var(--cok-tx)}
 
-/* ── SIZE BADGES ── */
-.sizes-row{display:flex;flex-wrap:wrap;gap:.3rem}
-.sb{display:inline-flex;flex-direction:column;align-items:center;border-radius:5px;padding:.2rem .4rem;font-size:.7rem;min-width:34px;border:1px solid transparent;line-height:1.2}
-.sb .sn{font-weight:700;font-size:.75rem}
-.sb .ss{font-size:.65rem}
-.sb.s0{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
-.sb.slow{background:#fef9c3;border-color:#fde047;color:#854d0e}
-.sb.sok{background:#dcfce7;border-color:#86efac;color:#15803d}
+/* TOTAL */
+.tot{display:inline-block;min-width:36px;text-align:center;padding:.22rem .5rem;border-radius:4px;font-weight:700;font-size:.8rem;border:1px solid rgba(0,0,0,.1)}
+.tot.t0{background:var(--c0-bg);color:var(--c0-tx)}
+.tot.tlow{background:var(--clow-bg);color:var(--clow-tx)}
+.tot.tok{background:var(--cok-bg);color:var(--cok-tx)}
 
-/* ── TOTAL BADGE ── */
-.total-b{display:inline-block;min-width:34px;text-align:center;padding:.2rem .5rem;border-radius:5px;font-weight:700;font-size:.82rem}
-.t0{background:#fee2e2;color:#b91c1c}
-.tlow{background:#fef9c3;color:#854d0e}
-.tok{background:#dcfce7;color:#15803d}
-
-/* ── VENTA / INGRESO ── */
+/* FORMS */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
-.card{background:var(--white);border-radius:8px;padding:1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.card h3{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.04em;margin-bottom:1rem}
+.card{background:#fff;border-radius:7px;padding:1.2rem;border:1px solid var(--grey2)}
+.card h3{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;margin-bottom:.9rem;border-bottom:2px solid var(--grey2);padding-bottom:.4rem}
 
-/* ── SEARCHABLE VARIANT PICKER ── */
-.vpicker{position:relative}
-.vpicker-input{width:100%;padding:.6rem .85rem;border:2px solid var(--grey2);border-radius:6px;font-size:.85rem;font-family:inherit;outline:none;transition:border-color .15s}
-.vpicker-input:focus{border-color:var(--red)}
-.vpicker-dropdown{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--white);border:2px solid var(--grey2);border-radius:6px;max-height:260px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 16px rgba(0,0,0,.12)}
-.vpicker-dropdown.open{display:block}
-.vp-item{padding:.5rem .8rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.83rem;border-bottom:1px solid var(--grey2)}
-.vp-item:last-child{border-bottom:none}
-.vp-item:hover{background:#f5f5f5}
-.vp-item .vi-img{width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid var(--grey2);flex-shrink:0}
-.vp-item .vi-ph{width:36px;height:36px;border-radius:4px;background:var(--grey2);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
-.vp-item .vi-label{flex:1;line-height:1.3}
-.vp-item .vi-stock{font-size:.75rem;font-weight:700;padding:.1rem .35rem;border-radius:4px}
-.vi-stock.s0{background:#fee2e2;color:#b91c1c}
-.vi-stock.slow{background:#fef9c3;color:#854d0e}
-.vi-stock.sok{background:#dcfce7;color:#15803d}
-.vp-selected{font-size:.78rem;color:var(--muted);margin-top:.3rem;min-height:1.1em}
-
-.op-row{display:flex;gap:.6rem;align-items:flex-end;margin-top:.8rem}
-.qty-in{width:80px;padding:.6rem .7rem;border:2px solid var(--grey2);border-radius:6px;font-size:.9rem;font-family:inherit;outline:none;text-align:center}
+/* FORM FIELDS */
+.frow{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.7rem}
+.frow .field{margin-bottom:0;flex:1;min-width:130px}
+.prod-search{position:relative}
+.prod-search input{width:100%;padding:.6rem .8rem;border:2px solid var(--grey2);border-radius:5px;font-size:.85rem;font-family:inherit;outline:none}
+.prod-search input:focus{border-color:var(--red)}
+.qty-in{width:75px;padding:.55rem .6rem;border:2px solid var(--grey2);border-radius:5px;font-size:.9rem;font-family:inherit;outline:none;text-align:center}
 .qty-in:focus{border-color:var(--red)}
-.current-stock{font-size:.8rem;color:var(--muted);margin-top:.4rem}
+.cur-stock{font-size:.78rem;color:var(--muted);margin:.3rem 0 .6rem}
 
-/* ── BULK TABLE ── */
-.bulk-wrap{overflow-x:auto;margin-bottom:.8rem;border:1px solid var(--grey2);border-radius:6px}
-.bulk-tbl{width:100%;border-collapse:collapse;font-size:.82rem}
-.bulk-tbl th{background:var(--grey2);padding:.4rem .6rem;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
-.bulk-tbl td{padding:.35rem .5rem;border-top:1px solid var(--grey2)}
-.bulk-tbl input[type=number]{width:64px;padding:.3rem .4rem;border:1.5px solid var(--grey2);border-radius:4px;font-size:.82rem;text-align:center;font-family:inherit}
+/* BULK */
+.bulk-wrap{border:1px solid var(--grey2);border-radius:5px;overflow:hidden;margin-bottom:.7rem}
+.bulk-tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.bulk-tbl th{background:var(--grey2);padding:.38rem .6rem;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.bulk-tbl td{padding:.32rem .5rem;border-top:1px solid var(--grey2)}
+.bulk-tbl select{width:100%;padding:.3rem .4rem;border:1.5px solid var(--grey2);border-radius:4px;font-size:.78rem;font-family:inherit;outline:none}
+.bulk-tbl select:focus{border-color:var(--red)}
+.bulk-tbl input[type=number]{width:58px;padding:.3rem .35rem;border:1.5px solid var(--grey2);border-radius:4px;font-size:.8rem;text-align:center;font-family:inherit}
 .bulk-tbl input:focus{border-color:var(--red);outline:none}
-.rm-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;line-height:1;padding:0 .2rem}
-.bulk-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.rm-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:.95rem;padding:0 .15rem;line-height:1}
+.bulk-footer{display:flex;gap:.6rem;flex-wrap:wrap}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:1.2rem;right:1.2rem;background:var(--black);color:var(--white);padding:.7rem 1rem;border-radius:7px;font-size:.82rem;z-index:9999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;max-width:300px}
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(255,255,255,.78);display:none;align-items:center;justify-content:center;z-index:9998}
+.spinner{width:30px;height:30px;border:3px solid var(--grey2);border-top-color:var(--red);border-radius:50%;animation:spin .55s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:1rem;right:1rem;background:var(--black);color:#fff;padding:.65rem 1rem;border-radius:6px;font-size:.8rem;z-index:9999;opacity:0;transform:translateY(5px);transition:all .22s;pointer-events:none;max-width:280px}
 .toast.show{opacity:1;transform:none}
 .toast.ok{border-left:4px solid #22c55e}
 .toast.err{border-left:4px solid var(--red)}
 
-/* ── LOADING ── */
-.overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:none;align-items:center;justify-content:center;z-index:9998}
-.spinner{width:32px;height:32px;border:3px solid var(--grey2);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── SUMMARY BAR ── */
-.summary-bar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
-.sbar-item{padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:600}
-
-@media(max-width:760px){
-  .two-col{grid-template-columns:1fr}
-  .toolbar{flex-direction:column;align-items:stretch}
-  .search-box input{width:100%}
-  .legend{margin-left:0}
-}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -165,10 +145,10 @@ tbody tr:last-child td{border-bottom:none}
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <h1>Inventario</h1>
-    <p>Panel de gestión — Procalzado</p>
-    <div class="error-msg" id="loginErr"></div>
-    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email"/></div>
-    <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/></div>
+    <p>Panel de gestion — Procalzado</p>
+    <div class="err-msg" id="loginErr"></div>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" autocomplete="email" placeholder="tu@email.com"/></div>
+    <div class="field"><label>Contrasena</label><input type="password" id="loginPass" autocomplete="current-password" placeholder="••••••••"/></div>
     <button class="btn btn-red btn-w" id="loginBtn">Entrar</button>
   </div>
 </div>
@@ -176,48 +156,45 @@ tbody tr:last-child td{border-bottom:none}
 <!-- MAIN -->
 <div class="inv" id="invPanel">
   <div class="inv-header">
-    <h2>📦 Inventario — Procalzado</h2>
-    <div class="inv-header-right">
-      <span class="user-email" id="uEmail"></span>
-      <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.25)" id="logoutBtn">Salir</button>
+    <h2>Inventario — Procalzado</h2>
+    <div style="display:flex;align-items:center;gap:.7rem">
+      <span class="ue" id="uEmail"></span>
+      <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.25);font-size:.72rem" id="logoutBtn">Salir</button>
     </div>
   </div>
 
   <div class="tabs">
     <div class="tab active" data-tab="inventario">Inventario</div>
     <div class="tab" data-tab="ventas">Registrar Ventas</div>
-    <div class="tab" data-tab="ingresos">Ingresos de Mercancía</div>
+    <div class="tab" data-tab="ingresos">Ingresos de Mercancia</div>
   </div>
 
   <div class="panel">
 
-    <!-- ────── TAB INVENTARIO ────── -->
-    <div class="panel-section active" id="tab-inventario">
+    <!-- TAB INVENTARIO -->
+    <div class="sec active" id="tab-inventario">
       <div class="toolbar">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="searchQ" placeholder="Buscar producto o color…"/>
-        </div>
-        <select class="flt" id="fltStock">
+        <input type="text" id="searchQ" placeholder="Buscar producto o color..."/>
+        <select id="fltStock">
           <option value="">Todos los stocks</option>
-          <option value="0">Sin stock</option>
-          <option value="low">Stock bajo</option>
-          <option value="ok">Stock OK</option>
+          <option value="0">Sin stock (rojo)</option>
+          <option value="low">Stock bajo (amarillo)</option>
+          <option value="ok">Stock OK (verde)</option>
         </select>
-        <select class="flt" id="fltBrand"><option value="">Todas las marcas</option></select>
+        <select id="fltBrand"><option value="">Todas las marcas</option></select>
         <div class="legend">
-          <div class="leg"><div class="dot" style="background:#ef4444"></div>Sin stock</div>
-          <div class="leg"><div class="dot" style="background:#eab308"></div>Bajo (1–4)</div>
-          <div class="leg"><div class="dot" style="background:#22c55e"></div>OK (5+)</div>
+          <div class="leg"><div class="dot" style="background:var(--c0-bg)"></div>Sin stock</div>
+          <div class="leg"><div class="dot" style="background:var(--clow-bg)"></div>Bajo (1-4)</div>
+          <div class="leg"><div class="dot" style="background:var(--cok-bg)"></div>OK (5+)</div>
         </div>
-        <button class="btn btn-black" id="exportBtn">⬇ Excel</button>
+        <button class="btn btn-black" id="exportBtn">Descargar Excel</button>
       </div>
-      <div class="summary-bar" id="summaryBar"></div>
+      <div class="sumbar" id="sumbar"></div>
       <div class="tbl-wrap">
         <table>
           <thead>
             <tr>
-              <th>Foto</th>
+              <th>Marca</th>
               <th>Producto</th>
               <th>Color</th>
               <th>Tallas y stock</th>
@@ -225,107 +202,126 @@ tbody tr:last-child td{border-bottom:none}
             </tr>
           </thead>
           <tbody id="invBody">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
-      <div id="invCount" style="margin-top:.6rem;font-size:.75rem;color:var(--muted)"></div>
+      <div id="invCount" style="margin-top:.5rem;font-size:.72rem;color:var(--muted)"></div>
     </div>
 
-    <!-- ────── TAB VENTAS ────── -->
-    <div class="panel-section" id="tab-ventas">
+    <!-- TAB VENTAS -->
+    <div class="sec" id="tab-ventas">
       <div class="two-col">
         <div class="card">
-          <h3>Venta Individual</h3>
-          <label style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem">Buscar variante</label>
-          <div class="vpicker" id="saleVpicker">
-            <input type="text" class="vpicker-input" id="saleSearch" placeholder="Escribe producto, color o talla…" autocomplete="off"/>
-            <div class="vpicker-dropdown" id="saleDropdown"></div>
+          <h3>Venta individual</h3>
+          <div class="field">
+            <label>Buscar producto</label>
+            <input type="text" id="saleProdSearch" placeholder="Escribe para filtrar..." autocomplete="off"/>
           </div>
-          <div class="vp-selected" id="saleSelected">—</div>
-          <div class="current-stock" id="saleCurStock"></div>
-          <div class="op-row">
-            <input type="number" class="qty-in" id="saleQty" min="1" value="1" placeholder="Cant."/>
+          <div class="field">
+            <label>Producto</label>
+            <select id="saleProd"><option value="">Selecciona...</option></select>
+          </div>
+          <div class="field">
+            <label>Color</label>
+            <select id="saleColor" disabled><option value="">— primero producto —</option></select>
+          </div>
+          <div class="field">
+            <label>Talla</label>
+            <select id="saleSize" disabled><option value="">—</option></select>
+          </div>
+          <div class="cur-stock" id="saleCurStock"></div>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <input type="number" class="qty-in" id="saleQty" min="1" value="1"/>
             <button class="btn btn-red" id="saleSingleBtn">Descontar</button>
           </div>
         </div>
 
         <div class="card">
-          <h3>Descuento Masivo</h3>
+          <h3>Descuento masivo</h3>
           <div class="bulk-wrap">
             <table class="bulk-tbl">
-              <thead><tr><th>Variante</th><th>Cant.</th><th></th></tr></thead>
+              <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Cant.</th><th></th></tr></thead>
               <tbody id="saleBulkBody">
-                <tr id="saleBulkEmpty"><td colspan="3" style="color:var(--muted);text-align:center;padding:.7rem;font-size:.8rem">Sin filas aún</td></tr>
+                <tr id="saleBulkEmpty"><td colspan="5" style="color:var(--muted);text-align:center;padding:.65rem;font-size:.78rem">Sin filas</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="bulk-actions">
-            <button class="btn btn-outline" id="addSaleRowBtn">+ Agregar fila</button>
+          <div class="bulk-footer">
+            <button class="btn btn-outline" id="addSaleRow">+ Agregar fila</button>
             <button class="btn btn-red" id="saleBulkBtn">Aplicar descuentos</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ────── TAB INGRESOS ────── -->
-    <div class="panel-section" id="tab-ingresos">
+    <!-- TAB INGRESOS -->
+    <div class="sec" id="tab-ingresos">
       <div class="two-col">
         <div class="card">
-          <h3>Ingreso Individual</h3>
-          <label style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem">Buscar variante</label>
-          <div class="vpicker" id="entryVpicker">
-            <input type="text" class="vpicker-input" id="entrySearch" placeholder="Escribe producto, color o talla…" autocomplete="off"/>
-            <div class="vpicker-dropdown" id="entryDropdown"></div>
+          <h3>Ingreso individual</h3>
+          <div class="field">
+            <label>Buscar producto</label>
+            <input type="text" id="entryProdSearch" placeholder="Escribe para filtrar..." autocomplete="off"/>
           </div>
-          <div class="vp-selected" id="entrySelected">—</div>
-          <div class="current-stock" id="entryCurStock"></div>
-          <div class="op-row">
-            <input type="number" class="qty-in" id="entryQty" min="1" value="1" placeholder="Cant."/>
+          <div class="field">
+            <label>Producto</label>
+            <select id="entryProd"><option value="">Selecciona...</option></select>
+          </div>
+          <div class="field">
+            <label>Color</label>
+            <select id="entryColor" disabled><option value="">— primero producto —</option></select>
+          </div>
+          <div class="field">
+            <label>Talla</label>
+            <select id="entrySize" disabled><option value="">—</option></select>
+          </div>
+          <div class="cur-stock" id="entryCurStock"></div>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <input type="number" class="qty-in" id="entryQty" min="1" value="1"/>
             <button class="btn btn-green" id="entrySingleBtn">Agregar</button>
           </div>
         </div>
 
         <div class="card">
-          <h3>Ingreso Masivo</h3>
+          <h3>Ingreso masivo</h3>
           <div class="bulk-wrap">
             <table class="bulk-tbl">
-              <thead><tr><th>Variante</th><th>Cant.</th><th></th></tr></thead>
+              <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Cant.</th><th></th></tr></thead>
               <tbody id="entryBulkBody">
-                <tr id="entryBulkEmpty"><td colspan="3" style="color:var(--muted);text-align:center;padding:.7rem;font-size:.8rem">Sin filas aún</td></tr>
+                <tr id="entryBulkEmpty"><td colspan="5" style="color:var(--muted);text-align:center;padding:.65rem;font-size:.78rem">Sin filas</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="bulk-actions">
-            <button class="btn btn-outline" id="addEntryRowBtn">+ Agregar fila</button>
+          <div class="bulk-footer">
+            <button class="btn btn-outline" id="addEntryRow">+ Agregar fila</button>
             <button class="btn btn-green" id="entryBulkBtn">Aplicar ingresos</button>
           </div>
         </div>
       </div>
     </div>
 
-  </div><!-- /panel -->
-</div><!-- /inv -->
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script is:inline define:vars={{sbUrl: import.meta.env.PUBLIC_SUPABASE_URL, sbAnon: import.meta.env.PUBLIC_SUPABASE_ANON_KEY}}>
 (function(){
-const LOW = 5; // umbral stock bajo → amarillo
+const LOW = 5;
 const sb = window.supabase.createClient(sbUrl, sbAnon);
 const $ = id => document.getElementById(id);
 
-// ── HELPERS ──
 function loading(on){ $('overlay').style.display = on ? 'flex' : 'none'; }
 function toast(msg, ok=true){
   const t=$('toast'); t.textContent=msg;
   t.className='toast show '+(ok?'ok':'err');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',3000);
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',3200);
 }
 function scls(s){ return s<=0?'s0':s<LOW?'slow':'sok'; }
 function tcls(s){ return s<=0?'t0':s<LOW?'tlow':'tok'; }
 
-// ── AUTH ──
+// AUTH
 async function checkAuth(){
   const {data:{session}} = await sb.auth.getSession();
   if(session) showPanel(session.user.email);
@@ -334,12 +330,12 @@ $('loginBtn').addEventListener('click', async()=>{
   const em=$('loginEmail').value.trim(), pw=$('loginPass').value;
   if(!em||!pw){showErr('Completa todos los campos');return;}
   $('loginBtn').disabled=true;
-  const {data,error} = await sb.auth.signInWithPassword({email:em,password:pw});
-  if(error){showErr('Email o contraseña incorrectos');$('loginBtn').disabled=false;return;}
+  const {data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(error){showErr('Email o contrasena incorrectos');$('loginBtn').disabled=false;return;}
   showPanel(data.user.email);
 });
 $('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click();});
-$('logoutBtn').addEventListener('click', async()=>{
+$('logoutBtn').addEventListener('click',async()=>{
   await sb.auth.signOut();
   $('loginWrap').style.display=''; $('invPanel').style.display='none'; allData=null;
 });
@@ -351,19 +347,18 @@ async function showPanel(email){
   await loadData();
 }
 
-// ── TABS ──
+// TABS
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.panel-section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
     tab.classList.add('active');
     $('tab-'+tab.dataset.tab).classList.add('active');
   });
 });
 
-// ── DATA ──
+// DATA
 let allData=null;
-
 async function fetchAll(table,select){
   let rows=[],offset=0;
   while(true){
@@ -377,26 +372,14 @@ async function fetchAll(table,select){
 async function loadData(){
   loading(true);
   try{
-    const [products,variants,images]=await Promise.all([
+    const [products,variants]=await Promise.all([
       fetchAll('products','id,name,slug,brands(name)'),
       fetchAll('product_variants','id,product_id,color,size,stock,active'),
-      fetchAll('product_images','product_id,color,url,is_primary'),
     ]);
 
-    // imgMap: product_id|color → url (primaria primero)
-    const imgMap={};
-    for(const img of images){
-      const k=img.product_id+'|'+img.color;
-      const kany=img.product_id+'|';
-      if(!imgMap[k]||img.is_primary) imgMap[k]=img.url;
-      if(!imgMap[kany]||img.is_primary) imgMap[kany]=img.url;
-    }
-
-    // productMap: id → product
     const productMap={};
     for(const p of products) productMap[p.id]=p;
 
-    // Group active variants by product→color→[variants]
     const byProd={};
     for(const v of variants){
       if(!v.active) continue;
@@ -404,44 +387,50 @@ async function loadData(){
       if(!byProd[v.product_id][v.color]) byProd[v.product_id][v.color]=[];
       byProd[v.product_id][v.color].push(v);
     }
-    // Sort sizes
     for(const pid in byProd)
       for(const c in byProd[pid])
         byProd[pid][c].sort((a,b)=>{const na=parseFloat(a.size),nb=parseFloat(b.size);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.size.localeCompare(b.size);});
 
-    allData={products,variants,images,imgMap,productMap,byProd};
+    allData={products,variants,productMap,byProd};
 
     // Brand filter
     const brands=[...new Set(products.map(p=>p.brands?.name).filter(Boolean))].sort();
     const bf=$('fltBrand');
     brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;bf.appendChild(o);});
 
+    // Populate product selects
+    const sortedP=[...products].sort((a,b)=>{
+      const ba=a.brands?.name||'', bb=b.brands?.name||'';
+      return ba.localeCompare(bb)||a.name.localeCompare(b.name);
+    });
+    setupProductSelect('saleProd','saleColor','saleSize','saleCurStock','saleProdSearch',sortedP);
+    setupProductSelect('entryProd','entryColor','entrySize','entryCurStock','entryProdSearch',sortedP);
+
     renderTable();
   }finally{loading(false);}
 }
 
-// ── RENDER TABLE ──
+// RENDER TABLE
 function renderTable(){
   if(!allData) return;
   const q=$('searchQ').value.toLowerCase().trim();
-  const fStock=$('fltStock').value;
-  const fBrand=$('fltBrand').value;
-  const {products,byProd,imgMap}=allData;
+  const fs=$('fltStock').value;
+  const fb=$('fltBrand').value;
+  const {products,byProd}=allData;
 
   const rows=[];
   for(const p of products){
     const brand=p.brands?.name||'';
-    if(fBrand&&brand!==fBrand) continue;
+    if(fb&&brand!==fb) continue;
     const colorMap=byProd[p.id]||{};
     for(const [color,vs] of Object.entries(colorMap)){
-      const label=(brand+' '+p.name+' '+color).toLowerCase();
-      if(q&&!label.includes(q)) continue;
+      const lbl=(brand+' '+p.name+' '+color).toLowerCase();
+      if(q&&!lbl.includes(q)) continue;
       const total=vs.reduce((s,v)=>s+(v.stock||0),0);
-      if(fStock==='0'&&!vs.some(v=>(v.stock||0)===0)) continue;
-      if(fStock==='low'&&!vs.some(v=>(v.stock||0)>0&&(v.stock||0)<LOW)) continue;
-      if(fStock==='ok'&&!vs.some(v=>(v.stock||0)>=LOW)) continue;
-      const img=imgMap[p.id+'|'+color]||imgMap[p.id+'|']||null;
-      rows.push({p,brand,color,vs,total,img});
+      if(fs==='0'&&!vs.some(v=>(v.stock||0)===0)) continue;
+      if(fs==='low'&&!vs.some(v=>(v.stock||0)>0&&(v.stock||0)<LOW)) continue;
+      if(fs==='ok'&&!vs.some(v=>(v.stock||0)>=LOW)) continue;
+      rows.push({p,brand,color,vs,total});
     }
   }
   rows.sort((a,b)=>{
@@ -451,49 +440,40 @@ function renderTable(){
     return a.color.localeCompare(b.color);
   });
 
-  const tbody=$('invBody');
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Sin resultados</td></tr>';
-    $('invCount').textContent=''; $('summaryBar').innerHTML=''; return;
+    $('invBody').innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Sin resultados</td></tr>';
+    $('invCount').textContent=''; $('sumbar').innerHTML=''; return;
   }
 
-  let total0=0,totalLow=0,totalOk=0,totalUnits=0;
-  tbody.innerHTML=rows.map(({p,brand,color,vs,total,img})=>{
-    if(total===0) total0++;
-    else if(total<LOW*vs.length*0.5) totalLow++;
-    else totalOk++;
-    totalUnits+=total;
-
-    const imgHtml=img
-      ?`<img src="${img}" class="p-img" alt="" loading="lazy"/>`
-      :`<div class="p-img-ph">👟</div>`;
-
+  let n0=0,nLow=0,nOk=0,nUnits=0;
+  $('invBody').innerHTML=rows.map(({p,brand,color,vs,total})=>{
+    if(total===0) n0++; else if(total<LOW) nLow++; else nOk++;
+    nUnits+=total;
     const badges=vs.map(v=>{
       const s=v.stock||0;
-      return `<div class="sb ${scls(s)}" title="T${v.size}: ${s}u"><span class="sn">${v.size}</span><span class="ss">${s}u</span></div>`;
+      return `<div class="sz ${scls(s)}"><span class="n">${v.size}</span><span class="u">${s}u</span></div>`;
     }).join('');
-
     return `<tr>
-      <td>${imgHtml}</td>
-      <td><div class="p-name">${brand?`<div class="p-brand">${brand}</div>`:''} ${p.name}</div></td>
-      <td style="font-size:.82rem;white-space:nowrap">${color}</td>
+      <td style="font-size:.75rem;color:var(--muted);white-space:nowrap">${brand}</td>
+      <td><span class="p-name">${p.name}</span></td>
+      <td style="font-size:.8rem;white-space:nowrap">${color}</td>
       <td><div class="sizes-row">${badges}</div></td>
-      <td style="text-align:center"><span class="total-b ${tcls(total)}">${total}</span></td>
+      <td style="text-align:center"><span class="tot ${tcls(total)}">${total}</span></td>
     </tr>`;
   }).join('');
 
-  $('invCount').textContent=`${rows.length} variantes`;
-  $('summaryBar').innerHTML=
-    `<span class="sbar-item" style="background:#fee2e2;color:#b91c1c">🔴 Sin stock: ${total0}</span>`+
-    `<span class="sbar-item" style="background:#fef9c3;color:#854d0e">🟡 Stock bajo: ${totalLow}</span>`+
-    `<span class="sbar-item" style="background:#dcfce7;color:#15803d">🟢 Stock OK: ${totalOk}</span>`+
-    `<span class="sbar-item" style="background:var(--grey2);color:var(--black)">Total unidades: ${totalUnits}</span>`;
+  $('invCount').textContent=`${rows.length} variantes mostradas`;
+  $('sumbar').innerHTML=
+    `<span class="sum-chip" style="background:var(--c0-bg);color:var(--c0-tx)">Sin stock: ${n0}</span>`+
+    `<span class="sum-chip" style="background:var(--clow-bg);color:var(--clow-tx)">Stock bajo: ${nLow}</span>`+
+    `<span class="sum-chip" style="background:var(--cok-bg);color:var(--cok-tx)">Stock OK: ${nOk}</span>`+
+    `<span class="sum-chip" style="background:var(--grey2)">Total unidades: ${nUnits}</span>`;
 }
 
 ['searchQ','fltStock','fltBrand'].forEach(id=>$(id).addEventListener('input',renderTable));
 
-// ── EXPORT XLSX ──
-$('exportBtn').addEventListener('click', async()=>{
+// EXPORT XLSX
+$('exportBtn').addEventListener('click',async()=>{
   if(!allData){toast('Sin datos',false);return;}
   loading(true);
   try{
@@ -501,237 +481,209 @@ $('exportBtn').addEventListener('click', async()=>{
     const wb=new ExcelJS.Workbook();
     const ws=wb.addWorksheet('Inventario');
     ws.columns=[
-      {header:'Marca',key:'brand',width:16},
-      {header:'Producto',key:'name',width:22},
-      {header:'Color',key:'color',width:20},
-      {header:'Talla',key:'size',width:8},
-      {header:'Stock',key:'stock',width:9},
+      {header:'Marca',key:'brand',width:16},{header:'Producto',key:'name',width:22},
+      {header:'Color',key:'color',width:20},{header:'Talla',key:'size',width:8},{header:'Stock',key:'stock',width:9},
     ];
-    ws.getRow(1).eachCell(c=>{
-      c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF000000'}};
-      c.font={color:{argb:'FFFFFFFF'},bold:true};
-    });
-    const sorted=[...products].sort((a,b)=>{
-      const ba=a.brands?.name||a.name,bb=b.brands?.name||b.name;
-      return ba.localeCompare(bb)||a.name.localeCompare(b.name);
-    });
-    for(const p of sorted){
+    ws.getRow(1).eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF000000'}};c.font={color:{argb:'FFFFFFFF'},bold:true};});
+    const sp=[...products].sort((a,b)=>{const ba=a.brands?.name||a.name,bb=b.brands?.name||b.name;return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
+    for(const p of sp){
       for(const [color,vs] of Object.entries(byProd[p.id]||{})){
         for(const v of vs){
           const s=v.stock||0;
           const row=ws.addRow({brand:p.brands?.name||'',name:p.name,color,size:v.size,stock:s});
           const sc=row.getCell('stock');
-          if(s===0){sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEE2E2'}};sc.font={color:{argb:'FFB91C1C'},bold:true};}
-          else if(s<LOW){sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEF9C3'}};sc.font={color:{argb:'FF854D0E'},bold:true};}
-          else{sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDCFCE7'}};sc.font={color:{argb:'FF15803D'},bold:true};}
+          if(s===0){sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFECACA'}};sc.font={color:{argb:'FF991B1B'},bold:true};}
+          else if(s<LOW){sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEF08A'}};sc.font={color:{argb:'FF713F12'},bold:true};}
+          else{sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFBBF7D0'}};sc.font={color:{argb:'FF14532D'},bold:true};}
         }
       }
     }
     const buf=await wb.xlsx.writeBuffer();
     const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    a.download=`inventario-procalzado-${new Date().toISOString().slice(0,10)}.xlsx`;
-    a.click(); toast('Excel descargado ✓');
+    a.download=`inventario-${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click(); toast('Excel descargado');
   }catch(e){toast('Error al generar Excel',false);console.error(e);}
   finally{loading(false);}
 });
 
-// ── VARIANT PICKER (buscador) ──
-function makeVPicker(inputId, dropdownId, selectedId, curStockId, onSelect){
-  const inp=$(inputId), drop=$(dropdownId), sel=$(selectedId), cur=$(curStockId);
-  let chosen=null;
-
-  function renderDrop(q){
-    if(!allData||!q.trim()){drop.classList.remove('open');return;}
-    const terms=q.toLowerCase().split(/\s+/).filter(Boolean);
-    const matches=[];
-    for(const v of allData.variants){
-      if(!v.active) continue;
-      const p=allData.productMap[v.product_id];
-      if(!p) continue;
-      const brand=p.brands?.name||'';
-      const label=`${brand} ${p.name} ${v.color} ${v.size}`.toLowerCase();
-      if(terms.every(t=>label.includes(t))) matches.push({v,p,brand});
-      if(matches.length>=40) break;
-    }
-    if(!matches.length){drop.innerHTML='<div style="padding:.6rem .8rem;font-size:.8rem;color:var(--muted)">Sin resultados</div>';drop.classList.add('open');return;}
-    drop.innerHTML=matches.map(({v,p,brand},i)=>{
-      const s=v.stock||0;
-      const img=allData.imgMap[v.product_id+'|'+v.color]||allData.imgMap[v.product_id+'|']||null;
-      const imgHtml=img?`<img class="vi-img" src="${img}" alt=""/>`:`<div class="vi-ph">👟</div>`;
-      return `<div class="vp-item" data-idx="${i}">
-        ${imgHtml}
-        <div class="vi-label">${brand?`<span style="font-size:.7rem;color:var(--muted)">${brand}</span><br>`:''}
-          <strong>${p.name}</strong> / ${v.color} / T${v.size}
-        </div>
-        <span class="vi-stock ${scls(s)}">${s}u</span>
-      </div>`;
-    }).join('');
-    drop._matches=matches;
-    drop.querySelectorAll('.vp-item').forEach((el,i)=>{
-      el.addEventListener('mousedown',e=>{e.preventDefault();pick(matches[i]);});
-    });
-    drop.classList.add('open');
-  }
-
-  function pick({v,p,brand}){
-    chosen=v;
-    inp.value=`${brand?brand+' ':''}${p.name} / ${v.color} / T${v.size}`;
-    sel.textContent='';
-    cur.textContent=`Stock actual: ${v.stock||0} unidades`;
-    drop.classList.remove('open');
-    onSelect(v);
-  }
-
-  inp.addEventListener('input',()=>renderDrop(inp.value));
-  inp.addEventListener('focus',()=>renderDrop(inp.value));
-  inp.addEventListener('blur',()=>setTimeout(()=>drop.classList.remove('open'),150));
-  document.addEventListener('click',e=>{if(!inp.contains(e.target)&&!drop.contains(e.target))drop.classList.remove('open');});
-
-  return ()=>chosen;
-}
-
-// ── UPDATE STOCK ──
-async function updateStock(vid, delta){
+// UPDATE STOCK
+async function updateStock(vid,delta){
   const v=allData.variants.find(x=>x.id===vid);
   if(!v) throw new Error('Variante no encontrada');
-  const newS=Math.max(0,(v.stock||0)+delta);
-  const {error}=await sb.from('product_variants').update({stock:newS}).eq('id',vid);
+  const ns=Math.max(0,(v.stock||0)+delta);
+  const {error}=await sb.from('product_variants').update({stock:ns}).eq('id',vid);
   if(error) throw error;
-  v.stock=newS; return newS;
+  v.stock=ns; return ns;
 }
 
-// ── SINGLE VENTAS / INGRESOS ──
-let getSaleChosen, getEntryChosen;
-window.addEventListener('load',()=>{
-  getSaleChosen=makeVPicker('saleSearch','saleDropdown','saleSelected','saleCurStock',v=>{
-    $('saleCurStock').textContent=`Stock actual: ${v.stock||0} unidades`;
-  });
-  getEntryChosen=makeVPicker('entrySearch','entryDropdown','entrySelected','entryCurStock',v=>{
-    $('entryCurStock').textContent=`Stock actual: ${v.stock||0} unidades`;
-  });
-});
+// PRODUCT SELECT WITH SEARCH FILTER
+function setupProductSelect(prodSelId, colorSelId, sizeSelId, curStockId, searchId, sortedProducts){
+  const allOpts=sortedProducts.map(p=>({
+    p,
+    label: (p.brands?.name ? p.brands.name+' ' : '') + p.name
+  }));
 
+  function rebuildOpts(q){
+    const sel=$(prodSelId);
+    const prev=sel.value;
+    sel.innerHTML='<option value="">Selecciona...</option>';
+    const filtered=q ? allOpts.filter(o=>o.label.toLowerCase().includes(q.toLowerCase())) : allOpts;
+    filtered.forEach(({p,label})=>{
+      const o=document.createElement('option'); o.value=p.id; o.textContent=label; sel.appendChild(o);
+    });
+    if(prev && [...sel.options].some(o=>o.value===prev)) sel.value=prev;
+  }
+
+  $(searchId).addEventListener('input',()=>rebuildOpts($(searchId).value));
+
+  $(prodSelId).addEventListener('change',()=>{
+    const pid=$(prodSelId).value;
+    $(colorSelId).innerHTML='<option value="">Selecciona color...</option>';
+    $(sizeSelId).innerHTML='<option value="">—</option>';
+    $(colorSelId).disabled=!pid; $(sizeSelId).disabled=true;
+    $(curStockId).textContent='';
+    if(!pid||!allData) return;
+    const colors=Object.keys(allData.byProd[pid]||{}).sort();
+    colors.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;$(colorSelId).appendChild(o);});
+  });
+
+  $(colorSelId).addEventListener('change',()=>{
+    const pid=$(prodSelId).value, color=$(colorSelId).value;
+    $(sizeSelId).innerHTML='<option value="">Selecciona talla...</option>';
+    $(sizeSelId).disabled=!color; $(curStockId).textContent='';
+    if(!pid||!color||!allData) return;
+    const vs=allData.byProd[pid]?.[color]||[];
+    vs.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size}  (stock: ${v.stock||0})`;$(sizeSelId).appendChild(o);});
+  });
+
+  $(sizeSelId).addEventListener('change',()=>{
+    const vid=$(sizeSelId).value;
+    if(!vid||!allData){$(curStockId).textContent='';return;}
+    const v=allData.variants.find(x=>x.id===vid);
+    $(curStockId).textContent=v?`Stock actual: ${v.stock||0} unidades`:'';
+  });
+
+  rebuildOpts('');
+}
+
+// SINGLE OPS
 $('saleSingleBtn').addEventListener('click',async()=>{
-  const v=getSaleChosen&&getSaleChosen();
-  const qty=parseInt($('saleQty').value)||0;
-  if(!v){toast('Busca y selecciona una variante',false);return;}
+  const vid=$('saleSize').value, qty=parseInt($('saleQty').value)||0;
+  if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   loading(true);
   try{
-    const ns=await updateStock(v.id,-qty);
-    toast(`Descontado ✓ → stock: ${ns}u`);
+    const ns=await updateStock(vid,-qty);
+    toast(`Descontado — stock: ${ns} unidades`);
     $('saleCurStock').textContent=`Stock actual: ${ns} unidades`;
+    const o=$('saleSize').selectedOptions[0];
+    const v=allData.variants.find(x=>x.id===vid);
+    if(o&&v) o.textContent=`T${v.size}  (stock: ${ns})`;
     renderTable();
   }catch(e){toast('Error: '+e.message,false);}
   finally{loading(false);}
 });
 
 $('entrySingleBtn').addEventListener('click',async()=>{
-  const v=getEntryChosen&&getEntryChosen();
-  const qty=parseInt($('entryQty').value)||0;
-  if(!v){toast('Busca y selecciona una variante',false);return;}
+  const vid=$('entrySize').value, qty=parseInt($('entryQty').value)||0;
+  if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   loading(true);
   try{
-    const ns=await updateStock(v.id,qty);
-    toast(`Ingreso registrado ✓ → stock: ${ns}u`);
+    const ns=await updateStock(vid,qty);
+    toast(`Ingreso registrado — stock: ${ns} unidades`);
     $('entryCurStock').textContent=`Stock actual: ${ns} unidades`;
+    const o=$('entrySize').selectedOptions[0];
+    const v=allData.variants.find(x=>x.id===vid);
+    if(o&&v) o.textContent=`T${v.size}  (stock: ${ns})`;
     renderTable();
   }catch(e){toast('Error: '+e.message,false);}
   finally{loading(false);}
 });
 
-// ── BULK ROWS ──
-function addBulkRow(tbodyId, emptyId){
+// BULK ROW
+function addBulkRow(tbodyId,emptyId){
   if(!allData){toast('Carga los datos primero',false);return;}
   $(emptyId).style.display='none';
   const tbody=$(tbodyId);
-  const tr=document.createElement('tr');
-  tr._vid=null;
+  const tr=document.createElement('tr'); tr.dataset.bulk='1'; tr._vid=null;
 
-  // Mini search input
-  const searchTd=document.createElement('td');
-  const si=document.createElement('input');
-  si.type='text'; si.placeholder='Buscar variante…';
-  si.style.cssText='width:100%;border:1.5px solid var(--grey2);border-radius:4px;padding:.3rem .5rem;font-size:.8rem;font-family:inherit';
-  const sdrop=document.createElement('div');
-  sdrop.style.cssText='position:relative';
-  const slist=document.createElement('div');
-  slist.style.cssText='position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--grey2);border-radius:4px;max-height:180px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,.1)';
-
-  si.addEventListener('input',()=>{
-    const q=si.value.toLowerCase().trim();
-    if(!q){slist.style.display='none';return;}
-    const terms=q.split(/\s+/).filter(Boolean);
-    const matches=[];
-    for(const v of allData.variants){
-      if(!v.active) continue;
-      const p=allData.productMap[v.product_id]; if(!p) continue;
-      const brand=p.brands?.name||'';
-      const lbl=`${brand} ${p.name} ${v.color} ${v.size}`.toLowerCase();
-      if(terms.every(t=>lbl.includes(t))) matches.push({v,p,brand});
-      if(matches.length>=20) break;
-    }
-    if(!matches.length){slist.style.display='none';return;}
-    slist.innerHTML=matches.map(({v,p,brand},i)=>{
-      const s=v.stock||0;
-      return `<div style="padding:.4rem .6rem;cursor:pointer;font-size:.78rem;border-bottom:1px solid var(--grey2);display:flex;justify-content:space-between;align-items:center" data-i="${i}">
-        <span>${brand?brand+' ':''}${p.name} / ${v.color} / T${v.size}</span>
-        <span style="font-size:.7rem;padding:.1rem .3rem;border-radius:3px" class="${scls(s)}">${s}u</span>
-      </div>`;
-    }).join('');
-    slist._m=matches;
-    slist.querySelectorAll('[data-i]').forEach(el=>{
-      el.addEventListener('mousedown',e=>{
-        e.preventDefault();
-        const {v,p,brand}=matches[parseInt(el.dataset.i)];
-        tr._vid=v.id;
-        si.value=`${brand?brand+' ':''}${p.name} / ${v.color} / T${v.size}`;
-        slist.style.display='none';
-      });
-    });
-    slist.style.display='block';
+  // Product select cell
+  const tdP=document.createElement('td');
+  const sSel=document.createElement('select'); sSel.className='';
+  sSel.innerHTML='<option value="">Producto...</option>';
+  allData.products.slice().sort((a,b)=>{
+    const ba=a.brands?.name||'',bb=b.brands?.name||'';
+    return ba.localeCompare(bb)||a.name.localeCompare(b.name);
+  }).forEach(p=>{
+    const o=document.createElement('option');o.value=p.id;
+    o.textContent=(p.brands?.name?p.brands.name+' ':'')+p.name;
+    sSel.appendChild(o);
   });
-  si.addEventListener('blur',()=>setTimeout(()=>slist.style.display='none',150));
+  tdP.appendChild(sSel);
 
-  sdrop.append(si,slist);
-  searchTd.appendChild(sdrop);
+  // Color select cell
+  const tdC=document.createElement('td');
+  const cSel=document.createElement('select'); cSel.disabled=true;
+  cSel.innerHTML='<option value="">Color...</option>';
+  tdC.appendChild(cSel);
 
-  const qtyTd=document.createElement('td');
-  const qi=document.createElement('input');
-  qi.type='number'; qi.min='1'; qi.value='1';
-  qi.style.cssText='width:60px;padding:.3rem .4rem;border:1.5px solid var(--grey2);border-radius:4px;font-size:.82rem;text-align:center;font-family:inherit';
-  qtyTd.appendChild(qi);
+  // Size select cell
+  const tdSz=document.createElement('td');
+  const szSel=document.createElement('select'); szSel.disabled=true;
+  szSel.innerHTML='<option value="">Talla...</option>';
+  tdSz.appendChild(szSel);
 
-  const rmTd=document.createElement('td');
-  const rmBtn=document.createElement('button');
-  rmBtn.className='rm-btn'; rmBtn.textContent='✕';
-  rmBtn.addEventListener('click',()=>{
+  sSel.addEventListener('change',()=>{
+    const pid=sSel.value;
+    cSel.innerHTML='<option value="">Color...</option>';
+    szSel.innerHTML='<option value="">Talla...</option>';
+    cSel.disabled=!pid; szSel.disabled=true; tr._vid=null;
+    if(!pid) return;
+    Object.keys(allData.byProd[pid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
+  });
+  cSel.addEventListener('change',()=>{
+    const pid=sSel.value,color=cSel.value;
+    szSel.innerHTML='<option value="">Talla...</option>';
+    szSel.disabled=!color; tr._vid=null;
+    if(!pid||!color) return;
+    (allData.byProd[pid]?.[color]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size} (${v.stock||0}u)`;szSel.appendChild(o);});
+  });
+  szSel.addEventListener('change',()=>{ tr._vid=szSel.value||null; });
+
+  // Qty cell
+  const tdQ=document.createElement('td');
+  const qi=document.createElement('input'); qi.type='number'; qi.min='1'; qi.value='1';
+  tdQ.appendChild(qi);
+
+  // Remove cell
+  const tdR=document.createElement('td');
+  const rb=document.createElement('button'); rb.className='rm-btn'; rb.textContent='x';
+  rb.addEventListener('click',()=>{
     tr.remove();
-    if(!tbody.querySelectorAll('tr[data-bulk]').length) $(emptyId).style.display='';
+    if(!tbody.querySelectorAll('[data-bulk]').length) $(emptyId).style.display='';
   });
-  rmTd.appendChild(rmBtn);
+  tdR.appendChild(rb);
 
-  tr.dataset.bulk='1';
-  tr.append(searchTd,qtyTd,rmTd);
+  tr.append(tdP,tdC,tdSz,tdQ,tdR);
   tbody.appendChild(tr);
 }
 
-$('addSaleRowBtn').addEventListener('click',()=>addBulkRow('saleBulkBody','saleBulkEmpty'));
-$('addEntryRowBtn').addEventListener('click',()=>addBulkRow('entryBulkBody','entryBulkEmpty'));
+$('addSaleRow').addEventListener('click',()=>addBulkRow('saleBulkBody','saleBulkEmpty'));
+$('addEntryRow').addEventListener('click',()=>addBulkRow('entryBulkBody','entryBulkEmpty'));
 
-async function applyBulk(tbodyId, emptyId, delta){
-  const rows=[...$( tbodyId).querySelectorAll('tr[data-bulk]')];
+async function applyBulk(tbodyId,emptyId,delta){
+  const rows=[...$(tbodyId).querySelectorAll('[data-bulk]')];
   if(!rows.length){toast('No hay filas',false);return;}
   const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0}))
     .filter(o=>o.vid&&o.qty>0);
-  if(!ops.length){toast('Completa las filas (variante + cantidad)',false);return;}
+  if(!ops.length){toast('Completa las filas',false);return;}
   loading(true);
   try{
     for(const o of ops) await updateStock(o.vid,delta*o.qty);
-    toast(`${ops.length} variantes actualizadas ✓`);
-    $(tbodyId).querySelectorAll('tr[data-bulk]').forEach(r=>r.remove());
+    toast(`${ops.length} variantes actualizadas`);
+    $(tbodyId).querySelectorAll('[data-bulk]').forEach(r=>r.remove());
     $(emptyId).style.display='';
     renderTable();
   }catch(e){toast('Error: '+e.message,false);}
@@ -741,7 +693,6 @@ async function applyBulk(tbodyId, emptyId, delta){
 $('saleBulkBtn').addEventListener('click',()=>applyBulk('saleBulkBody','saleBulkEmpty',-1));
 $('entryBulkBtn').addEventListener('click',()=>applyBulk('entryBulkBody','entryBulkEmpty',1));
 
-// ── INIT ──
 checkAuth();
 })();
 </script>
