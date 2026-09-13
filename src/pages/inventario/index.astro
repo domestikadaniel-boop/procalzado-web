@@ -1,0 +1,874 @@
+---
+// Inventario — panel interno de gestión de stock
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Inventario — Procalzado</title>
+<meta name="robots" content="noindex,nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<style>
+:root{--red:#FF0000;--black:#000;--white:#fff;--grey:#F2F2F2;--grey2:#E5E5E5;--muted:#666;--green:#22c55e;--yellow:#eab308;--orange:#f97316}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);min-height:100vh}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-box{background:var(--white);border-radius:12px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.1);border-top:4px solid var(--red)}
+.login-box h1{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;margin-bottom:.3rem}
+.login-box p{font-size:.85rem;color:var(--muted);margin-bottom:1.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+.field input,.field select{width:100%;padding:.7rem .9rem;border:2px solid var(--grey2);border-radius:6px;font-size:.9rem;font-family:inherit;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--red)}
+.btn{padding:.7rem 1.4rem;background:var(--red);color:var(--white);border:none;border-radius:6px;font-size:.88rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.btn:hover{opacity:.88}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-w{width:100%}
+.btn-outline{background:transparent;color:var(--black);border:2px solid var(--grey2)}
+.btn-outline:hover{border-color:var(--black);opacity:1}
+.btn-green{background:#16a34a}
+.btn-sm{padding:.45rem .9rem;font-size:.78rem}
+.error-msg{background:#ffe6e6;color:#c00;padding:.6rem .8rem;border-radius:6px;font-size:.82rem;margin-bottom:1rem;display:none}
+
+/* MAIN */
+.inv{display:none;min-height:100vh;flex-direction:column}
+.inv-header{background:var(--black);color:var(--white);padding:.9rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.inv-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.04em;flex:1}
+.inv-header-right{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--grey2);background:var(--white);padding:0 1.5rem}
+.tab{padding:.7rem 1.2rem;font-weight:600;font-size:.85rem;letter-spacing:.03em;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;color:var(--muted);text-transform:uppercase}
+.tab.active{color:var(--red);border-bottom-color:var(--red)}
+
+/* PANEL */
+.panel{padding:1.5rem;max-width:1400px;margin:0 auto;width:100%}
+.panel-section{display:none}
+.panel-section.active{display:block}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center}
+.search-input{padding:.6rem .9rem;border:2px solid var(--grey2);border-radius:6px;font-size:.88rem;font-family:inherit;outline:none;width:260px;transition:border-color .2s}
+.search-input:focus{border-color:var(--red)}
+.filter-select{padding:.6rem .8rem;border:2px solid var(--grey2);border-radius:6px;font-size:.85rem;font-family:inherit;outline:none;background:var(--white)}
+.legend{display:flex;gap:.8rem;margin-left:auto;align-items:center;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot-red{background:#ef4444}
+.dot-yellow{background:#eab308}
+.dot-green{background:#22c55e}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;background:var(--white);font-size:.85rem}
+th{background:var(--black);color:var(--white);padding:.65rem .9rem;text-align:left;font-weight:600;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+td{padding:.55rem .9rem;border-bottom:1px solid var(--grey2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+
+/* STOCK CELLS */
+.stock-cell{font-weight:700;text-align:center;border-radius:4px;padding:.2rem .5rem;display:inline-block;min-width:32px}
+.stock-0{background:#fee2e2;color:#dc2626}
+.stock-low{background:#fef9c3;color:#a16207}
+.stock-ok{background:#dcfce7;color:#16a34a}
+
+/* PRODUCT CARD */
+.prod-img{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--grey2)}
+.prod-img-placeholder{width:48px;height:48px;border-radius:6px;background:var(--grey2);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.prod-name{font-weight:600}
+.prod-color{font-size:.78rem;color:var(--muted)}
+
+/* SIZES ROW */
+.sizes-grid{display:flex;gap:.4rem;flex-wrap:wrap}
+.size-badge{display:inline-flex;flex-direction:column;align-items:center;border-radius:6px;padding:.25rem .45rem;font-size:.75rem;border:1px solid transparent;cursor:default;min-width:36px}
+.size-badge .sz-num{font-weight:700;font-size:.82rem}
+.size-badge .sz-stock{font-size:.68rem}
+.size-badge.s0{background:#fee2e2;border-color:#fca5a5;color:#dc2626}
+.size-badge.slow{background:#fef9c3;border-color:#fde047;color:#a16207}
+.size-badge.sok{background:#dcfce7;border-color:#86efac;color:#16a34a}
+
+/* SALE / ENTRY FORMS */
+.card{background:var(--white);border-radius:10px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:1.5rem}
+.card h3{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;margin-bottom:1rem;color:var(--black)}
+.form-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:1rem}
+.form-row .field{margin-bottom:0;flex:1;min-width:160px}
+.qty-input{width:90px;padding:.6rem .7rem;border:2px solid var(--grey2);border-radius:6px;font-size:.9rem;font-family:inherit;outline:none;text-align:center}
+.qty-input:focus{border-color:var(--red)}
+
+/* BULK TABLE */
+.bulk-tbl{width:100%;border-collapse:collapse;font-size:.85rem}
+.bulk-tbl th{background:var(--grey2);padding:.5rem .7rem;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.bulk-tbl td{padding:.45rem .7rem;border-bottom:1px solid var(--grey2)}
+.bulk-tbl input[type=number]{width:70px;padding:.35rem .5rem;border:1.5px solid var(--grey2);border-radius:4px;font-size:.85rem;text-align:center}
+.bulk-tbl input:focus{border-color:var(--red);outline:none}
+.remove-row{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:0 .2rem}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--black);color:var(--white);padding:.8rem 1.2rem;border-radius:8px;font-size:.85rem;z-index:9999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1;transform:none}
+.toast.toast-ok{border-left:4px solid var(--green)}
+.toast.toast-err{border-left:4px solid var(--red)}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;z-index:999;display:none}
+.spinner{width:36px;height:36px;border:4px solid var(--grey2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:640px){
+  .toolbar{flex-direction:column;align-items:stretch}
+  .search-input{width:100%}
+  .legend{margin-left:0}
+  .form-row{flex-direction:column}
+  .panel{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <h1>Inventario</h1>
+    <p>Panel de gestión de stock — Procalzado</p>
+    <div class="error-msg" id="loginError"></div>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/></div>
+    <button class="btn btn-w" id="loginBtn" type="button">Entrar</button>
+  </div>
+</div>
+
+<!-- MAIN PANEL -->
+<div class="inv" id="invPanel">
+  <div class="inv-header">
+    <h2>📦 Inventario — Procalzado</h2>
+    <div class="inv-header-right">
+      <span id="userEmail" style="font-size:.82rem;opacity:.7"></span>
+      <button class="btn btn-sm btn-outline" style="color:var(--white);border-color:rgba(255,255,255,.3)" id="logoutBtn">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="inventario">Inventario</div>
+    <div class="tab" data-tab="ventas">Registrar Ventas</div>
+    <div class="tab" data-tab="ingresos">Ingresos de Mercancía</div>
+  </div>
+
+  <!-- ── TAB INVENTARIO ── -->
+  <div class="panel">
+    <div class="panel-section active" id="tab-inventario">
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar producto o color…"/>
+        <select class="filter-select" id="filterStock">
+          <option value="">Todos los stocks</option>
+          <option value="0">Sin stock (rojo)</option>
+          <option value="low">Stock bajo (amarillo)</option>
+          <option value="ok">Stock bueno (verde)</option>
+        </select>
+        <select class="filter-select" id="filterBrand">
+          <option value="">Todas las marcas</option>
+        </select>
+        <div class="legend">
+          <div class="legend-item"><div class="dot dot-red"></div>Sin stock</div>
+          <div class="legend-item"><div class="dot dot-yellow"></div>Stock bajo (1–4)</div>
+          <div class="legend-item"><div class="dot dot-green"></div>Stock OK (5+)</div>
+        </div>
+        <button class="btn btn-sm btn-outline" id="exportBtn">⬇ Descargar Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table id="invTable">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Producto</th>
+              <th>Color</th>
+              <th>Tallas y Stock</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="invBody">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="invCount" style="margin-top:.8rem;font-size:.82rem;color:var(--muted)"></div>
+    </div>
+
+    <!-- ── TAB VENTAS ── -->
+    <div class="panel-section" id="tab-ventas">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem" class="ventas-grid">
+
+        <!-- Venta individual -->
+        <div class="card">
+          <h3>Venta Individual</h3>
+          <div class="form-row">
+            <div class="field" style="flex:2">
+              <label>Producto</label>
+              <select id="saleProduct" class="filter-select" style="width:100%">
+                <option value="">Selecciona un producto…</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Color</label>
+              <select id="saleColor" class="filter-select" style="width:100%" disabled>
+                <option value="">— Primero escoge producto —</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Talla</label>
+              <select id="saleSize" class="filter-select" style="width:100%" disabled>
+                <option value="">—</option>
+              </select>
+            </div>
+          </div>
+          <div id="saleCurrent" style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem;display:none">
+            Stock actual: <strong id="saleCurrentVal"></strong>
+          </div>
+          <div class="form-row" style="align-items:flex-end">
+            <div class="field">
+              <label>Cantidad vendida</label>
+              <input type="number" class="qty-input" id="saleQty" min="1" value="1"/>
+            </div>
+            <button class="btn btn-green" id="saleSingleBtn">Descontar</button>
+          </div>
+        </div>
+
+        <!-- Venta masiva -->
+        <div class="card">
+          <h3>Descuento Masivo</h3>
+          <div style="overflow-x:auto;margin-bottom:1rem">
+            <table class="bulk-tbl" id="bulkTable">
+              <thead>
+                <tr>
+                  <th>Producto / Color / Talla</th>
+                  <th>Cant.</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="bulkBody">
+                <tr id="bulkEmptyRow"><td colspan="3" style="color:var(--muted);text-align:center;padding:.8rem">Agrega filas con el botón de abajo</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" id="addBulkRowBtn">+ Agregar fila</button>
+            <button class="btn btn-sm" id="bulkSaveBtn" style="background:#dc2626">Aplicar descuentos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB INGRESOS ── -->
+    <div class="panel-section" id="tab-ingresos">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem" class="ventas-grid">
+
+        <!-- Ingreso individual -->
+        <div class="card">
+          <h3>Ingreso Individual</h3>
+          <div class="form-row">
+            <div class="field" style="flex:2">
+              <label>Producto</label>
+              <select id="entryProduct" class="filter-select" style="width:100%">
+                <option value="">Selecciona un producto…</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Color</label>
+              <select id="entryColor" class="filter-select" style="width:100%" disabled>
+                <option value="">— Primero escoge producto —</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Talla</label>
+              <select id="entrySize" class="filter-select" style="width:100%" disabled>
+                <option value="">—</option>
+              </select>
+            </div>
+          </div>
+          <div id="entryCurrent" style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem;display:none">
+            Stock actual: <strong id="entryCurrentVal"></strong>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Cantidad que entra</label>
+              <input type="number" class="qty-input" id="entryQty" min="1" value="1"/>
+            </div>
+            <button class="btn btn-green" id="entrySingleBtn">Agregar</button>
+          </div>
+        </div>
+
+        <!-- Ingreso masivo -->
+        <div class="card">
+          <h3>Ingreso Masivo</h3>
+          <div style="overflow-x:auto;margin-bottom:1rem">
+            <table class="bulk-tbl" id="entryBulkTable">
+              <thead>
+                <tr>
+                  <th>Producto / Color / Talla</th>
+                  <th>Cant.</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="entryBulkBody">
+                <tr id="entryBulkEmptyRow"><td colspan="3" style="color:var(--muted);text-align:center;padding:.8rem">Agrega filas con el botón de abajo</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" id="addEntryRowBtn">+ Agregar fila</button>
+            <button class="btn btn-green btn-sm" id="entryBulkSaveBtn">Aplicar ingresos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script is:inline define:vars={{sbUrl: import.meta.env.PUBLIC_SUPABASE_URL, sbAnon: import.meta.env.PUBLIC_SUPABASE_ANON_KEY}}>
+(function() {
+const LOW_STOCK_THRESHOLD = 5;
+const supabase = window.supabase.createClient(sbUrl, sbAnon);
+
+const $ = id => document.getElementById(id);
+function showLoading(v) { $('loadingOverlay').style.display = v ? 'flex' : 'none'; }
+function showToast(msg, ok = true) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (ok ? 'toast-ok' : 'toast-err');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── AUTH ──
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) showPanel(session.user.email);
+}
+
+$('loginBtn').addEventListener('click', async () => {
+  const email = $('loginEmail').value.trim(), pass = $('loginPass').value;
+  if (!email || !pass) { showErr('Completa todos los campos'); return; }
+  $('loginBtn').disabled = true;
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) { showErr('Email o contraseña incorrectos'); $('loginBtn').disabled = false; return; }
+  showPanel(data.user.email);
+});
+
+$('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  $('loginWrap').style.display = '';
+  $('invPanel').style.display = 'none';
+  allData = null;
+});
+
+function showErr(msg) {
+  const e = $('loginError');
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+
+async function showPanel(email) {
+  $('loginWrap').style.display = 'none';
+  $('invPanel').style.display = 'flex';
+  $('userEmail').textContent = email;
+  await loadData();
+}
+
+// ── TABS ──
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    $('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── DATA ──
+let allData = null; // { products, variants }
+
+async function fetchAll(table, select, extra = '') {
+  let results = [], offset = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from(table).select(select).range(offset, offset + 999);
+    if (error || !data?.length) break;
+    results.push(...data);
+    if (data.length < 1000) break;
+    offset += 1000;
+  }
+  return results;
+}
+
+async function loadData() {
+  showLoading(true);
+  try {
+    const [products, variants, images] = await Promise.all([
+      fetchAll('products', 'id,name,slug,brands(name)', ''),
+      fetchAll('product_variants', 'id,product_id,color,size,stock,active', ''),
+      fetchAll('product_images', 'product_id,color,url,is_primary', ''),
+    ]);
+
+    // Index images by product_id+color (primary first)
+    const imgMap = {};
+    for (const img of images) {
+      const key = img.product_id + '|' + img.color;
+      if (!imgMap[key] || img.is_primary) imgMap[key] = img.url;
+      // Also store any image without color filter as fallback
+      const keyAny = img.product_id + '|';
+      if (!imgMap[keyAny] || img.is_primary) imgMap[keyAny] = img.url;
+    }
+
+    // Group variants by product_id → color → sizes
+    const variantsByProduct = {};
+    for (const v of variants) {
+      if (!v.active) continue;
+      if (!variantsByProduct[v.product_id]) variantsByProduct[v.product_id] = {};
+      if (!variantsByProduct[v.product_id][v.color]) variantsByProduct[v.product_id][v.color] = [];
+      variantsByProduct[v.product_id][v.color].push(v);
+    }
+
+    // Sort sizes numerically
+    for (const pid in variantsByProduct)
+      for (const color in variantsByProduct[pid])
+        variantsByProduct[pid][color].sort((a, b) => {
+          const na = parseFloat(a.size), nb = parseFloat(b.size);
+          return (!isNaN(na) && !isNaN(nb)) ? na - nb : a.size.localeCompare(b.size);
+        });
+
+    allData = { products, variants, images, imgMap, variantsByProduct };
+
+    // Populate brand filter
+    const brands = [...new Set(products.map(p => p.brands?.name).filter(Boolean))].sort();
+    const bf = $('filterBrand');
+    brands.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; bf.appendChild(o); });
+
+    // Populate product selectors for ventas/ingresos
+    const sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name));
+    populateProductSelect('saleProduct', sortedProducts);
+    populateProductSelect('entryProduct', sortedProducts);
+
+    renderTable();
+  } finally {
+    showLoading(false);
+  }
+}
+
+function populateProductSelect(selectId, products) {
+  const sel = $(selectId);
+  sel.innerHTML = '<option value="">Selecciona un producto…</option>';
+  products.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = (p.brands?.name ? p.brands.name + ' ' : '') + p.name;
+    sel.appendChild(o);
+  });
+}
+
+// ── TABLE RENDER ──
+function stockClass(s) {
+  if (s <= 0) return 's0';
+  if (s < LOW_STOCK_THRESHOLD) return 'slow';
+  return 'sok';
+}
+
+function renderTable() {
+  if (!allData) return;
+  const search = $('searchInput').value.toLowerCase().trim();
+  const filterStock = $('filterStock').value;
+  const filterBrand = $('filterBrand').value;
+  const { products, variantsByProduct, imgMap } = allData;
+
+  const rows = [];
+  for (const p of products) {
+    const brandName = p.brands?.name || '';
+    if (filterBrand && brandName !== filterBrand) continue;
+    const colorMap = variantsByProduct[p.id] || {};
+    for (const [color, variants] of Object.entries(colorMap)) {
+      const label = (brandName + ' ' + p.name + ' ' + color).toLowerCase();
+      if (search && !label.includes(search)) continue;
+      const total = variants.reduce((s, v) => s + (v.stock || 0), 0);
+      // Filter by stock level
+      if (filterStock === '0' && !variants.some(v => (v.stock || 0) === 0)) continue;
+      if (filterStock === 'low' && !variants.some(v => (v.stock || 0) > 0 && (v.stock || 0) < LOW_STOCK_THRESHOLD)) continue;
+      if (filterStock === 'ok' && !variants.some(v => (v.stock || 0) >= LOW_STOCK_THRESHOLD)) continue;
+
+      const imgUrl = imgMap[p.id + '|' + color] || imgMap[p.id + '|'] || null;
+      rows.push({ p, brandName, color, variants, total, imgUrl });
+    }
+  }
+
+  // Sort: by brand name then product name
+  rows.sort((a, b) => {
+    const ba = a.brandName || a.p.name, bb = b.brandName || b.p.name;
+    if (ba !== bb) return ba.localeCompare(bb);
+    if (a.p.name !== b.p.name) return a.p.name.localeCompare(b.p.name);
+    return a.color.localeCompare(b.color);
+  });
+
+  const tbody = $('invBody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Sin resultados</td></tr>';
+    $('invCount').textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(({ p, brandName, color, variants, total, imgUrl }) => {
+    const sizeBadges = variants.map(v => {
+      const s = v.stock || 0;
+      return `<div class="size-badge ${stockClass(s)}" title="${v.size}: ${s} uds">
+        <span class="sz-num">${v.size}</span>
+        <span class="sz-stock">${s}</span>
+      </div>`;
+    }).join('');
+
+    const imgHtml = imgUrl
+      ? `<img src="${imgUrl}" class="prod-img" alt="" loading="lazy"/>`
+      : `<div class="prod-img-placeholder">👟</div>`;
+
+    const totalClass = total === 0 ? 'stock-0' : total < LOW_STOCK_THRESHOLD * variants.length / 2 ? 'stock-low' : 'stock-ok';
+
+    return `<tr>
+      <td>${imgHtml}</td>
+      <td><div class="prod-name">${brandName ? `<span style="color:var(--muted);font-size:.78rem">${brandName}</span><br>` : ''}${p.name}</div></td>
+      <td><div class="prod-color">${color}</div></td>
+      <td><div class="sizes-grid">${sizeBadges}</div></td>
+      <td><span class="stock-cell ${totalClass}">${total}</span></td>
+    </tr>`;
+  }).join('');
+
+  $('invCount').textContent = `${rows.length} variantes mostradas`;
+}
+
+['searchInput', 'filterStock', 'filterBrand'].forEach(id => {
+  $(id).addEventListener('input', renderTable);
+});
+
+// ── EXPORT XLSX ──
+$('exportBtn').addEventListener('click', exportXlsx);
+async function exportXlsx() {
+  if (!allData) return;
+  showLoading(true);
+  try {
+    const { products, variantsByProduct, imgMap } = allData;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Inventario');
+
+    ws.columns = [
+      { header: 'Marca', key: 'brand', width: 15 },
+      { header: 'Producto', key: 'name', width: 22 },
+      { header: 'Color', key: 'color', width: 20 },
+      { header: 'Talla', key: 'size', width: 8 },
+      { header: 'Stock', key: 'stock', width: 8 },
+    ];
+
+    // Header style
+    ws.getRow(1).eachCell(cell => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000000' } };
+      cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+    });
+
+    const sortedProducts = [...products].sort((a, b) => {
+      const ba = a.brands?.name || a.name, bb = b.brands?.name || b.name;
+      return ba.localeCompare(bb) || a.name.localeCompare(b.name);
+    });
+
+    for (const p of sortedProducts) {
+      const colorMap = variantsByProduct[p.id] || {};
+      for (const [color, variants] of Object.entries(colorMap)) {
+        for (const v of variants) {
+          const s = v.stock || 0;
+          const row = ws.addRow({
+            brand: p.brands?.name || '',
+            name: p.name,
+            color,
+            size: v.size,
+            stock: s,
+          });
+          // Color stock cell
+          const stockCell = row.getCell('stock');
+          if (s === 0) {
+            stockCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+            stockCell.font = { color: { argb: 'FFDC2626' }, bold: true };
+          } else if (s < LOW_STOCK_THRESHOLD) {
+            stockCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF9C3' } };
+            stockCell.font = { color: { argb: 'FFA16207' }, bold: true };
+          } else {
+            stockCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+            stockCell.font = { color: { argb: 'FF16A34A' }, bold: true };
+          }
+        }
+      }
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `inventario-procalzado-${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click();
+    showToast('Excel descargado ✓');
+  } catch(e) {
+    showToast('Error al generar Excel', false);
+    console.error(e);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ── PRODUCT/COLOR/SIZE SELECTORS (Ventas & Ingresos) ──
+function setupVariantSelectors(productSel, colorSel, sizeSel, currentDiv, currentVal) {
+  $(productSel).addEventListener('change', () => {
+    const pid = $(productSel).value;
+    $(colorSel).innerHTML = '<option value="">Selecciona color…</option>';
+    $(sizeSel).innerHTML = '<option value="">—</option>';
+    $(colorSel).disabled = !pid;
+    $(sizeSel).disabled = true;
+    $(currentDiv).style.display = 'none';
+    if (!pid || !allData) return;
+    const colors = Object.keys(allData.variantsByProduct[pid] || {}).sort();
+    colors.forEach(c => {
+      const o = document.createElement('option'); o.value = c; o.textContent = c;
+      $(colorSel).appendChild(o);
+    });
+  });
+
+  $(colorSel).addEventListener('change', () => {
+    const pid = $(productSel).value, color = $(colorSel).value;
+    $(sizeSel).innerHTML = '<option value="">Selecciona talla…</option>';
+    $(sizeSel).disabled = !color;
+    $(currentDiv).style.display = 'none';
+    if (!pid || !color || !allData) return;
+    const variants = allData.variantsByProduct[pid]?.[color] || [];
+    variants.forEach(v => {
+      const o = document.createElement('option'); o.value = v.id;
+      o.textContent = `Talla ${v.size} (stock: ${v.stock || 0})`;
+      $(sizeSel).appendChild(o);
+    });
+  });
+
+  $(sizeSel).addEventListener('change', () => {
+    const vid = $(sizeSel).value;
+    if (!vid || !allData) { $(currentDiv).style.display = 'none'; return; }
+    const variant = allData.variants.find(v => v.id === vid);
+    if (variant) {
+      $(currentVal).textContent = variant.stock || 0;
+      $(currentDiv).style.display = 'block';
+    }
+  });
+}
+
+setupVariantSelectors('saleProduct', 'saleColor', 'saleSize', 'saleCurrent', 'saleCurrentVal');
+setupVariantSelectors('entryProduct', 'entryColor', 'entrySize', 'entryCurrent', 'entryCurrentVal');
+
+// ── UPDATE STOCK ──
+async function updateStock(variantId, delta) {
+  // Get current stock
+  const variant = allData.variants.find(v => v.id === variantId);
+  if (!variant) throw new Error('Variante no encontrada');
+  const newStock = Math.max(0, (variant.stock || 0) + delta);
+  const { error } = await supabase.from('product_variants')
+    .update({ stock: newStock }).eq('id', variantId);
+  if (error) throw error;
+  // Update local data
+  variant.stock = newStock;
+  return newStock;
+}
+
+// Single sale
+$('saleSingleBtn').addEventListener('click', async () => {
+  const vid = $('saleSize').value, qty = parseInt($('saleQty').value) || 0;
+  if (!vid) { showToast('Selecciona producto / color / talla', false); return; }
+  if (qty <= 0) { showToast('Cantidad debe ser mayor a 0', false); return; }
+  showLoading(true);
+  try {
+    const newStock = await updateStock(vid, -qty);
+    showToast(`Stock actualizado → ${newStock} unidades`);
+    $('saleCurrentVal').textContent = newStock;
+    // Refresh size selector text
+    const o = $('saleSize').selectedOptions[0];
+    const variant = allData.variants.find(v => v.id === vid);
+    if (o && variant) o.textContent = `Talla ${variant.size} (stock: ${newStock})`;
+    renderTable();
+  } catch(e) {
+    showToast('Error: ' + e.message, false);
+  } finally {
+    showLoading(false);
+  }
+});
+
+// Single entry
+$('entrySingleBtn').addEventListener('click', async () => {
+  const vid = $('entrySize').value, qty = parseInt($('entryQty').value) || 0;
+  if (!vid) { showToast('Selecciona producto / color / talla', false); return; }
+  if (qty <= 0) { showToast('Cantidad debe ser mayor a 0', false); return; }
+  showLoading(true);
+  try {
+    const newStock = await updateStock(vid, qty);
+    showToast(`Stock actualizado → ${newStock} unidades`);
+    $('entryCurrentVal').textContent = newStock;
+    const o = $('entrySize').selectedOptions[0];
+    const variant = allData.variants.find(v => v.id === vid);
+    if (o && variant) o.textContent = `Talla ${variant.size} (stock: ${newStock})`;
+    renderTable();
+  } catch(e) {
+    showToast('Error: ' + e.message, false);
+  } finally {
+    showLoading(false);
+  }
+});
+
+// ── BULK ROWS ──
+function buildVariantLabel(vid) {
+  if (!allData || !vid) return '';
+  const v = allData.variants.find(x => x.id === vid);
+  if (!v) return vid;
+  const p = allData.products.find(x => x.id === v.product_id);
+  return `${p?.name || ''} / ${v.color} / T${v.size}`;
+}
+
+function addBulkRow(tbodyId, emptyRowId) {
+  if (!allData) { showToast('Carga los datos primero', false); return; }
+  const emptyRow = $(emptyRowId);
+  if (emptyRow) emptyRow.style.display = 'none';
+
+  const tbody = $(tbodyId);
+  const tr = document.createElement('tr');
+  tr.dataset.vid = '';
+
+  // Product select
+  const prodSel = document.createElement('select');
+  prodSel.style.cssText = 'width:100%;border:1.5px solid var(--grey2);border-radius:4px;padding:.3rem .5rem;font-size:.82rem;font-family:inherit';
+  prodSel.innerHTML = '<option value="">Producto…</option>';
+  [...allData.products].sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = (p.brands?.name ? p.brands.name + ' ' : '') + p.name;
+    prodSel.appendChild(o);
+  });
+
+  const colorSel = document.createElement('select');
+  colorSel.style.cssText = prodSel.style.cssText;
+  colorSel.innerHTML = '<option value="">Color…</option>';
+  colorSel.disabled = true;
+
+  const sizeSel = document.createElement('select');
+  sizeSel.style.cssText = prodSel.style.cssText;
+  sizeSel.innerHTML = '<option value="">Talla…</option>';
+  sizeSel.disabled = true;
+
+  prodSel.addEventListener('change', () => {
+    colorSel.innerHTML = '<option value="">Color…</option>';
+    sizeSel.innerHTML = '<option value="">Talla…</option>';
+    colorSel.disabled = !prodSel.value;
+    sizeSel.disabled = true;
+    tr.dataset.vid = '';
+    if (!prodSel.value) return;
+    const colors = Object.keys(allData.variantsByProduct[prodSel.value] || {}).sort();
+    colors.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; colorSel.appendChild(o); });
+  });
+
+  colorSel.addEventListener('change', () => {
+    sizeSel.innerHTML = '<option value="">Talla…</option>';
+    sizeSel.disabled = !colorSel.value;
+    tr.dataset.vid = '';
+    const variants = allData.variantsByProduct[prodSel.value]?.[colorSel.value] || [];
+    variants.forEach(v => {
+      const o = document.createElement('option'); o.value = v.id;
+      o.textContent = `T${v.size} (stock: ${v.stock || 0})`;
+      sizeSel.appendChild(o);
+    });
+  });
+
+  sizeSel.addEventListener('change', () => { tr.dataset.vid = sizeSel.value; });
+
+  const qtyInput = document.createElement('input');
+  qtyInput.type = 'number'; qtyInput.min = '1'; qtyInput.value = '1';
+  qtyInput.className = 'qty-input'; qtyInput.style.width = '60px';
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove-row'; removeBtn.textContent = '✕';
+  removeBtn.addEventListener('click', () => {
+    tr.remove();
+    if (!tbody.querySelectorAll('tr:not([id])').length) {
+      $(emptyRowId).style.display = '';
+    }
+  });
+
+  const selCell = document.createElement('td');
+  selCell.style.cssText = 'display:flex;flex-direction:column;gap:.25rem;min-width:200px';
+  selCell.append(prodSel, colorSel, sizeSel);
+
+  const qtyCell = document.createElement('td');
+  qtyCell.appendChild(qtyInput);
+
+  const removeCell = document.createElement('td');
+  removeCell.appendChild(removeBtn);
+
+  tr.append(selCell, qtyCell, removeCell);
+  tbody.appendChild(tr);
+}
+
+$('addBulkRowBtn').addEventListener('click', () => addBulkRow('bulkBody', 'bulkEmptyRow'));
+$('addEntryRowBtn').addEventListener('click', () => addBulkRow('entryBulkBody', 'entryBulkEmptyRow'));
+
+async function applyBulk(tbodyId, delta, emptyRowId) {
+  const rows = [...$(tbodyId).querySelectorAll('tr:not([id])')];
+  if (!rows.length) { showToast('No hay filas para procesar', false); return; }
+
+  const ops = [];
+  for (const tr of rows) {
+    const vid = tr.dataset.vid;
+    const qty = parseInt(tr.querySelector('input[type=number]').value) || 0;
+    if (!vid || qty <= 0) continue;
+    ops.push({ vid, qty: delta * qty });
+  }
+
+  if (!ops.length) { showToast('Completa las filas (producto, color, talla, cantidad)', false); return; }
+
+  showLoading(true);
+  try {
+    let ok = 0;
+    for (const op of ops) {
+      await updateStock(op.vid, op.qty);
+      ok++;
+    }
+    showToast(`${ok} variantes actualizadas ✓`);
+    // Clear rows
+    $(tbodyId).querySelectorAll('tr:not([id])').forEach(r => r.remove());
+    $(emptyRowId).style.display = '';
+    renderTable();
+  } catch(e) {
+    showToast('Error: ' + e.message, false);
+  } finally {
+    showLoading(false);
+  }
+}
+
+$('bulkSaveBtn').addEventListener('click', () => applyBulk('bulkBody', -1, 'bulkEmptyRow'));
+$('entryBulkSaveBtn').addEventListener('click', () => applyBulk('entryBulkBody', 1, 'entryBulkEmptyRow'));
+
+// ── INIT ──
+checkAuth();
+})();
+</script>
+
+<style>
+@media(max-width:760px){
+  .ventas-grid{grid-template-columns:1fr !important}
+}
+</style>
+</body>
+</html>
