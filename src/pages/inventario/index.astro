@@ -22,7 +22,7 @@ body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13p
 .lb p{font-size:.78rem;color:#666;margin-bottom:1.2rem}
 .fl{margin-bottom:.7rem}
 .fl label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem}
-.fl input,.fl select{width:100%;padding:.58rem .75rem;border:1.5px solid #ddd;border-radius:4px;font-size:.85rem;font-family:inherit;outline:none}
+.fl input[type=email],.fl input[type=password],.fl select{width:100%;padding:.58rem .75rem;border:1.5px solid #ddd;border-radius:4px;font-size:.85rem;font-family:inherit;outline:none}
 .fl input:focus,.fl select:focus{border-color:#f00}
 .emsg{background:#fee2e2;color:#991b1b;padding:.4rem .65rem;border-radius:4px;font-size:.75rem;margin-bottom:.6rem;display:none}
 .btn{display:inline-flex;align-items:center;gap:.3rem;padding:.5rem .95rem;border:none;border-radius:4px;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:opacity .12s;white-space:nowrap}
@@ -58,7 +58,7 @@ body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13p
 .sumbar{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.65rem}
 .chip{padding:.2rem .55rem;border-radius:3px;font-size:.7rem;font-weight:600;border:1px solid rgba(0,0,0,.1)}
 
-/* TABLE — flat, one row per size */
+/* TABLE */
 .tw{border:1px solid #ccc;border-radius:6px;overflow:hidden;overflow-x:auto;background:#fff}
 table{width:100%;border-collapse:collapse;font-size:.82rem}
 thead th{background:#000;color:#fff;padding:.5rem .75rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;border-right:1px solid #444}
@@ -80,12 +80,23 @@ tbody tr:hover td{filter:brightness(.96)}
 .qi{width:70px;padding:.5rem .5rem;border:1.5px solid #ddd;border-radius:4px;font-size:.88rem;font-family:inherit;outline:none;text-align:center}
 .qi:focus{border-color:#f00}
 
+/* COMBOBOX */
+.combo{position:relative}
+.combo-inp{width:100%;padding:.5rem .75rem;border:1.5px solid #ddd;border-radius:4px;font-size:.85rem;font-family:inherit;outline:none}
+.combo-inp:focus{border-color:#f00;border-radius:4px 4px 0 0}
+.combo-dd{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 4px 4px;max-height:200px;overflow-y:auto;z-index:300;display:none;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.combo-dd.open{display:block}
+.combo-opt{padding:.42rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid #f0f0f0}
+.combo-opt:last-child{border-bottom:none}
+.combo-opt:hover{background:#f5f5f5}
+.combo-none{padding:.42rem .75rem;font-size:.82rem;color:#999}
+
 /* BULK */
 .bw{border:1px solid #ddd;border-radius:5px;overflow:hidden;margin-bottom:.65rem}
 .bt{width:100%;border-collapse:collapse;font-size:.78rem}
 .bt th{background:#eee;padding:.35rem .55rem;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700;border-right:1px solid #ddd}
 .bt th:last-child{border-right:none}
-.bt td{padding:.3rem .45rem;border-top:1px solid #eee;border-right:1px solid #eee}
+.bt td{padding:.3rem .45rem;border-top:1px solid #eee;border-right:1px solid #eee;vertical-align:top}
 .bt td:last-child{border-right:none}
 .bt select{width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none}
 .bt select:focus{border-color:#f00}
@@ -93,6 +104,16 @@ tbody tr:hover td{filter:brightness(.96)}
 .bt input:focus{border-color:#f00;outline:none}
 .rm{background:none;border:none;color:#dc2626;cursor:pointer;font-size:.88rem;padding:0 .1rem;font-weight:700}
 .bf{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+
+/* BULK COMBO */
+.bcomb{position:relative;min-width:140px}
+.bcomb-inp{width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none}
+.bcomb-inp:focus{border-color:#f00}
+.bcomb-dd{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 3px 3px;max-height:160px;overflow-y:auto;z-index:400;display:none;box-shadow:0 4px 8px rgba(0,0,0,.12)}
+.bcomb-dd.open{display:block}
+.bcomb-opt{padding:.3rem .45rem;cursor:pointer;font-size:.74rem;border-bottom:1px solid #f0f0f0}
+.bcomb-opt:last-child{border-bottom:none}
+.bcomb-opt:hover{background:#f5f5f5}
 
 /* OVERLAY */
 .ov{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:9998}
@@ -177,8 +198,13 @@ tbody tr:hover td{filter:brightness(.96)}
       <div class="two-col">
         <div class="card">
           <h3>Venta individual</h3>
-          <div class="fl"><label>Buscar producto</label><input type="text" id="sPSearch" placeholder="Escribe para filtrar..." autocomplete="off"/></div>
-          <div class="fl"><label>Producto</label><select id="sProd"><option value="">Selecciona...</option></select></div>
+          <div class="fl">
+            <label>Producto</label>
+            <div class="combo" id="sPC">
+              <input type="text" class="combo-inp" id="sCInp" placeholder="Buscar producto..." autocomplete="off"/>
+              <div class="combo-dd" id="sCDd"></div>
+            </div>
+          </div>
           <div class="fl"><label>Color</label><select id="sCol" disabled><option value="">— primero producto —</option></select></div>
           <div class="fl"><label>Talla</label><select id="sSz" disabled><option value="">—</option></select></div>
           <div class="cs" id="sCS"></div>
@@ -206,8 +232,13 @@ tbody tr:hover td{filter:brightness(.96)}
       <div class="two-col">
         <div class="card">
           <h3>Ingreso individual</h3>
-          <div class="fl"><label>Buscar producto</label><input type="text" id="ePSearch" placeholder="Escribe para filtrar..." autocomplete="off"/></div>
-          <div class="fl"><label>Producto</label><select id="eProd"><option value="">Selecciona...</option></select></div>
+          <div class="fl">
+            <label>Producto</label>
+            <div class="combo" id="ePC">
+              <input type="text" class="combo-inp" id="eCInp" placeholder="Buscar producto..." autocomplete="off"/>
+              <div class="combo-dd" id="eCDd"></div>
+            </div>
+          </div>
           <div class="fl"><label>Color</label><select id="eCol" disabled><option value="">— primero producto —</option></select></div>
           <div class="fl"><label>Talla</label><select id="eSz" disabled><option value="">—</option></select></div>
           <div class="cs" id="eCS"></div>
@@ -299,14 +330,14 @@ async function load(){
     for(const pid in byP)for(const c in byP[pid])byP[pid][c].sort((a,b)=>{const na=parseFloat(a.size),nb=parseFloat(b.size);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.size.localeCompare(b.size);});
     allD={products,variants,pm,byP};
 
-    // brands
+    // brands filter
     const brands=[...new Set(products.map(p=>p.brands?.name).filter(Boolean))].sort();
     brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;$('fbr').appendChild(o);});
 
-    // product selects
+    // product selects — sorted brand+name
     const sp=[...products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
-    setupPS('sPSearch','sProd','sCol','sSz','sCS',sp);
-    setupPS('ePSearch','eProd','eCol','eSz','eCS',sp);
+    setupPS('sCInp','sCDd','sCol','sSz','sCS',sp);
+    setupPS('eCInp','eCDd','eCol','eSz','eCS',sp);
 
     render();
   }finally{ld(false);}
@@ -320,7 +351,6 @@ function render(){
   const fb=$('fbr').value;
   const{products,byP}=allD;
 
-  // Build flat rows
   const rows=[];
   for(const p of products){
     const brand=p.brands?.name||'';
@@ -339,7 +369,6 @@ function render(){
     }
   }
 
-  // Sort: name A-Z → color → size
   rows.sort((a,b)=>{
     if(a.name!==b.name)return a.name.localeCompare(b.name);
     if(a.color!==b.color)return a.color.localeCompare(b.color);
@@ -389,7 +418,12 @@ $('exBtn').addEventListener('click',async()=>{
       {header:'Color',key:'color',width:20},{header:'Talla',key:'size',width:8},{header:'Stock',key:'stock',width:9},
     ];
     ws.getRow(1).eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF000000'}};c.font={color:{argb:'FFFFFFFF'},bold:true};});
-    const sp=[...products].sort((a,b)=>{const ba=a.brands?.name||a.name,bb=b.brands?.name||b.name;return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
+
+    const sp=[...products].sort((a,b)=>{
+      const ba=a.brands?.name||'',bb=b.brands?.name||'';
+      if(a.name!==b.name)return a.name.localeCompare(b.name);
+      return ba.localeCompare(bb);
+    });
     for(const p of sp){
       for(const[color,vs]of Object.entries(byP[p.id]||{})){
         for(const v of vs){
@@ -403,11 +437,16 @@ $('exBtn').addEventListener('click',async()=>{
       }
     }
     const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.href=url;
     a.download=`inventario-${new Date().toISOString().slice(0,10)}.xlsx`;
-    a.click();toast('Excel descargado');
-  }catch(e){toast('Error',false);console.error(e);}
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},200);
+    toast('Excel descargado');
+  }catch(e){toast('Error al generar Excel',false);console.error(e);}
   finally{ld(false);}
 });
 
@@ -421,43 +460,64 @@ async function updS(vid,delta){
   v.stock=ns;return ns;
 }
 
-// PRODUCT SELECT + SEARCH
-function setupPS(searchId,prodId,colId,szId,csId,sortedP){
-  const allOpts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
-  function rebuild(q){
-    const sel=$(prodId),prev=sel.value;
-    sel.innerHTML='<option value="">Selecciona...</option>';
-    (q?allOpts.filter(o=>o.label.toLowerCase().includes(q.toLowerCase())):allOpts).forEach(({id,label})=>{
-      const o=document.createElement('option');o.value=id;o.textContent=label;sel.appendChild(o);
-    });
-    if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
+// COMBOBOX — integrates search + list into one widget
+function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
+  const inp=$(cInpId),dd=$(cDdId);
+  const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
+  let selPid=null;
+
+  function renderOpts(q){
+    const filtered=q?opts.filter(o=>o.label.toLowerCase().includes(q.toLowerCase())):opts;
+    if(!filtered.length){
+      dd.innerHTML='<div class="combo-none">Sin resultados</div>';
+    }else{
+      dd.innerHTML=filtered.map(o=>`<div class="combo-opt" data-id="${o.id}">${o.label}</div>`).join('');
+      dd.querySelectorAll('.combo-opt').forEach(el=>{
+        el.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          selPid=el.dataset.id;
+          inp.value=el.textContent;
+          dd.classList.remove('open');
+          onPick(selPid);
+        });
+      });
+    }
   }
-  $(searchId).addEventListener('input',()=>rebuild($(searchId).value));
-  $(prodId).addEventListener('change',()=>{
-    const pid=$(prodId).value;
+
+  function onPick(pid){
     $(colId).innerHTML='<option value="">Color...</option>';
     $(szId).innerHTML='<option value="">—</option>';
     $(colId).disabled=!pid;$(szId).disabled=true;$(csId).textContent='';
     if(!pid||!allD)return;
     Object.keys(allD.byP[pid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;$(colId).appendChild(o);});
-  });
+  }
+
+  inp.addEventListener('focus',()=>{renderOpts(inp.value);dd.classList.add('open');});
+  inp.addEventListener('input',()=>{selPid=null;onPick(null);renderOpts(inp.value);dd.classList.add('open');});
+  inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),160));
+
   $(colId).addEventListener('change',()=>{
-    const pid=$(prodId).value,col=$(colId).value;
+    const col=$(colId).value;
     $(szId).innerHTML='<option value="">Talla...</option>';
     $(szId).disabled=!col;$(csId).textContent='';
-    if(!pid||!col||!allD)return;
-    (allD.byP[pid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size}  (stock: ${v.stock||0})`;$(szId).appendChild(o);});
+    if(!selPid||!col||!allD)return;
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{
+      const o=document.createElement('option');o.value=v.id;
+      o.textContent=`${v.size} (${v.stock||0} disponibles)`;
+      $(szId).appendChild(o);
+    });
   });
   $(szId).addEventListener('change',()=>{
     const vid=$(szId).value;if(!vid||!allD){$(csId).textContent='';return;}
     const v=allD.variants.find(x=>x.id===vid);
     $(csId).textContent=v?`Stock actual: ${v.stock||0} unidades`:'';
   });
-  rebuild('');
+
+  renderOpts('');
 }
 
 // SINGLE OPS
-async function singleOp(prodId,colId,szId,csId,qtyId,delta,successMsg){
+async function singleOp(szId,csId,qtyId,delta,successMsg){
   const vid=$(szId).value,qty=parseInt($(qtyId).value)||0;
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
@@ -466,16 +526,16 @@ async function singleOp(prodId,colId,szId,csId,qtyId,delta,successMsg){
     const ns=await updS(vid,delta*qty);
     toast(`${successMsg} — stock: ${ns}u`);
     $(csId).textContent=`Stock actual: ${ns} unidades`;
-    const o=$(szId).selectedOptions[0];
     const v=allD.variants.find(x=>x.id===vid);
-    if(o&&v)o.textContent=`T${v.size}  (stock: ${ns})`;
+    const sel=$(szId);
+    if(sel.selectedOptions[0]&&v)sel.selectedOptions[0].textContent=`${v.size} (${ns} disponibles)`;
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
 }
 
-$('sSingle').addEventListener('click',()=>singleOp('sProd','sCol','sSz','sCS','sQty',-1,'Descontado'));
-$('eSingle').addEventListener('click',()=>singleOp('eProd','eCol','eSz','eCS','eQty',1,'Ingreso registrado'));
+$('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty',-1,'Descontado'));
+$('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty',1,'Ingreso registrado'));
 
 // BULK ROW
 function addBR(tbodyId,emptyId){
@@ -484,27 +544,54 @@ function addBR(tbodyId,emptyId){
   const tbody=$(tbodyId);
   const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;
 
-  function mkSel(placeholder){const s=document.createElement('select');s.innerHTML=`<option value="">${placeholder}</option>`;return s;}
+  // Product combobox
+  const pWrap=document.createElement('div');pWrap.className='bcomb';
+  const pInp=document.createElement('input');pInp.type='text';pInp.className='bcomb-inp';pInp.placeholder='Buscar...';pInp.autocomplete='off';
+  const pDd=document.createElement('div');pDd.className='bcomb-dd';
+  pWrap.append(pInp,pDd);
 
-  const pSel=mkSel('Producto...');
   const sortedP=[...allD.products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
-  sortedP.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=(p.brands?.name?p.brands.name+' ':'')+p.name;pSel.appendChild(o);});
+  const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
+  let selPid=null;
 
+  function mkSel(placeholder){
+    const s=document.createElement('select');
+    s.innerHTML=`<option value="">${placeholder}</option>`;
+    return s;
+  }
   const cSel=mkSel('Color...'); cSel.disabled=true;
   const sSel=mkSel('Talla...'); sSel.disabled=true;
 
-  pSel.addEventListener('change',()=>{
-    const pid=pSel.value;
-    cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
-    cSel.disabled=!pid;sSel.disabled=true;tr._vid=null;
-    if(!pid)return;
-    Object.keys(allD.byP[pid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
-  });
+  function renderPOpts(q){
+    const filtered=q?opts.filter(o=>o.label.toLowerCase().includes(q.toLowerCase())):opts;
+    pDd.innerHTML=filtered.length
+      ? filtered.map(o=>`<div class="bcomb-opt" data-id="${o.id}">${o.label}</div>`).join('')
+      : '<div class="bcomb-opt" style="color:#999">Sin resultados</div>';
+    pDd.querySelectorAll('.bcomb-opt[data-id]').forEach(el=>{
+      el.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        selPid=el.dataset.id;pInp.value=el.textContent;pDd.classList.remove('open');
+        cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
+        cSel.disabled=!selPid;sSel.disabled=true;tr._vid=null;
+        if(selPid)Object.keys(allD.byP[selPid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
+      });
+    });
+  }
+
+  pInp.addEventListener('focus',()=>{renderPOpts(pInp.value);pDd.classList.add('open');});
+  pInp.addEventListener('input',()=>{selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;renderPOpts(pInp.value);pDd.classList.add('open');});
+  pInp.addEventListener('blur',()=>setTimeout(()=>pDd.classList.remove('open'),160));
+  renderPOpts('');
+
   cSel.addEventListener('change',()=>{
-    const pid=pSel.value,col=cSel.value;
+    const col=cSel.value;
     sSel.innerHTML='<option value="">Talla...</option>';sSel.disabled=!col;tr._vid=null;
-    if(!pid||!col)return;
-    (allD.byP[pid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size} (${v.stock||0}u)`;sSel.appendChild(o);});
+    if(!selPid||!col)return;
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{
+      const o=document.createElement('option');o.value=v.id;
+      o.textContent=`${v.size} (${v.stock||0} disponibles)`;
+      sSel.appendChild(o);
+    });
   });
   sSel.addEventListener('change',()=>{tr._vid=sSel.value||null;});
 
@@ -514,7 +601,7 @@ function addBR(tbodyId,emptyId){
   rb.addEventListener('click',()=>{tr.remove();if(!tbody.querySelectorAll('[data-bulk]').length)$(emptyId).style.display='';});
 
   function cell(el){const td=document.createElement('td');td.appendChild(el);return td;}
-  tr.append(cell(pSel),cell(cSel),cell(sSel),cell(qi),cell(rb));
+  tr.append(cell(pWrap),cell(cSel),cell(sSel),cell(qi),cell(rb));
   tbody.appendChild(tr);
 }
 
@@ -527,8 +614,13 @@ async function applyBulk(tbodyId,emptyId,delta){
   const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0})).filter(o=>o.vid&&o.qty>0);
   if(!ops.length){toast('Completa las filas',false);return;}
   ld(true);
-  try{for(const o of ops)await updS(o.vid,delta*o.qty);toast(`${ops.length} variantes actualizadas`);$(tbodyId).querySelectorAll('[data-bulk]').forEach(r=>r.remove());$(emptyId).style.display='';render();}
-  catch(e){toast('Error: '+e.message,false);}
+  try{
+    for(const o of ops)await updS(o.vid,delta*o.qty);
+    toast(`${ops.length} variantes actualizadas`);
+    $(tbodyId).querySelectorAll('[data-bulk]').forEach(r=>r.remove());
+    $(emptyId).style.display='';
+    render();
+  }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
 }
 
