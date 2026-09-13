@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
 <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-<style>
+<style is:global>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13px}
 
@@ -61,15 +61,15 @@ body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13p
 /* TABLE — flat, one row per size */
 .tw{border:1px solid #ccc;border-radius:6px;overflow:hidden;overflow-x:auto;background:#fff}
 table{width:100%;border-collapse:collapse;font-size:.82rem}
-thead th{background:#000;color:#fff;padding:.48rem .7rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;border-right:1px solid #333}
-thead th:last-child{border-right:none}
-tbody td{padding:.4rem .7rem;border-bottom:1px solid #e0e0e0;border-right:1px solid #e8e8e8;white-space:nowrap}
-tbody td:last-child{border-right:none;text-align:center;font-weight:700;min-width:70px}
+thead th{background:#000;color:#fff;padding:.5rem .75rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;border-right:1px solid #444}
+thead th:last-child{border-right:none;text-align:center;width:100px}
+tbody td{padding:.4rem .75rem;border-bottom:1px solid #d0d0d0;border-right:1px solid #d0d0d0;white-space:nowrap}
+tbody td:last-child{border-right:none;text-align:center;font-weight:700;min-width:100px}
 tbody tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:#f8f8f8}
-.s0{background:#FECACA;color:#991B1B}
-.slow{background:#FEF08A;color:#713F12}
-.sok{background:#BBF7D0;color:#14532D}
+tbody tr:hover td{filter:brightness(.96)}
+.s0{background:#FECACA !important;color:#991B1B !important}
+.slow{background:#FEF08A !important;color:#713F12 !important}
+.sok{background:#BBF7D0 !important;color:#14532D !important}
 
 /* FORMS */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
@@ -339,9 +339,8 @@ function render(){
     }
   }
 
-  // Sort: brand → name → color → size
+  // Sort: name A-Z → color → size
   rows.sort((a,b)=>{
-    if(a.brand!==b.brand)return a.brand.localeCompare(b.brand);
     if(a.name!==b.name)return a.name.localeCompare(b.name);
     if(a.color!==b.color)return a.color.localeCompare(b.color);
     const na=parseFloat(a.size),nb=parseFloat(b.size);
