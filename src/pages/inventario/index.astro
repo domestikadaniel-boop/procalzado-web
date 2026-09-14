@@ -106,14 +106,14 @@ tbody tr:hover td{filter:brightness(.96)}
 .bf{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
 
 /* BULK COMBO */
-.bcomb{position:relative;min-width:140px}
+.bcomb{min-width:140px}
 .bcomb-inp{width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none}
 .bcomb-inp:focus{border-color:#f00}
-.bcomb-dd{position:fixed;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 3px 3px;max-height:200px;overflow-y:auto;z-index:9990;display:none;box-shadow:0 4px 12px rgba(0,0,0,.18)}
-.bcomb-dd.open{display:block}
-.bcomb-opt{padding:.32rem .5rem;cursor:pointer;font-size:.75rem;border-bottom:1px solid #f0f0f0}
+/* Singleton dropdown — appended to body, never clipped */
+#_bDd{position:fixed;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 4px 4px;max-height:220px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.bcomb-opt{padding:.35rem .5rem;cursor:pointer;font-size:.78rem;border-bottom:1px solid #f0f0f0}
 .bcomb-opt:last-child{border-bottom:none}
-.bcomb-opt:hover{background:#f5f5f5}
+.bcomb-opt:hover,.bcomb-opt:active{background:#f5f5f5}
 
 /* OVERLAY */
 .ov{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:9998}
@@ -469,7 +469,7 @@ function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
     }else{
       dd.innerHTML=filtered.map(o=>`<div class="combo-opt" data-id="${o.id}">${o.label}</div>`).join('');
       dd.querySelectorAll('.combo-opt').forEach(el=>{
-        el.addEventListener('mousedown',e=>{
+        el.addEventListener('pointerdown',e=>{
           e.preventDefault();
           selPid=el.dataset.id;
           inp.value=el.textContent;
@@ -490,7 +490,7 @@ function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
 
   inp.addEventListener('focus',()=>{renderOpts(inp.value);dd.classList.add('open');});
   inp.addEventListener('input',()=>{selPid=null;onPick(null);renderOpts(inp.value);dd.classList.add('open');});
-  inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),160));
+  document.addEventListener('pointerdown',e=>{if(!inp.contains(e.target)&&!dd.contains(e.target))dd.classList.remove('open');},{passive:true});
 
   $(colId).addEventListener('change',()=>{
     const col=$(colId).value;
@@ -533,6 +533,37 @@ async function singleOp(szId,csId,qtyId,delta,successMsg){
 $('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty',-1,'Descontado'));
 $('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty',1,'Ingreso registrado'));
 
+// BULK DROPDOWN SINGLETON — pegado al body, nunca recortado por overflow:hidden
+const _bDd=document.createElement('div');_bDd.id='_bDd';document.body.appendChild(_bDd);
+let _bDdCtx=null; // {inp, opts, onSel}
+
+function _bDdOpen(inp,opts,onSel){
+  _bDdCtx={inp,opts,onSel};
+  _bDdRender(inp.value);
+  const r=inp.getBoundingClientRect();
+  _bDd.style.cssText=`display:block;top:${r.bottom}px;left:${r.left}px;width:${r.width}px`;
+}
+function _bDdRender(q){
+  if(!_bDdCtx)return;
+  const{opts,onSel}=_bDdCtx;
+  const fil=q?opts.filter(o=>o.label.toLowerCase().includes(q.toLowerCase())):opts;
+  _bDd.innerHTML=fil.length
+    ?fil.map(o=>`<div class="bcomb-opt" data-id="${o.id}">${o.label}</div>`).join('')
+    :'<div class="bcomb-opt" style="color:#999;cursor:default">Sin resultados</div>';
+  _bDd.querySelectorAll('.bcomb-opt[data-id]').forEach(el=>{
+    el.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      onSel(el.dataset.id,el.textContent.trim());
+      _bDd.style.display='none';_bDdCtx=null;
+    });
+  });
+}
+document.addEventListener('pointerdown',e=>{
+  if(_bDdCtx&&!_bDdCtx.inp.contains(e.target)&&!_bDd.contains(e.target)){
+    _bDd.style.display='none';_bDdCtx=null;
+  }
+},{passive:true});
+
 // BULK ROW
 function addBR(tbodyId,emptyId){
   if(!allD){toast('Carga los datos primero',false);return;}
@@ -540,66 +571,41 @@ function addBR(tbodyId,emptyId){
   const tbody=$(tbodyId);
   const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;
 
-  // Product combobox
   const pWrap=document.createElement('div');pWrap.className='bcomb';
   const pInp=document.createElement('input');pInp.type='text';pInp.className='bcomb-inp';pInp.placeholder='Buscar...';pInp.autocomplete='off';
-  const pDd=document.createElement('div');pDd.className='bcomb-dd';
-  pWrap.append(pInp,pDd);
+  pWrap.appendChild(pInp);
 
   const sortedP=[...allD.products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
   const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
   let selPid=null;
 
-  function mkSel(placeholder){
-    const s=document.createElement('select');
-    s.innerHTML=`<option value="">${placeholder}</option>`;
-    return s;
-  }
+  function mkSel(placeholder){const s=document.createElement('select');s.innerHTML=`<option value="">${placeholder}</option>`;return s;}
   const cSel=mkSel('Color...'); cSel.disabled=true;
   const sSel=mkSel('Talla...'); sSel.disabled=true;
 
-  function renderPOpts(q){
-    const filtered=q?opts.filter(o=>o.label.toLowerCase().includes(q.toLowerCase())):opts;
-    pDd.innerHTML=filtered.length
-      ? filtered.map(o=>`<div class="bcomb-opt" data-id="${o.id}">${o.label}</div>`).join('')
-      : '<div class="bcomb-opt" style="color:#999">Sin resultados</div>';
-    pDd.querySelectorAll('.bcomb-opt[data-id]').forEach(el=>{
-      el.addEventListener('mousedown',e=>{
-        e.preventDefault();
-        selPid=el.dataset.id;pInp.value=el.textContent;pDd.classList.remove('open');
-        cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
-        cSel.disabled=!selPid;sSel.disabled=true;tr._vid=null;
-        if(selPid)Object.keys(allD.byP[selPid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
-      });
-    });
+  function onSel(id,label){
+    selPid=id;pInp.value=label;
+    cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
+    cSel.disabled=!selPid;sSel.disabled=true;tr._vid=null;
+    if(selPid)Object.keys(allD.byP[selPid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
   }
 
-  function openPDd(){
-    const r=pInp.getBoundingClientRect();
-    pDd.style.top=(r.bottom+window.scrollY)+'px';
-    pDd.style.left=(r.left+window.scrollX)+'px';
-    pDd.style.width=r.width+'px';
-    pDd.classList.add('open');
-  }
-  pInp.addEventListener('focus',()=>{renderPOpts(pInp.value);openPDd();});
-  pInp.addEventListener('input',()=>{selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;renderPOpts(pInp.value);openPDd();});
-  pInp.addEventListener('blur',()=>setTimeout(()=>pDd.classList.remove('open'),160));
-  renderPOpts('');
+  pInp.addEventListener('focus',()=>_bDdOpen(pInp,opts,onSel));
+  pInp.addEventListener('input',()=>{
+    if(_bDdCtx&&_bDdCtx.inp===pInp)_bDdRender(pInp.value);
+    else _bDdOpen(pInp,opts,onSel);
+    if(selPid){selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;}
+  });
 
   cSel.addEventListener('change',()=>{
     const col=cSel.value;
     sSel.innerHTML='<option value="">Talla...</option>';sSel.disabled=!col;tr._vid=null;
     if(!selPid||!col)return;
-    (allD.byP[selPid]?.[col]||[]).forEach(v=>{
-      const o=document.createElement('option');o.value=v.id;
-      o.textContent=`${v.size} (${v.stock||0} disponibles)`;
-      sSel.appendChild(o);
-    });
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`${v.size} (${v.stock||0} disponibles)`;sSel.appendChild(o);});
   });
   sSel.addEventListener('change',()=>{tr._vid=sSel.value||null;});
 
   const qi=document.createElement('input');qi.type='number';qi.min='1';qi.value='1';
-
   const rb=document.createElement('button');rb.className='rm';rb.textContent='x';
   rb.addEventListener('click',()=>{tr.remove();if(!tbody.querySelectorAll('[data-bulk]').length)$(emptyId).style.display='';});
 
