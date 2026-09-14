@@ -283,7 +283,12 @@ function scls(s){return s<=0?'s0':s<LOW?'slow':'sok';}
 
 // AUTH
 window.__tsToken=null;
-window.onTurnstileSuccess=function(t){window.__tsToken=t;};
+window.onTurnstileSuccess=function(t){
+  window.__tsToken=t;
+  const lerr=$('lerr');if(lerr)lerr.style.display='none';
+  const em=$('lem').value.trim(),pw=$('lpw').value;
+  if(em&&pw)$('lbtn').click();
+};
 
 async function init(){const{data:{session}}=await sb.auth.getSession();if(session)go(session.user.email);}
 $('lbtn').addEventListener('click',async()=>{
