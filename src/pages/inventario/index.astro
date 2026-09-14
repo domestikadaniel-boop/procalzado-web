@@ -172,6 +172,7 @@ tbody tr:hover td{filter:brightness(.96)}
           <option value="ok">Stock OK (5+)</option>
         </select>
         <select id="fbr"><option value="">Todas las marcas</option></select>
+        <button class="btn btn-o" id="reloadBtn">Recargar datos</button>
         <button class="btn btn-b" id="exBtn">Descargar Excel</button>
       </div>
       <div class="sumbar" id="sb"></div>
@@ -414,6 +415,7 @@ function render(){
 }
 
 ['sq','fst','fbr'].forEach(id=>$(id).addEventListener('input',render));
+$('reloadBtn').addEventListener('click',()=>load());
 
 // EXCEL — genera HTML que Excel abre con colores (sin librería externa)
 $('exBtn').addEventListener('click',()=>{
