@@ -132,12 +132,12 @@ const schemaProduct = {
                 <span id="priceOriginal" style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${Number(product.price).toLocaleString('es-CO')}</span>
                 <span id="priceMain" style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${Number((product as any).sale_price).toLocaleString('es-CO')}</span>
                 <span id="priceBadge" style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-{Math.round((1 - (product as any).sale_price / product.price) * 100)}%</span>
-                <span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>
+                <span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio en WhatsApp</span>
               </>
             ) : (
               <>
                 <span id="priceMain" style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${Number(product.price).toLocaleString('es-CO')}</span>
-                <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>
+                <span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio en WhatsApp</span>
               </>
             )}
           </>
@@ -272,12 +272,12 @@ const schemaProduct = {
           `<span style="font-size:1.1rem;color:var(--muted);text-decoration:line-through;margin-right:.6rem">${fmt(colorPrice)}</span>` +
           `<span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em;color:var(--red)">${fmt(colorSale)}</span>` +
           `<span style="background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.5rem;vertical-align:middle">-${pct}%</span>` +
-          `<span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio</span>`;
+          `<span style="display:block;font-size:.78rem;color:var(--muted);margin-top:.2rem">Al por mayor consultar precio en WhatsApp</span>`;
         if (btnAdd) btnAdd.dataset.price = String(colorSale);
       } else {
         priceDisplay.innerHTML =
           `<span style="font-family:var(--fd);font-size:2rem;letter-spacing:.03em">${fmt(colorPrice)}</span>` +
-          `<span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio</span>`;
+          `<span style="font-size:.78rem;color:var(--muted);margin-left:.5rem">Al por mayor consultar precio en WhatsApp</span>`;
         if (btnAdd) btnAdd.dataset.price = String(colorPrice);
       }
     } else {
