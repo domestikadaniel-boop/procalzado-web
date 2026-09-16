@@ -349,7 +349,6 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
         </div>
         <div class="field"><label><input type="checkbox" id="pShowPrice"/> Mostrar precio en el sitio</label></div>
         <div class="field"><label><input type="checkbox" id="pFeatured"/> Producto destacado</label></div>
-        <div class="field"><label><input type="checkbox" id="pDisableBuyBtn"/> Desactivar botón "Comprar" (solo WhatsApp y carrito)</label></div>
         <div class="field full"><label>Descripción corta (SEO)</label><textarea id="pShortDesc" rows="2" maxlength="160"></textarea></div>
         <div class="field full"><label>Descripción completa</label><textarea id="pDesc" rows="4"></textarea></div>
         <div class="field full">
@@ -1012,7 +1011,7 @@ function openProductForm(p=null){
   $('pPrice').value=p?.price||'';
   const pct=(p?.sale_price&&p?.price)?Math.round((1-p.sale_price/p.price)*100):'';
   $('pSalePrice').value=pct;
-  updateSalePricePreview();$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;$('pDisableBuyBtn').checked=p?.disable_buy_button||false;
+  updateSalePricePreview();$('pShowPrice').checked=p?.show_price||false;$('pFeatured').checked=p?.featured||false;
   $('pShortDesc').value=p?.short_description||'';$('pDesc').value=p?.description||'';
   $('pNotice').value=p?.notice||'';$('pNoticeType').value=p?.notice_type||'info';
 
@@ -1122,7 +1121,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
       }
     });
   }
-  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:(()=>{const pct=$('pSalePrice').value?parseFloat($('pSalePrice').value):null;const pr=$('pPrice').value?parseFloat($('pPrice').value):null;return(pct&&pr)?Math.round(pr*(1-pct/100)):null})(),show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,disable_buy_button:$('pDisableBuyBtn').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,color_sale_prices:colorSalePricesObj,active:true};
+  const pd={name,slug,brand_id:$('pBrand').value||null,category_id:primaryCatId,gender:selectedGenders[0]||null,genders:selectedGenders,price:$('pPrice').value?parseFloat($('pPrice').value):null,sale_price:(()=>{const pct=$('pSalePrice').value?parseFloat($('pSalePrice').value):null;const pr=$('pPrice').value?parseFloat($('pPrice').value):null;return(pct&&pr)?Math.round(pr*(1-pct/100)):null})(),show_price:$('pShowPrice').checked,featured:$('pFeatured').checked,short_description:$('pShortDesc').value.trim()||null,description:$('pDesc').value.trim()||null,notice:$('pNotice').value.trim()||null,notice_type:$('pNoticeType').value||'info',specs,per_color_prices:perColorPrices,color_prices:colorPricesObj,color_sale_prices:colorSalePricesObj,active:true};
 
   loading(true);let pid=$('productId').value;
   if(pid){const{error}=await supabase.from('products').update(pd).eq('id',pid);if(error){loading(false);alert('Error: '+error.message);return}}
