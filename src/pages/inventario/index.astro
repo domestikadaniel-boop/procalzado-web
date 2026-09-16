@@ -30,6 +30,7 @@ body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13p
 .btn-r{background:#f00;color:#fff}
 .btn-b{background:#000;color:#fff}
 .btn-g{background:#16a34a;color:#fff}
+.btn-p{background:#7c3aed;color:#fff}
 .btn-o{background:transparent;border:1.5px solid #ccc;color:#000}
 .btn-o:hover{border-color:#666;opacity:1}
 .btn-w{width:100%;justify-content:center}
@@ -41,7 +42,7 @@ body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13p
 .hdr .ue{font-size:.72rem;opacity:.5}
 
 /* TABS */
-.tabs{background:#fff;border-bottom:2px solid #ddd;display:flex;padding:0 1.1rem}
+.tabs{background:#fff;border-bottom:2px solid #ddd;display:flex;padding:0 1.1rem;flex-wrap:wrap}
 .tab{padding:.58rem .95rem;font-weight:600;font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;color:#888;transition:all .12s}
 .tab.active{color:#f00;border-bottom-color:#f00}
 
@@ -62,23 +63,31 @@ body{font-family:'Barlow',sans-serif;background:#f0f0f0;color:#000;font-size:13p
 .tw{border:1px solid #ccc;border-radius:6px;overflow:hidden;overflow-x:auto;background:#fff}
 table{width:100%;border-collapse:collapse;font-size:.82rem}
 thead th{background:#000;color:#fff;padding:.5rem .75rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;border-right:1px solid #444}
-thead th:last-child{border-right:none;text-align:center;width:100px}
+thead th:last-child{border-right:none}
+thead th.num{text-align:center;width:80px}
 tbody td{padding:.4rem .75rem;border-bottom:1px solid #d0d0d0;border-right:1px solid #d0d0d0;white-space:nowrap}
-tbody td:last-child{border-right:none;text-align:center;font-weight:700;min-width:100px}
+tbody td.num{text-align:center;font-weight:700;min-width:80px}
+tbody td:last-child{border-right:none}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{filter:brightness(.96)}
 .s0{background:#FECACA !important;color:#991B1B !important}
 .slow{background:#FEF08A !important;color:#713F12 !important}
 .sok{background:#BBF7D0 !important;color:#14532D !important}
 
+/* LOCATION BADGES */
+.loc-a{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#DBEAFE;color:#1D4ED8;letter-spacing:.04em}
+.loc-b{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#F3E8FF;color:#7C3AED;letter-spacing:.04em}
+
 /* FORMS */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .card{background:#fff;border-radius:6px;padding:1.1rem;border:1px solid #ddd}
 .card h3{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem}
-.frow{display:flex;gap:.5rem;align-items:flex-end;margin-top:.6rem}
+.frow{display:flex;gap:.5rem;align-items:flex-end;margin-top:.6rem;flex-wrap:wrap}
 .cs{font-size:.76rem;color:#666;margin:.3rem 0 .5rem}
 .qi{width:70px;padding:.5rem .5rem;border:1.5px solid #ddd;border-radius:4px;font-size:.88rem;font-family:inherit;outline:none;text-align:center}
-.qi:focus{border-color:#f00}
+.qi:focus{border-color:#f00;outline:none}
+.loc-sel{padding:.5rem .65rem;border:1.5px solid #ddd;border-radius:4px;font-size:.8rem;font-family:inherit;outline:none;background:#fff}
+.loc-sel:focus{border-color:#f00}
 
 /* COMBOBOX */
 .combo{position:relative}
@@ -109,11 +118,17 @@ tbody tr:hover td{filter:brightness(.96)}
 .bcomb{min-width:140px}
 .bcomb-inp{width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none}
 .bcomb-inp:focus{border-color:#f00}
-/* Singleton dropdown — appended to body, never clipped */
 #_bDd{position:fixed;background:#fff;border:1.5px solid #f00;border-top:none;border-radius:0 0 4px 4px;max-height:220px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 6px 16px rgba(0,0,0,.2)}
 .bcomb-opt{padding:.35rem .5rem;cursor:pointer;font-size:.78rem;border-bottom:1px solid #f0f0f0}
 .bcomb-opt:last-child{border-bottom:none}
 .bcomb-opt:hover,.bcomb-opt:active{background:#f5f5f5}
+
+/* TRANSFER */
+.trf-card{background:#fff;border-radius:6px;padding:1.1rem;border:1px solid #ddd;max-width:520px}
+.trf-arrow{display:flex;align-items:center;gap:.75rem;margin:.75rem 0}
+.trf-arrow-icon{font-size:1.4rem;color:#7c3aed}
+.trf-loc{flex:1;padding:.55rem .75rem;border:2px solid #ddd;border-radius:5px;font-size:.85rem;font-family:inherit;outline:none;background:#fff;font-weight:600}
+.trf-loc:focus{border-color:#7c3aed}
 
 /* OVERLAY */
 .ov{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:9998}
@@ -164,6 +179,7 @@ tbody tr:hover td{filter:brightness(.96)}
     <div class="tab active" data-tab="inv">Inventario</div>
     <div class="tab" data-tab="ven">Registrar Ventas</div>
     <div class="tab" data-tab="ing">Ingresos de Mercancia</div>
+    <div class="tab" data-tab="trf">Transferir Mercancia</div>
   </div>
 
   <div class="panel">
@@ -178,6 +194,11 @@ tbody tr:hover td{filter:brightness(.96)}
           <option value="low">Stock bajo (1-4)</option>
           <option value="ok">Stock OK (5+)</option>
         </select>
+        <select id="floc">
+          <option value="">Todas las ubicaciones</option>
+          <option value="almacen">Almacén</option>
+          <option value="bodega">Bodega</option>
+        </select>
         <select id="fbr"><option value="">Todas las marcas</option></select>
         <button class="btn btn-o" id="reloadBtn">Recargar datos</button>
         <button class="btn btn-b" id="exBtn">Descargar Excel</button>
@@ -191,11 +212,13 @@ tbody tr:hover td{filter:brightness(.96)}
               <th>Producto</th>
               <th>Color</th>
               <th>Talla</th>
-              <th>Stock</th>
+              <th class="num">Almacén</th>
+              <th class="num">Bodega</th>
+              <th class="num">Total</th>
             </tr>
           </thead>
           <tbody id="tb">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -218,6 +241,10 @@ tbody tr:hover td{filter:brightness(.96)}
           <div class="fl"><label>Talla</label><select id="sSz" disabled><option value="">—</option></select></div>
           <div class="cs" id="sCS"></div>
           <div class="frow">
+            <select class="loc-sel" id="sLoc">
+              <option value="almacen">Almacén</option>
+              <option value="bodega">Bodega</option>
+            </select>
             <input type="number" class="qi" id="sQty" min="1" value="1"/>
             <button class="btn btn-r" id="sSingle">Descontar</button>
           </div>
@@ -225,8 +252,8 @@ tbody tr:hover td{filter:brightness(.96)}
         <div class="card">
           <h3>Descuento masivo</h3>
           <div class="bw"><table class="bt">
-            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Cant.</th><th></th></tr></thead>
-            <tbody id="sBulkBody"><tr id="sBE"><td colspan="5" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
+            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Ubicación</th><th>Cant.</th><th></th></tr></thead>
+            <tbody id="sBulkBody"><tr id="sBE"><td colspan="6" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
           </table></div>
           <div class="bf">
             <button class="btn btn-o" id="addSR">+ Fila</button>
@@ -252,6 +279,10 @@ tbody tr:hover td{filter:brightness(.96)}
           <div class="fl"><label>Talla</label><select id="eSz" disabled><option value="">—</option></select></div>
           <div class="cs" id="eCS"></div>
           <div class="frow">
+            <select class="loc-sel" id="eLoc">
+              <option value="almacen">Almacén</option>
+              <option value="bodega">Bodega</option>
+            </select>
             <input type="number" class="qi" id="eQty" min="1" value="1"/>
             <button class="btn btn-g" id="eSingle">Agregar</button>
           </div>
@@ -259,12 +290,64 @@ tbody tr:hover td{filter:brightness(.96)}
         <div class="card">
           <h3>Ingreso masivo</h3>
           <div class="bw"><table class="bt">
-            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Cant.</th><th></th></tr></thead>
-            <tbody id="eBulkBody"><tr id="eBE"><td colspan="5" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
+            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Ubicación</th><th>Cant.</th><th></th></tr></thead>
+            <tbody id="eBulkBody"><tr id="eBE"><td colspan="6" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
           </table></div>
           <div class="bf">
             <button class="btn btn-o" id="addER">+ Fila</button>
             <button class="btn btn-g" id="eBulk">Aplicar ingresos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSFERIR -->
+    <div class="sec" id="tab-trf">
+      <div class="two-col">
+        <div class="trf-card">
+          <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">Transferir mercancia</h3>
+          <p style="font-size:.78rem;color:#666;margin-bottom:1rem">Mueve unidades de una ubicacion a otra sin afectar el stock total.</p>
+          <div class="fl">
+            <label>Producto</label>
+            <div class="combo" id="tPC">
+              <input type="text" class="combo-inp" id="tCInp" placeholder="Buscar producto..." autocomplete="off"/>
+              <div class="combo-dd" id="tCDd"></div>
+            </div>
+          </div>
+          <div class="fl"><label>Color</label><select id="tCol" disabled><option value="">— primero producto —</option></select></div>
+          <div class="fl"><label>Talla</label><select id="tSz" disabled><option value="">—</option></select></div>
+          <div class="cs" id="tCS"></div>
+
+          <div class="trf-arrow">
+            <select class="trf-loc" id="tFrom">
+              <option value="almacen">Almacén</option>
+              <option value="bodega">Bodega</option>
+            </select>
+            <span class="trf-arrow-icon">→</span>
+            <select class="trf-loc" id="tTo">
+              <option value="bodega">Bodega</option>
+              <option value="almacen">Almacén</option>
+            </select>
+          </div>
+
+          <div class="frow" style="margin-top:.5rem">
+            <div>
+              <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem">Cantidad</label>
+              <input type="number" class="qi" id="tQty" min="1" value="1" style="width:90px"/>
+            </div>
+            <button class="btn btn-p" id="tBtn" style="align-self:flex-end">Transferir</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Transferencia masiva</h3>
+          <div class="bw"><table class="bt">
+            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>De</th><th>A</th><th>Cant.</th><th></th></tr></thead>
+            <tbody id="tBulkBody"><tr id="tBE"><td colspan="7" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
+          </table></div>
+          <div class="bf">
+            <button class="btn btn-o" id="addTR">+ Fila</button>
+            <button class="btn btn-p" id="tBulk">Aplicar transferencias</button>
           </div>
         </div>
       </div>
@@ -335,6 +418,20 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
+// sync from/to en transferencia individual para que nunca sean iguales
+$('tFrom').addEventListener('change',()=>{
+  const f=$('tFrom').value;
+  const to=$('tTo');
+  const other=f==='almacen'?'bodega':'almacen';
+  [...to.options].forEach(o=>{o.selected=o.value===other;});
+});
+$('tTo').addEventListener('change',()=>{
+  const t=$('tTo').value;
+  const from=$('tFrom');
+  const other=t==='almacen'?'bodega':'almacen';
+  [...from.options].forEach(o=>{o.selected=o.value===other;});
+});
+
 // DATA
 let allD=null;
 async function fetchAll(tbl,sel){
@@ -348,7 +445,7 @@ async function load(){
   try{
     const[products,variants]=await Promise.all([
       fetchAll('products','id,name,brands(name)'),
-      fetchAll('product_variants','id,product_id,color,size,stock,active'),
+      fetchAll('product_variants','id,product_id,color,size,stock_almacen,stock_bodega,active'),
     ]);
     const pm={};for(const p of products)pm[p.id]=p;
     const byP={};
@@ -361,25 +458,26 @@ async function load(){
     for(const pid in byP)for(const c in byP[pid])byP[pid][c].sort((a,b)=>{const na=parseFloat(a.size),nb=parseFloat(b.size);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.size.localeCompare(b.size);});
     allD={products,variants,pm,byP};
 
-    // brands filter
     const brands=[...new Set(products.map(p=>p.brands?.name).filter(Boolean))].sort();
+    $('fbr').innerHTML='<option value="">Todas las marcas</option>';
     brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;$('fbr').appendChild(o);});
 
-    // product selects — sorted brand+name
     const sp=[...products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
     setupPS('sCInp','sCDd','sCol','sSz','sCS',sp);
     setupPS('eCInp','eCDd','eCol','eSz','eCS',sp);
+    setupPS('tCInp','tCDd','tCol','tSz','tCS',sp);
 
     render();
   }finally{ld(false);}
 }
 
-// RENDER — flat table, one row per size
+// RENDER — one row per variant with almacen + bodega + total
 function render(){
   if(!allD)return;
   const q=$('sq').value.toLowerCase().trim();
   const fs=$('fst').value;
   const fb=$('fbr').value;
+  const floc=$('floc').value; // '' | 'almacen' | 'bodega'
   const{products,byP}=allD;
 
   const rows=[];
@@ -389,13 +487,19 @@ function render(){
     const cm=byP[p.id]||{};
     for(const[color,vs]of Object.entries(cm)){
       for(const v of vs){
-        const s=v.stock||0;
+        const sa=v.stock_almacen||0;
+        const sb2=v.stock_bodega||0;
+        const tot=sa+sb2;
+
+        // location filter: if filtering to a specific location, check that location's stock
+        const checkStock=floc==='almacen'?sa:floc==='bodega'?sb2:tot;
+
         const lbl=(brand+' '+p.name+' '+color+' '+v.size).toLowerCase();
         if(q&&!lbl.includes(q))continue;
-        if(fs==='0'&&s!==0)continue;
-        if(fs==='low'&&(s<=0||s>=LOW))continue;
-        if(fs==='ok'&&s<LOW)continue;
-        rows.push({brand,name:p.name,color,size:v.size,stock:s,vid:v.id});
+        if(fs==='0'&&checkStock!==0)continue;
+        if(fs==='low'&&(checkStock<=0||checkStock>=LOW))continue;
+        if(fs==='ok'&&checkStock<LOW)continue;
+        rows.push({brand,name:p.name,color,size:v.size,sa,sb:sb2,tot,vid:v.id});
       }
     }
   }
@@ -408,21 +512,23 @@ function render(){
   });
 
   if(!rows.length){
-    $('tb').innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:#888">Sin resultados</td></tr>';
+    $('tb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Sin resultados</td></tr>';
     $('cnt').textContent='';$('sb').innerHTML='';return;
   }
 
-  let n0=0,nL=0,nOk=0,tot=0;
+  let n0=0,nL=0,nOk=0,totA=0,totB=0;
   $('tb').innerHTML=rows.map(r=>{
-    const s=r.stock;
-    if(s===0)n0++;else if(s<LOW)nL++;else nOk++;
-    tot+=s;
+    const checkStock=floc==='almacen'?r.sa:floc==='bodega'?r.sb:r.tot;
+    if(checkStock===0)n0++;else if(checkStock<LOW)nL++;else nOk++;
+    totA+=r.sa;totB+=r.sb;
     return`<tr>
       <td>${r.brand}</td>
       <td>${r.name}</td>
       <td>${r.color}</td>
       <td style="text-align:center">${r.size}</td>
-      <td class="${scls(s)}">${s}</td>
+      <td class="num ${floc===''||floc==='almacen'?scls(r.sa):''}">${r.sa}</td>
+      <td class="num ${floc===''||floc==='bodega'?scls(r.sb):''}">${r.sb}</td>
+      <td class="num ${floc===''?scls(r.tot):''}">${r.tot}</td>
     </tr>`;
   }).join('');
 
@@ -431,13 +537,15 @@ function render(){
     `<span class="chip" style="background:#FECACA;color:#991B1B">Sin stock: ${n0}</span>`+
     `<span class="chip" style="background:#FEF08A;color:#713F12">Stock bajo: ${nL}</span>`+
     `<span class="chip" style="background:#BBF7D0;color:#14532D">Stock OK: ${nOk}</span>`+
-    `<span class="chip" style="background:#e0e0e0">Total unidades: ${tot}</span>`;
+    `<span class="chip loc-a">Almacén: ${totA}</span>`+
+    `<span class="chip loc-b">Bodega: ${totB}</span>`+
+    `<span class="chip" style="background:#e0e0e0">Total: ${totA+totB}</span>`;
 }
 
-['sq','fst','fbr'].forEach(id=>$(id).addEventListener('input',render));
+['sq','fst','fbr','floc'].forEach(id=>$(id).addEventListener('input',render));
 $('reloadBtn').addEventListener('click',()=>load());
 
-// EXCEL — genera HTML que Excel abre con colores (sin librería externa)
+// EXCEL
 $('exBtn').addEventListener('click',()=>{
   if(!allD){toast('Sin datos',false);return;}
   const{products,byP}=allD;
@@ -449,16 +557,16 @@ $('exBtn').addEventListener('click',()=>{
   for(const p of sp){
     for(const[color,vs]of Object.entries(byP[p.id]||{})){
       for(const v of vs){
-        const s=v.stock||0;
+        const sa=v.stock_almacen||0,sb2=v.stock_bodega||0,tot=sa+sb2;
         let bg,fg;
-        if(s<=0){bg='#FECACA';fg='#991B1B';}
-        else if(s<LOW){bg='#FEF08A';fg='#713F12';}
+        if(tot<=0){bg='#FECACA';fg='#991B1B';}
+        else if(tot<LOW){bg='#FEF08A';fg='#713F12';}
         else{bg='#BBF7D0';fg='#14532D';}
-        filas+=`<tr><td>${p.brands?.name||''}</td><td>${p.name}</td><td>${color}</td><td>${v.size}</td><td style="background:${bg};color:${fg};font-weight:bold">${s}</td></tr>`;
+        filas+=`<tr><td>${p.brands?.name||''}</td><td>${p.name}</td><td>${color}</td><td>${v.size}</td><td style="background:#DBEAFE;color:#1D4ED8;font-weight:bold">${sa}</td><td style="background:#F3E8FF;color:#7C3AED;font-weight:bold">${sb2}</td><td style="background:${bg};color:${fg};font-weight:bold">${tot}</td></tr>`;
       }
     }
   }
-  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"><style>th{background:#000;color:#fff;font-weight:bold;padding:4px 8px;border:1px solid #444}td{padding:3px 8px;border:1px solid #ccc}</style></head><body><table><thead><tr><th>Marca</th><th>Producto</th><th>Color</th><th>Talla</th><th>Stock</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"><style>th{background:#000;color:#fff;font-weight:bold;padding:4px 8px;border:1px solid #444}td{padding:3px 8px;border:1px solid #ccc}</style></head><body><table><thead><tr><th>Marca</th><th>Producto</th><th>Color</th><th>Talla</th><th>Almacen</th><th>Bodega</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
   const blob=new Blob(['﻿'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -468,17 +576,35 @@ $('exBtn').addEventListener('click',()=>{
   toast('Excel descargado');
 });
 
-// UPDATE STOCK
-async function updS(vid,delta){
+// UPDATE STOCK — loc: 'almacen' | 'bodega'
+async function updS(vid,delta,loc){
   const v=allD.variants.find(x=>x.id===vid);
   if(!v)throw new Error('No encontrado');
-  const ns=Math.max(0,(v.stock||0)+delta);
-  const{error}=await sb.from('product_variants').update({stock:ns}).eq('id',vid);
+  const field=loc==='bodega'?'stock_bodega':'stock_almacen';
+  const cur=v[field]||0;
+  const ns=Math.max(0,cur+delta);
+  const{error}=await sb.from('product_variants').update({[field]:ns}).eq('id',vid);
   if(error)throw error;
-  v.stock=ns;return ns;
+  v[field]=ns;return ns;
 }
 
-// COMBOBOX — integrates search + list into one widget
+// TRANSFER STOCK
+async function transferS(vid,fromLoc,qty){
+  const v=allD.variants.find(x=>x.id===vid);
+  if(!v)throw new Error('No encontrado');
+  const fromField=fromLoc==='bodega'?'stock_bodega':'stock_almacen';
+  const toField=fromLoc==='bodega'?'stock_almacen':'stock_bodega';
+  const fromCur=v[fromField]||0;
+  if(fromCur<qty)throw new Error(`Stock insuficiente en ${fromLoc}: ${fromCur} disponibles`);
+  const fromNew=fromCur-qty;
+  const toNew=(v[toField]||0)+qty;
+  const{error}=await sb.from('product_variants').update({[fromField]:fromNew,[toField]:toNew}).eq('id',vid);
+  if(error)throw error;
+  v[fromField]=fromNew;v[toField]=toNew;
+  return{fromNew,toNew};
+}
+
+// COMBOBOX
 function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
   const inp=$(cInpId),dd=$(cDdId);
   const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
@@ -520,44 +646,61 @@ function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
     $(szId).disabled=!col;$(csId).textContent='';
     if(!selPid||!col||!allD)return;
     (allD.byP[selPid]?.[col]||[]).forEach(v=>{
+      const sa=v.stock_almacen||0,sb2=v.stock_bodega||0;
       const o=document.createElement('option');o.value=v.id;
-      o.textContent=`${v.size} (${v.stock||0} disponibles)`;
+      o.textContent=`${v.size} (Alm:${sa} / Bod:${sb2})`;
       $(szId).appendChild(o);
     });
   });
   $(szId).addEventListener('change',()=>{
     const vid=$(szId).value;if(!vid||!allD){$(csId).textContent='';return;}
     const v=allD.variants.find(x=>x.id===vid);
-    $(csId).textContent=v?`Stock actual: ${v.stock||0} unidades`:'';
+    $(csId).textContent=v?`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`:'';
   });
 
   renderOpts('');
 }
 
 // SINGLE OPS
-async function singleOp(szId,csId,qtyId,delta,successMsg){
-  const vid=$(szId).value,qty=parseInt($(qtyId).value)||0;
+async function singleOp(szId,csId,qtyId,locId,delta,successMsg){
+  const vid=$(szId).value,qty=parseInt($(qtyId).value)||0,loc=$(locId).value;
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   ld(true);
   try{
-    const ns=await updS(vid,delta*qty);
-    toast(`${successMsg} — stock: ${ns}u`);
-    $(csId).textContent=`Stock actual: ${ns} unidades`;
+    const ns=await updS(vid,delta*qty,loc);
     const v=allD.variants.find(x=>x.id===vid);
-    const sel=$(szId);
-    if(sel.selectedOptions[0]&&v)sel.selectedOptions[0].textContent=`${v.size} (${ns} disponibles)`;
+    toast(`${successMsg} en ${loc} — ${loc==='bodega'?'Bod':'Alm'}: ${ns}u`);
+    if(v)$(csId).textContent=`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`;
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
 }
 
-$('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty',-1,'Descontado'));
-$('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty',1,'Ingreso registrado'));
+$('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty','sLoc',-1,'Descontado'));
+$('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty','eLoc',1,'Ingreso registrado'));
 
-// BULK DROPDOWN SINGLETON — pegado al body, nunca recortado por overflow:hidden
+// TRANSFER SINGLE
+$('tBtn').addEventListener('click',async()=>{
+  const vid=$('tSz').value,qty=parseInt($('tQty').value)||0;
+  const fromLoc=$('tFrom').value,toLoc=$('tTo').value;
+  if(!vid){toast('Selecciona producto / color / talla',false);return;}
+  if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
+  if(fromLoc===toLoc){toast('Origen y destino no pueden ser iguales',false);return;}
+  ld(true);
+  try{
+    const{fromNew,toNew}=await transferS(vid,fromLoc,qty);
+    const v=allD.variants.find(x=>x.id===vid);
+    toast(`Transferido: ${qty}u de ${fromLoc} → ${toLoc}`);
+    if(v)$('tCS').textContent=`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`;
+    render();
+  }catch(e){toast('Error: '+e.message,false);}
+  finally{ld(false);}
+});
+
+// BULK DROPDOWN SINGLETON
 const _bDd=document.createElement('div');_bDd.id='_bDd';document.body.appendChild(_bDd);
-let _bDdCtx=null; // {inp, opts, onSel}
+let _bDdCtx=null;
 
 function _bDdOpen(inp,opts,onSel){
   _bDdCtx={inp,opts,onSel};
@@ -586,12 +729,12 @@ document.addEventListener('pointerdown',e=>{
   }
 },{passive:true});
 
-// BULK ROW
+// BULK ROW — for ventas/ingresos (incluye location select)
 function addBR(tbodyId,emptyId){
   if(!allD){toast('Carga los datos primero',false);return;}
   $(emptyId).style.display='none';
   const tbody=$(tbodyId);
-  const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;
+  const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;tr._loc='almacen';
 
   const pWrap=document.createElement('div');pWrap.className='bcomb';
   const pInp=document.createElement('input');pInp.type='text';pInp.className='bcomb-inp';pInp.placeholder='Buscar...';pInp.autocomplete='off';
@@ -604,6 +747,10 @@ function addBR(tbodyId,emptyId){
   function mkSel(placeholder){const s=document.createElement('select');s.innerHTML=`<option value="">${placeholder}</option>`;return s;}
   const cSel=mkSel('Color...'); cSel.disabled=true;
   const sSel=mkSel('Talla...'); sSel.disabled=true;
+  const lSel=document.createElement('select');
+  lSel.innerHTML='<option value="almacen">Almacén</option><option value="bodega">Bodega</option>';
+  lSel.style.cssText='width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none';
+  lSel.addEventListener('change',()=>{tr._loc=lSel.value;});
 
   function onSel(id,label){
     selPid=id;pInp.value=label;
@@ -623,7 +770,7 @@ function addBR(tbodyId,emptyId){
     const col=cSel.value;
     sSel.innerHTML='<option value="">Talla...</option>';sSel.disabled=!col;tr._vid=null;
     if(!selPid||!col)return;
-    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`${v.size} (${v.stock||0} disponibles)`;sSel.appendChild(o);});
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})`;sSel.appendChild(o);});
   });
   sSel.addEventListener('change',()=>{tr._vid=sSel.value||null;});
 
@@ -632,7 +779,7 @@ function addBR(tbodyId,emptyId){
   rb.addEventListener('click',()=>{tr.remove();if(!tbody.querySelectorAll('[data-bulk]').length)$(emptyId).style.display='';});
 
   function cell(el){const td=document.createElement('td');td.appendChild(el);return td;}
-  tr.append(cell(pWrap),cell(cSel),cell(sSel),cell(qi),cell(rb));
+  tr.append(cell(pWrap),cell(cSel),cell(sSel),cell(lSel),cell(qi),cell(rb));
   tbody.appendChild(tr);
 }
 
@@ -642,11 +789,11 @@ $('addER').addEventListener('click',()=>addBR('eBulkBody','eBE'));
 async function applyBulk(tbodyId,emptyId,delta){
   const rows=[...$(tbodyId).querySelectorAll('[data-bulk]')];
   if(!rows.length){toast('No hay filas',false);return;}
-  const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0})).filter(o=>o.vid&&o.qty>0);
+  const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0,loc:tr._loc||'almacen'})).filter(o=>o.vid&&o.qty>0);
   if(!ops.length){toast('Completa las filas',false);return;}
   ld(true);
   try{
-    for(const o of ops)await updS(o.vid,delta*o.qty);
+    for(const o of ops)await updS(o.vid,delta*o.qty,o.loc);
     toast(`${ops.length} variantes actualizadas`);
     $(tbodyId).querySelectorAll('[data-bulk]').forEach(r=>r.remove());
     $(emptyId).style.display='';
@@ -657,6 +804,94 @@ async function applyBulk(tbodyId,emptyId,delta){
 
 $('sBulk').addEventListener('click',()=>applyBulk('sBulkBody','sBE',-1));
 $('eBulk').addEventListener('click',()=>applyBulk('eBulkBody','eBE',1));
+
+// BULK TRANSFER ROWS
+function addTBR(){
+  if(!allD){toast('Carga los datos primero',false);return;}
+  $('tBE').style.display='none';
+  const tbody=$('tBulkBody');
+  const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;tr._from='almacen';tr._to='bodega';
+
+  const pWrap=document.createElement('div');pWrap.className='bcomb';
+  const pInp=document.createElement('input');pInp.type='text';pInp.className='bcomb-inp';pInp.placeholder='Buscar...';pInp.autocomplete='off';
+  pWrap.appendChild(pInp);
+
+  const sortedP=[...allD.products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
+  const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
+  let selPid=null;
+
+  function mkSel(placeholder){const s=document.createElement('select');s.innerHTML=`<option value="">${placeholder}</option>`;return s;}
+  const cSel=mkSel('Color...'); cSel.disabled=true;
+  const sSel=mkSel('Talla...'); sSel.disabled=true;
+
+  const fromSel=document.createElement('select');
+  fromSel.innerHTML='<option value="almacen">Almacén</option><option value="bodega">Bodega</option>';
+  fromSel.style.cssText='width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none';
+
+  const toSel=document.createElement('select');
+  toSel.innerHTML='<option value="bodega">Bodega</option><option value="almacen">Almacén</option>';
+  toSel.style.cssText='width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none';
+
+  fromSel.addEventListener('change',()=>{
+    tr._from=fromSel.value;
+    const other=fromSel.value==='almacen'?'bodega':'almacen';
+    [...toSel.options].forEach(o=>{o.selected=o.value===other;});
+    tr._to=other;
+  });
+  toSel.addEventListener('change',()=>{
+    tr._to=toSel.value;
+    const other=toSel.value==='almacen'?'bodega':'almacen';
+    [...fromSel.options].forEach(o=>{o.selected=o.value===other;});
+    tr._from=other;
+  });
+
+  function onSel(id,label){
+    selPid=id;pInp.value=label;
+    cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
+    cSel.disabled=!selPid;sSel.disabled=true;tr._vid=null;
+    if(selPid)Object.keys(allD.byP[selPid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
+  }
+
+  pInp.addEventListener('focus',()=>_bDdOpen(pInp,opts,onSel));
+  pInp.addEventListener('input',()=>{
+    if(_bDdCtx&&_bDdCtx.inp===pInp)_bDdRender(pInp.value);
+    else _bDdOpen(pInp,opts,onSel);
+    if(selPid){selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;}
+  });
+  cSel.addEventListener('change',()=>{
+    const col=cSel.value;
+    sSel.innerHTML='<option value="">Talla...</option>';sSel.disabled=!col;tr._vid=null;
+    if(!selPid||!col)return;
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})`;sSel.appendChild(o);});
+  });
+  sSel.addEventListener('change',()=>{tr._vid=sSel.value||null;});
+
+  const qi=document.createElement('input');qi.type='number';qi.min='1';qi.value='1';
+  const rb=document.createElement('button');rb.className='rm';rb.textContent='x';
+  rb.addEventListener('click',()=>{tr.remove();if(!tbody.querySelectorAll('[data-bulk]').length)$('tBE').style.display='';});
+
+  function cell(el){const td=document.createElement('td');td.appendChild(el);return td;}
+  tr.append(cell(pWrap),cell(cSel),cell(sSel),cell(fromSel),cell(toSel),cell(qi),cell(rb));
+  tbody.appendChild(tr);
+}
+
+$('addTR').addEventListener('click',addTBR);
+
+$('tBulk').addEventListener('click',async()=>{
+  const rows=[...$('tBulkBody').querySelectorAll('[data-bulk]')];
+  if(!rows.length){toast('No hay filas',false);return;}
+  const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0,from:tr._from,to:tr._to})).filter(o=>o.vid&&o.qty>0&&o.from!==o.to);
+  if(!ops.length){toast('Completa las filas correctamente',false);return;}
+  ld(true);
+  try{
+    for(const o of ops)await transferS(o.vid,o.from,o.qty);
+    toast(`${ops.length} transferencias aplicadas`);
+    $('tBulkBody').querySelectorAll('[data-bulk]').forEach(r=>r.remove());
+    $('tBE').style.display='';
+    render();
+  }catch(e){toast('Error: '+e.message,false);}
+  finally{ld(false);}
+});
 
 init();
 })();
