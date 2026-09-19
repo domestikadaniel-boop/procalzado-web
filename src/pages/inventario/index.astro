@@ -617,25 +617,33 @@ $('exBtn').addEventListener('click',()=>{
   toast('Excel descargado');
 });
 
-// LOG MOVEMENT
+// API MUTATE — todas las escrituras van por el endpoint server-side (service role key, bypass RLS)
 let currentUserEmail = '';
-async function logMovement(type, vid, qty, loc, fromLoc, toLoc){
+async function apiMutate(body){
+  const{data:{session}}=await sb.auth.getSession();
+  const token=session?.access_token||'';
+  const res=await fetch('/api/inventory/mutate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify(body),
+  });
+  const json=await res.json();
+  if(!res.ok)throw new Error(json.error||'Error del servidor');
+  return json;
+}
+
+async function logMovement(type,vid,qty,loc,fromLoc,toLoc){
   try{
-    const v = allD?.variants.find(x=>x.id===vid);
-    if(!v) return;
-    const p = allD?.pm[v.product_id];
-    const row = {
-      type,
-      product_name: p?.name || '',
-      brand_name: p?.brands?.name || '',
-      color: v.color || '',
-      size: v.size || '',
-      quantity: qty,
-      user_email: currentUserEmail,
-    };
-    if(type==='transferencia'){ row.from_location=fromLoc; row.to_location=toLoc; }
-    else { row.location=loc; }
-    await sb.from('inventory_movements').insert(row);
+    const v=allD?.variants.find(x=>x.id===vid);
+    if(!v)return;
+    const p=allD?.pm[v.product_id];
+    await apiMutate({
+      action:'log_movement',type,
+      product_name:p?.name||'',brand_name:p?.brands?.name||'',
+      color:v.color||'',size:v.size||'',quantity:qty,
+      user_email:currentUserEmail,
+      location:loc||null,from_location:fromLoc||null,to_location:toLoc||null,
+    });
   }catch(_){}
 }
 
@@ -646,9 +654,9 @@ async function updS(vid,delta,loc){
   const field=loc==='bodega'?'stock_bodega':'stock_almacen';
   const cur=v[field]||0;
   const ns=Math.max(0,cur+delta);
-  const{error}=await sb.from('product_variants').update({[field]:ns}).eq('id',vid);
-  if(error)throw error;
-  v[field]=ns;return ns;
+  const{data}=await apiMutate({action:'update_stock',vid,field,value:ns});
+  v.stock_almacen=data.stock_almacen;v.stock_bodega=data.stock_bodega;
+  return v[field];
 }
 
 // TRANSFER STOCK
@@ -661,10 +669,9 @@ async function transferS(vid,fromLoc,qty){
   if(fromCur<qty)throw new Error(`Stock insuficiente en ${fromLoc}: ${fromCur} disponibles`);
   const fromNew=fromCur-qty;
   const toNew=(v[toField]||0)+qty;
-  const{error}=await sb.from('product_variants').update({[fromField]:fromNew,[toField]:toNew}).eq('id',vid);
-  if(error)throw error;
-  v[fromField]=fromNew;v[toField]=toNew;
-  return{fromNew,toNew};
+  const{data}=await apiMutate({action:'transfer',vid,from_field:fromField,to_field:toField,from_value:fromNew,to_value:toNew});
+  v.stock_almacen=data.stock_almacen;v.stock_bodega=data.stock_bodega;
+  return{fromNew:data[fromField],toNew:data[toField]};
 }
 
 // COMBOBOX
@@ -969,11 +976,7 @@ let histData=[];
 async function loadHistory(){
   ld(true);
   try{
-    const{data,error}=await sb.from('inventory_movements')
-      .select('*')
-      .order('created_at',{ascending:false})
-      .limit(500);
-    if(error)throw error;
+    const{data}=await apiMutate({action:'get_movements'});
     histData=data||[];
     renderHistory();
   }catch(e){toast('Error cargando historial: '+e.message,false);}
