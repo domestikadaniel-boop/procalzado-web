@@ -123,6 +123,11 @@ tbody tr:hover td{filter:brightness(.96)}
 .bcomb-opt:last-child{border-bottom:none}
 .bcomb-opt:hover,.bcomb-opt:active{background:#f5f5f5}
 
+/* HISTORY BADGES */
+.mv-venta{display:inline-block;padding:.15rem .45rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#FEE2E2;color:#991B1B;letter-spacing:.04em;text-transform:uppercase}
+.mv-ingreso{display:inline-block;padding:.15rem .45rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#BBF7D0;color:#14532D;letter-spacing:.04em;text-transform:uppercase}
+.mv-transferencia{display:inline-block;padding:.15rem .45rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#F3E8FF;color:#7C3AED;letter-spacing:.04em;text-transform:uppercase}
+
 /* TRANSFER */
 .trf-card{background:#fff;border-radius:6px;padding:1.1rem;border:1px solid #ddd;max-width:520px}
 .trf-arrow{display:flex;align-items:center;gap:.75rem;margin:.75rem 0}
@@ -180,6 +185,7 @@ tbody tr:hover td{filter:brightness(.96)}
     <div class="tab" data-tab="ven">Registrar Ventas</div>
     <div class="tab" data-tab="ing">Ingresos de Mercancia</div>
     <div class="tab" data-tab="trf">Transferir Mercancia</div>
+    <div class="tab" data-tab="his">Historial</div>
   </div>
 
   <div class="panel">
@@ -353,6 +359,41 @@ tbody tr:hover td{filter:brightness(.96)}
       </div>
     </div>
 
+    <!-- HISTORIAL -->
+    <div class="sec" id="tab-his">
+      <div class="toolbar">
+        <select id="hftype">
+          <option value="">Todos los movimientos</option>
+          <option value="venta">Ventas</option>
+          <option value="ingreso">Ingresos</option>
+          <option value="transferencia">Transferencias</option>
+        </select>
+        <input type="text" id="hfsq" placeholder="Buscar producto..."/>
+        <button class="btn btn-o" id="hReloadBtn">Recargar</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha y hora</th>
+              <th>Tipo</th>
+              <th>Marca</th>
+              <th>Producto</th>
+              <th>Color</th>
+              <th>Talla</th>
+              <th class="num">Cantidad</th>
+              <th>Ubicación</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody id="htb">
+            <tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="hcnt" style="margin-top:.45rem;font-size:.7rem;color:#888"></div>
+    </div>
+
   </div>
 </div>
 
@@ -406,7 +447,7 @@ $('lbtn').addEventListener('click',async()=>{
 $('lpw').addEventListener('keydown',e=>{if(e.key==='Enter')$('lbtn').click();});
 $('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();$('lw').style.display='flex';$('invP').style.display='none';allD=null;});
 function se(m){const e=$('lerr');e.textContent=m;e.style.display='block';}
-async function go(email){$('lw').style.display='none';$('invP').style.display='flex';$('uem').textContent=email;await load();}
+async function go(email){currentUserEmail=email;$('lw').style.display='none';$('invP').style.display='flex';$('uem').textContent=email;await load();}
 
 // TABS
 document.querySelectorAll('.tab').forEach(t=>{
@@ -576,6 +617,28 @@ $('exBtn').addEventListener('click',()=>{
   toast('Excel descargado');
 });
 
+// LOG MOVEMENT
+let currentUserEmail = '';
+async function logMovement(type, vid, qty, loc, fromLoc, toLoc){
+  try{
+    const v = allD?.variants.find(x=>x.id===vid);
+    if(!v) return;
+    const p = allD?.pm[v.product_id];
+    const row = {
+      type,
+      product_name: p?.name || '',
+      brand_name: p?.brands?.name || '',
+      color: v.color || '',
+      size: v.size || '',
+      quantity: qty,
+      user_email: currentUserEmail,
+    };
+    if(type==='transferencia'){ row.from_location=fromLoc; row.to_location=toLoc; }
+    else { row.location=loc; }
+    await sb.from('inventory_movements').insert(row);
+  }catch(_){}
+}
+
 // UPDATE STOCK — loc: 'almacen' | 'bodega'
 async function updS(vid,delta,loc){
   const v=allD.variants.find(x=>x.id===vid);
@@ -662,7 +725,7 @@ function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
 }
 
 // SINGLE OPS
-async function singleOp(szId,csId,qtyId,locId,delta,successMsg){
+async function singleOp(szId,csId,qtyId,locId,delta,successMsg,type){
   const vid=$(szId).value,qty=parseInt($(qtyId).value)||0,loc=$(locId).value;
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
@@ -672,13 +735,14 @@ async function singleOp(szId,csId,qtyId,locId,delta,successMsg){
     const v=allD.variants.find(x=>x.id===vid);
     toast(`${successMsg} en ${loc} — ${loc==='bodega'?'Bod':'Alm'}: ${ns}u`);
     if(v)$(csId).textContent=`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`;
+    await logMovement(type,vid,qty,loc,null,null);
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
 }
 
-$('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty','sLoc',-1,'Descontado'));
-$('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty','eLoc',1,'Ingreso registrado'));
+$('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty','sLoc',-1,'Descontado','venta'));
+$('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty','eLoc',1,'Ingreso registrado','ingreso'));
 
 // TRANSFER SINGLE
 $('tBtn').addEventListener('click',async()=>{
@@ -693,6 +757,7 @@ $('tBtn').addEventListener('click',async()=>{
     const v=allD.variants.find(x=>x.id===vid);
     toast(`Transferido: ${qty}u de ${fromLoc} → ${toLoc}`);
     if(v)$('tCS').textContent=`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`;
+    await logMovement('transferencia',vid,qty,null,fromLoc,toLoc);
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
@@ -786,14 +851,17 @@ function addBR(tbodyId,emptyId){
 $('addSR').addEventListener('click',()=>addBR('sBulkBody','sBE'));
 $('addER').addEventListener('click',()=>addBR('eBulkBody','eBE'));
 
-async function applyBulk(tbodyId,emptyId,delta){
+async function applyBulk(tbodyId,emptyId,delta,type){
   const rows=[...$(tbodyId).querySelectorAll('[data-bulk]')];
   if(!rows.length){toast('No hay filas',false);return;}
   const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0,loc:tr._loc||'almacen'})).filter(o=>o.vid&&o.qty>0);
   if(!ops.length){toast('Completa las filas',false);return;}
   ld(true);
   try{
-    for(const o of ops)await updS(o.vid,delta*o.qty,o.loc);
+    for(const o of ops){
+      await updS(o.vid,delta*o.qty,o.loc);
+      await logMovement(type,o.vid,o.qty,o.loc,null,null);
+    }
     toast(`${ops.length} variantes actualizadas`);
     $(tbodyId).querySelectorAll('[data-bulk]').forEach(r=>r.remove());
     $(emptyId).style.display='';
@@ -802,8 +870,8 @@ async function applyBulk(tbodyId,emptyId,delta){
   finally{ld(false);}
 }
 
-$('sBulk').addEventListener('click',()=>applyBulk('sBulkBody','sBE',-1));
-$('eBulk').addEventListener('click',()=>applyBulk('eBulkBody','eBE',1));
+$('sBulk').addEventListener('click',()=>applyBulk('sBulkBody','sBE',-1,'venta'));
+$('eBulk').addEventListener('click',()=>applyBulk('eBulkBody','eBE',1,'ingreso'));
 
 // BULK TRANSFER ROWS
 function addTBR(){
@@ -884,13 +952,83 @@ $('tBulk').addEventListener('click',async()=>{
   if(!ops.length){toast('Completa las filas correctamente',false);return;}
   ld(true);
   try{
-    for(const o of ops)await transferS(o.vid,o.from,o.qty);
+    for(const o of ops){
+      await transferS(o.vid,o.from,o.qty);
+      await logMovement('transferencia',o.vid,o.qty,null,o.from,o.to);
+    }
     toast(`${ops.length} transferencias aplicadas`);
     $('tBulkBody').querySelectorAll('[data-bulk]').forEach(r=>r.remove());
     $('tBE').style.display='';
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
+});
+
+// HISTORIAL
+let histData=[];
+async function loadHistory(){
+  ld(true);
+  try{
+    const{data,error}=await sb.from('inventory_movements')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(500);
+    if(error)throw error;
+    histData=data||[];
+    renderHistory();
+  }catch(e){toast('Error cargando historial: '+e.message,false);}
+  finally{ld(false);}
+}
+
+function renderHistory(){
+  const q=$('hfsq').value.toLowerCase().trim();
+  const ft=$('hftype').value;
+  let rows=histData;
+  if(ft)rows=rows.filter(r=>r.type===ft);
+  if(q)rows=rows.filter(r=>(r.product_name||'').toLowerCase().includes(q)||(r.brand_name||'').toLowerCase().includes(q)||(r.color||'').toLowerCase().includes(q));
+
+  if(!rows.length){
+    $('htb').innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin movimientos</td></tr>';
+    $('hcnt').textContent='';return;
+  }
+
+  const fmt=dt=>{
+    const d=new Date(dt);
+    return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'})+
+      ' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+  };
+
+  const typeBadge=t=>`<span class="mv-${t}">${t}</span>`;
+
+  const ubicCol=r=>{
+    if(r.type==='transferencia')
+      return`<span class="loc-a">${r.from_location||''}</span> → <span class="loc-b">${r.to_location||''}</span>`;
+    const cls=r.location==='bodega'?'loc-b':'loc-a';
+    return`<span class="${cls}">${r.location||''}</span>`;
+  };
+
+  $('htb').innerHTML=rows.map(r=>`<tr>
+    <td style="white-space:nowrap">${fmt(r.created_at)}</td>
+    <td>${typeBadge(r.type)}</td>
+    <td>${r.brand_name||''}</td>
+    <td>${r.product_name||''}</td>
+    <td>${r.color||''}</td>
+    <td style="text-align:center">${r.size||''}</td>
+    <td class="num">${r.quantity}</td>
+    <td>${ubicCol(r)}</td>
+    <td style="font-size:.72rem;color:#666">${r.user_email||''}</td>
+  </tr>`).join('');
+  $('hcnt').textContent=`${rows.length} movimientos`;
+}
+
+['hftype','hfsq'].forEach(id=>$(id).addEventListener('input',renderHistory));
+$('hReloadBtn').addEventListener('click',loadHistory);
+
+// cargar historial al entrar al tab
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    if(t.dataset.tab==='his'&&!histData.length)loadHistory();
+  });
 });
 
 init();
