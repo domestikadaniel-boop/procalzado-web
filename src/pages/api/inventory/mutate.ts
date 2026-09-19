@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
+import { env as cfEnv } from 'cloudflare:workers';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
-  const sbUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-  const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+  const sbUrl = (cfEnv as any).PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+  const serviceKey = (cfEnv as any).SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
   // Verificar sesión del usuario con el anon key
   const authHeader = request.headers.get('Authorization');
