@@ -653,6 +653,8 @@ async function updS(vid,delta,loc){
   if(!v)throw new Error('No encontrado');
   const field=loc==='bodega'?'stock_bodega':'stock_almacen';
   const cur=v[field]||0;
+  // Validar stock suficiente al descontar
+  if(delta<0&&cur+delta<0)throw new Error(`Stock insuficiente en ${loc}: solo hay ${cur} unidades`);
   const ns=Math.max(0,cur+delta);
   const{data}=await apiMutate({action:'update_stock',vid,field,value:ns});
   v.stock_almacen=data.stock_almacen;v.stock_bodega=data.stock_bodega;
