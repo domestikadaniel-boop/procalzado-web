@@ -78,40 +78,36 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ ok: true });
 
     } else if (action === 'merge_variants') {
-      // Merge inteligente: preserva stock de variantes existentes (match por color+size)
-      // Solo inserta nuevas y borra las eliminadas. Nunca toca stock_almacen/stock_bodega.
+      // Merge por ID: variantes con id = existentes (preserva stock), sin id = nuevas.
+      // Solo borra las que el form no incluyó. Nunca toca stock_almacen/stock_bodega.
       const { product_id, variants: newVariants } = params;
       if (!product_id) throw new Error('product_id requerido');
 
       const { data: existing, error: fetchErr } = await sb
         .from('product_variants')
-        .select('id,color,size,color_hex,color_hex_2')
+        .select('id,color_hex,color_hex_2')
         .eq('product_id', product_id);
       if (fetchErr) throw fetchErr;
 
-      const existingMap: Record<string, any> = {};
-      (existing || []).forEach((v: any) => { existingMap[`${v.color}|${v.size}`] = v; });
-
+      const existingIds = new Set((existing || []).map((v: any) => v.id));
       const toInsert: any[] = [];
-      const toUpdateIds: { id: string; color_hex: string | null; color_hex_2: string | null }[] = [];
-      const accountedIds = new Set<string>();
+      const toUpdate: { id: string; color_hex: string | null; color_hex_2: string | null; color: string }[] = [];
+      const keptIds = new Set<string>();
 
       for (const v of (newVariants || [])) {
-        const key = `${v.color}|${v.size}`;
-        const ex = existingMap[key];
-        if (ex) {
-          accountedIds.add(ex.id);
-          if (ex.color_hex !== v.color_hex || ex.color_hex_2 !== v.color_hex_2) {
-            toUpdateIds.push({ id: ex.id, color_hex: v.color_hex, color_hex_2: v.color_hex_2 });
+        if (v.id && existingIds.has(v.id)) {
+          keptIds.add(v.id);
+          const ex = (existing || []).find((e: any) => e.id === v.id);
+          if (ex && (ex.color_hex !== v.color_hex || ex.color_hex_2 !== v.color_hex_2 || ex.color !== v.color)) {
+            toUpdate.push({ id: v.id, color_hex: v.color_hex, color_hex_2: v.color_hex_2, color: v.color });
           }
         } else {
-          toInsert.push(v);
+          const { id: _id, ...insertData } = v;
+          toInsert.push(insertData);
         }
       }
 
-      const toDeleteIds = (existing || [])
-        .filter((v: any) => !accountedIds.has(v.id))
-        .map((v: any) => v.id);
+      const toDeleteIds = [...existingIds].filter(id => !keptIds.has(id));
 
       if (toDeleteIds.length) {
         const { error } = await sb.from('product_variants').delete().in('id', toDeleteIds);
@@ -121,9 +117,9 @@ export const POST: APIRoute = async ({ request }) => {
         const { error } = await sb.from('product_variants').insert(toInsert);
         if (error) throw error;
       }
-      for (const u of toUpdateIds) {
+      for (const u of toUpdate) {
         const { error } = await sb.from('product_variants')
-          .update({ color_hex: u.color_hex, color_hex_2: u.color_hex_2 })
+          .update({ color_hex: u.color_hex, color_hex_2: u.color_hex_2, color: u.color })
           .eq('id', u.id);
         if (error) throw error;
       }
