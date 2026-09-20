@@ -85,23 +85,27 @@ export const POST: APIRoute = async ({ request }) => {
 
       const { data: existing, error: fetchErr } = await sb
         .from('product_variants')
-        .select('id,color_hex,color_hex_2')
+        .select('id,color,color_hex,color_hex_2')
         .eq('product_id', product_id);
       if (fetchErr) throw fetchErr;
 
       const existingIds = new Set((existing || []).map((v: any) => v.id));
+      const existingById: Record<string, any> = {};
+      (existing || []).forEach((v: any) => { existingById[v.id] = v; });
+
       const toInsert: any[] = [];
-      const toUpdate: { id: string; color_hex: string | null; color_hex_2: string | null; color: string }[] = [];
+      const toUpdate: { id: string; color: string; color_hex: string | null; color_hex_2: string | null }[] = [];
       const keptIds = new Set<string>();
 
       for (const v of (newVariants || [])) {
         if (v.id && existingIds.has(v.id)) {
           keptIds.add(v.id);
-          const ex = (existing || []).find((e: any) => e.id === v.id);
-          if (ex && (ex.color_hex !== v.color_hex || ex.color_hex_2 !== v.color_hex_2 || ex.color !== v.color)) {
-            toUpdate.push({ id: v.id, color_hex: v.color_hex, color_hex_2: v.color_hex_2, color: v.color });
+          const ex = existingById[v.id];
+          if (ex.color !== v.color || ex.color_hex !== v.color_hex || ex.color_hex_2 !== v.color_hex_2) {
+            toUpdate.push({ id: v.id, color: v.color, color_hex: v.color_hex, color_hex_2: v.color_hex_2 });
           }
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id: _id, ...insertData } = v;
           toInsert.push(insertData);
         }
@@ -109,18 +113,20 @@ export const POST: APIRoute = async ({ request }) => {
 
       const toDeleteIds = [...existingIds].filter(id => !keptIds.has(id));
 
-      if (toDeleteIds.length) {
-        const { error } = await sb.from('product_variants').delete().in('id', toDeleteIds);
-        if (error) throw error;
-      }
+      // Orden seguro: insertar primero, luego actualizar, borrar al final.
+      // Si insert falla antes del delete, no se pierden variantes existentes.
       if (toInsert.length) {
         const { error } = await sb.from('product_variants').insert(toInsert);
         if (error) throw error;
       }
       for (const u of toUpdate) {
         const { error } = await sb.from('product_variants')
-          .update({ color_hex: u.color_hex, color_hex_2: u.color_hex_2, color: u.color })
+          .update({ color: u.color, color_hex: u.color_hex, color_hex_2: u.color_hex_2 })
           .eq('id', u.id);
+        if (error) throw error;
+      }
+      if (toDeleteIds.length) {
+        const { error } = await sb.from('product_variants').delete().in('id', toDeleteIds);
         if (error) throw error;
       }
       return json({ ok: true });

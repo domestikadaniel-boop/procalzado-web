@@ -970,7 +970,7 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null,variantIds:{}});
   renderColors();
 });
 
@@ -1059,6 +1059,9 @@ function openProductForm(p=null){
       const variant=p.product_variants.find(v=>v.color===cname);
       const colorImages=(p.product_images||[]).filter(i=>i.color===cname);
       const colorSizes=p.product_variants.filter(v=>v.color===cname).map(v=>v.size).filter(s=>s!=='Única');
+      // variantIds guarda {size→id} para que el merge use IDs reales aunque cambie el nombre del color
+      const variantIds={};
+      p.product_variants.filter(v=>v.color===cname).forEach(v=>{variantIds[v.size]=v.id;});
       return{
         name:cname,
         hex:variant?.color_hex||'#000000',
@@ -1066,6 +1069,7 @@ function openProductForm(p=null){
         dual:!!variant?.color_hex_2,
         images:colorImages.map(i=>({url:i.url,id:i.id,existing:true})),
         sizes:colorSizes,
+        variantIds,
         showInIndex:cname===primaryImgColor
       };
     });
@@ -1087,7 +1091,7 @@ function openProductForm(p=null){
     c.salePct = (rawSale && basePrice) ? Math.round((1 - rawSale/basePrice) * 100) : null;
   });
 
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null});
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null,variantIds:{}});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -1151,36 +1155,41 @@ $('formSaveBtn').addEventListener('click',async()=>{
   // VARIANTS = combinación de cada color con cada talla (via endpoint service role para bypass RLS)
   const sizes = perColorSizes ? [] : getSelectedSizes();
   const validColors = formColors.filter(c=>c.name.trim());
-  // Mapa id por color+size de las variantes existentes cargadas del producto
+  // mkVar: usa c.variantIds[size] para identificar variantes existentes por ID real,
+  // así el stock se preserva aunque se renombre el color o se reordenen las tallas.
+  // Fallback existingVarMap para el caso "Único/Única" sin colores definidos.
   const existingVarMap={};
   (editingProduct?.product_variants||[]).forEach(v=>{existingVarMap[`${v.color}|${v.size}`]=v.id;});
-  const mkVar=(color,size,hex,hex2)=>{
-    const id=existingVarMap[`${color}|${size}`];
+  const mkVar=(c,size)=>{
+    const color=typeof c==='string'?c:c.name.trim();
+    const hex=typeof c==='string'?'#000000':c.hex;
+    const hex2=typeof c==='string'?null:(c.dual?c.hex2:null);
+    const id=(c.variantIds)?.[size] ?? existingVarMap[`${color}|${size}`];
     return{...(id?{id}:{}),product_id:pid,color,color_hex:hex,color_hex_2:hex2,size,stock:0,active:true};
   };
   const variants=[];
   if (perColorSizes) {
     if (validColors.length === 0) {
-      variants.push(mkVar('Único','Única','#000000',null));
+      variants.push(mkVar('Único','Única'));
     } else {
       validColors.forEach(c => {
         const colorSizes = (c.sizes || []).filter(Boolean);
         if (colorSizes.length === 0) {
-          variants.push(mkVar(c.name.trim(),'Única',c.hex,c.dual?c.hex2:null));
+          variants.push(mkVar(c,'Única'));
         } else {
-          colorSizes.forEach(s => variants.push(mkVar(c.name.trim(),s,c.hex,c.dual?c.hex2:null)));
+          colorSizes.forEach(s => variants.push(mkVar(c,s)));
         }
       });
     }
   } else {
     if (validColors.length === 0 && sizes.length === 0) {
-      variants.push(mkVar('Único','Única','#000000',null));
+      variants.push(mkVar('Único','Única'));
     } else if (validColors.length === 0) {
-      sizes.forEach(s => variants.push(mkVar('Único',s,'#000000',null)));
+      sizes.forEach(s => variants.push(mkVar('Único',s)));
     } else if (sizes.length === 0) {
-      validColors.forEach(c => variants.push(mkVar(c.name.trim(),'Única',c.hex,c.dual?c.hex2:null)));
+      validColors.forEach(c => variants.push(mkVar(c,'Única')));
     } else {
-      validColors.forEach(c => sizes.forEach(s => variants.push(mkVar(c.name.trim(),s,c.hex,c.dual?c.hex2:null))));
+      validColors.forEach(c => sizes.forEach(s => variants.push(mkVar(c,s))));
     }
   }
   const {data:{session:adminSession}}=await supabase.auth.getSession();
