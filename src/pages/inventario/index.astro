@@ -267,6 +267,24 @@ tbody tr:hover td{filter:brightness(.96)}
           </div>
         </div>
       </div>
+      <div class="card" style="margin-top:1rem">
+        <h3>Descuento masivo veloz</h3>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">
+          <div class="fl" style="flex:1;min-width:180px;margin-bottom:0">
+            <label>Producto</label>
+            <div class="combo"><input type="text" class="combo-inp" id="vzSCInp" placeholder="Buscar producto..." autocomplete="off"/><div class="combo-dd" id="vzSCDd"></div></div>
+          </div>
+          <div class="fl" style="margin-bottom:0"><label>Color</label><select id="vzSCol" class="loc-sel" disabled><option value="">— producto primero —</option></select></div>
+          <div class="fl" style="margin-bottom:0"><label>Ubicacion</label><select class="loc-sel" id="vzSLoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
+        </div>
+        <div id="vzSTbl" hidden>
+          <div class="bw"><table class="bt">
+            <thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>Cant. a descontar</th></tr></thead>
+            <tbody id="vzSTBody"></tbody>
+          </table></div>
+          <div class="bf" style="margin-top:.5rem"><button class="btn btn-r" id="vzSApply">Aplicar descuentos</button></div>
+        </div>
+      </div>
     </div>
 
     <!-- INGRESOS -->
@@ -303,6 +321,24 @@ tbody tr:hover td{filter:brightness(.96)}
             <button class="btn btn-o" id="addER">+ Fila</button>
             <button class="btn btn-g" id="eBulk">Aplicar ingresos</button>
           </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h3>Ingreso masivo veloz</h3>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">
+          <div class="fl" style="flex:1;min-width:180px;margin-bottom:0">
+            <label>Producto</label>
+            <div class="combo"><input type="text" class="combo-inp" id="vzECInp" placeholder="Buscar producto..." autocomplete="off"/><div class="combo-dd" id="vzECDd"></div></div>
+          </div>
+          <div class="fl" style="margin-bottom:0"><label>Color</label><select id="vzECol" class="loc-sel" disabled><option value="">— producto primero —</option></select></div>
+          <div class="fl" style="margin-bottom:0"><label>Ubicacion</label><select class="loc-sel" id="vzELoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
+        </div>
+        <div id="vzETbl" hidden>
+          <div class="bw"><table class="bt">
+            <thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>Cant. a ingresar</th></tr></thead>
+            <tbody id="vzETBody"></tbody>
+          </table></div>
+          <div class="bf" style="margin-top:.5rem"><button class="btn btn-g" id="vzEApply">Aplicar ingresos</button></div>
         </div>
       </div>
     </div>
@@ -355,6 +391,26 @@ tbody tr:hover td{filter:brightness(.96)}
             <button class="btn btn-o" id="addTR">+ Fila</button>
             <button class="btn btn-p" id="tBulk">Aplicar transferencias</button>
           </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h3>Transferencia masiva veloz</h3>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">
+          <div class="fl" style="flex:1;min-width:180px;margin-bottom:0">
+            <label>Producto</label>
+            <div class="combo"><input type="text" class="combo-inp" id="vzTCInp" placeholder="Buscar producto..." autocomplete="off"/><div class="combo-dd" id="vzTCDd"></div></div>
+          </div>
+          <div class="fl" style="margin-bottom:0"><label>Color</label><select id="vzTCol" class="loc-sel" disabled><option value="">— producto primero —</option></select></div>
+          <div class="fl" style="margin-bottom:0"><label>De</label><select class="trf-loc" id="vzTFrom"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
+          <span style="align-self:flex-end;padding-bottom:.55rem;font-size:1.2rem;color:#7c3aed">→</span>
+          <div class="fl" style="margin-bottom:0"><label>A</label><select class="trf-loc" id="vzTTo"><option value="bodega">Bodega</option><option value="almacen">Almacén</option></select></div>
+        </div>
+        <div id="vzTTbl" hidden>
+          <div class="bw"><table class="bt">
+            <thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>Cant. a transferir</th></tr></thead>
+            <tbody id="vzTTBody"></tbody>
+          </table></div>
+          <div class="bf" style="margin-top:.5rem"><button class="btn btn-p" id="vzTApply">Aplicar transferencias</button></div>
         </div>
       </div>
     </div>
@@ -507,6 +563,7 @@ async function load(){
     setupPS('sCInp','sCDd','sCol','sSz','sCS',sp);
     setupPS('eCInp','eCDd','eCol','eSz','eCS',sp);
     setupPS('tCInp','tCDd','tCol','tSz','tCS',sp);
+    setupVelozAll(sp);
 
     render();
   }finally{ld(false);}
@@ -1035,6 +1092,110 @@ document.querySelectorAll('.tab').forEach(t=>{
     if(t.dataset.tab==='his'&&!histData.length)loadHistory();
   });
 });
+
+// VELOZ
+function initVelozCombo(cInpId,cDdId,colId,tblId,sp,onColorChange){
+  const inp=$(cInpId),dd=$(cDdId),colSel=$(colId),tbl=$(tblId);
+  const opts=sp.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
+  let selPid=null;
+
+  function onPick(id,label){
+    selPid=id;inp.value=label;
+    colSel.innerHTML='<option value="">Color...</option>';
+    colSel.disabled=!id;tbl.hidden=true;
+    if(id)Object.keys(allD.byP[id]||{}).sort().forEach(c=>{
+      const o=document.createElement('option');o.value=c;o.textContent=c;colSel.appendChild(o);
+    });
+  }
+
+  inp.addEventListener('focus',()=>_bDdOpen(inp,opts,onPick));
+  inp.addEventListener('input',()=>{
+    if(_bDdCtx&&_bDdCtx.inp===inp)_bDdRender(inp.value);
+    else _bDdOpen(inp,opts,onPick);
+    if(selPid){selPid=null;colSel.innerHTML='<option value="">Color...</option>';colSel.disabled=true;tbl.hidden=true;}
+  });
+
+  colSel.addEventListener('change',()=>{
+    const col=colSel.value;
+    if(!col||!selPid){tbl.hidden=true;return;}
+    onColorChange(selPid,col);
+    tbl.hidden=false;
+  });
+}
+
+function renderVzRows(tbodyId,pid,col){
+  const vs=allD.byP[pid]?.[col]||[];
+  $(tbodyId).innerHTML=vs.map(v=>`
+    <tr data-vid="${v.id}">
+      <td style="font-weight:600;text-align:center;font-size:.9rem">${v.size}</td>
+      <td class="num">${v.stock_almacen||0}</td>
+      <td class="num">${v.stock_bodega||0}</td>
+      <td><input type="number" min="0" value="0" class="qi" style="width:64px"/></td>
+    </tr>`).join('');
+}
+
+function refreshVzRows(tbodyId){
+  $(tbodyId).querySelectorAll('tr[data-vid]').forEach(tr=>{
+    const v=allD.variants.find(x=>x.id===tr.dataset.vid);
+    if(v){tr.cells[1].textContent=v.stock_almacen||0;tr.cells[2].textContent=v.stock_bodega||0;tr.querySelector('input').value='0';}
+  });
+}
+
+function setupVelozAll(sp){
+  // VENTAS veloz
+  initVelozCombo('vzSCInp','vzSCDd','vzSCol','vzSTbl',sp,(pid,col)=>renderVzRows('vzSTBody',pid,col));
+  $('vzSApply').addEventListener('click',async()=>{
+    const rows=[...$('vzSTBody').querySelectorAll('tr[data-vid]')];
+    const loc=$('vzSLoc').value;
+    const ops=rows.map(tr=>({vid:tr.dataset.vid,qty:parseInt(tr.querySelector('input').value)||0})).filter(o=>o.qty>0);
+    if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    ld(true);
+    try{
+      for(const o of ops){await updS(o.vid,-o.qty,loc);await logMovement('venta',o.vid,o.qty,loc,null,null);}
+      toast(`${ops.length} variante${ops.length!==1?'s':''} descontadas`);
+      refreshVzRows('vzSTBody');render();
+    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
+  });
+
+  // INGRESOS veloz
+  initVelozCombo('vzECInp','vzECDd','vzECol','vzETbl',sp,(pid,col)=>renderVzRows('vzETBody',pid,col));
+  $('vzEApply').addEventListener('click',async()=>{
+    const rows=[...$('vzETBody').querySelectorAll('tr[data-vid]')];
+    const loc=$('vzELoc').value;
+    const ops=rows.map(tr=>({vid:tr.dataset.vid,qty:parseInt(tr.querySelector('input').value)||0})).filter(o=>o.qty>0);
+    if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    ld(true);
+    try{
+      for(const o of ops){await updS(o.vid,o.qty,loc);await logMovement('ingreso',o.vid,o.qty,loc,null,null);}
+      toast(`${ops.length} variante${ops.length!==1?'s':''} ingresadas`);
+      refreshVzRows('vzETBody');render();
+    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
+  });
+
+  // TRANSFER veloz
+  $('vzTFrom').addEventListener('change',()=>{
+    const f=$('vzTFrom').value,other=f==='almacen'?'bodega':'almacen';
+    [...$('vzTTo').options].forEach(o=>{o.selected=o.value===other;});
+  });
+  $('vzTTo').addEventListener('change',()=>{
+    const t=$('vzTTo').value,other=t==='almacen'?'bodega':'almacen';
+    [...$('vzTFrom').options].forEach(o=>{o.selected=o.value===other;});
+  });
+  initVelozCombo('vzTCInp','vzTCDd','vzTCol','vzTTbl',sp,(pid,col)=>renderVzRows('vzTTBody',pid,col));
+  $('vzTApply').addEventListener('click',async()=>{
+    const rows=[...$('vzTTBody').querySelectorAll('tr[data-vid]')];
+    const from=$('vzTFrom').value,to=$('vzTTo').value;
+    if(from===to){toast('Origen y destino iguales',false);return;}
+    const ops=rows.map(tr=>({vid:tr.dataset.vid,qty:parseInt(tr.querySelector('input').value)||0})).filter(o=>o.qty>0);
+    if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    ld(true);
+    try{
+      for(const o of ops){await transferS(o.vid,from,o.qty);await logMovement('transferencia',o.vid,o.qty,null,from,to);}
+      toast(`${ops.length} variante${ops.length!==1?'s':''} transferidas`);
+      refreshVzRows('vzTTBody');render();
+    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
+  });
+}
 
 init();
 })();
