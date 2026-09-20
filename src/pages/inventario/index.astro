@@ -531,6 +531,7 @@ $('tTo').addEventListener('change',()=>{
 
 // DATA
 let allD=null;
+let _vzReady=false;
 async function fetchAll(tbl,sel){
   let r=[],off=0;
   while(true){const{data}=await sb.from(tbl).select(sel).range(off,off+999);if(!data?.length)break;r.push(...data);if(data.length<1000)break;off+=1000;}
@@ -563,7 +564,7 @@ async function load(){
     setupPS('sCInp','sCDd','sCol','sSz','sCS',sp);
     setupPS('eCInp','eCDd','eCol','eSz','eCS',sp);
     setupPS('tCInp','tCDd','tCol','tSz','tCS',sp);
-    setupVelozAll(sp);
+    if(!_vzReady){_vzReady=true;setupVelozAll(sp);}
 
     render();
   }finally{ld(false);}

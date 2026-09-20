@@ -27,10 +27,10 @@ export const POST: APIRoute = async ({ request }) => {
         .from('product_variants')
         .update({ [field]: value })
         .eq('id', vid)
-        .select('id,stock_almacen,stock_bodega')
-        .single();
+        .select('id,stock_almacen,stock_bodega');
       if (error) throw error;
-      return json({ data });
+      if (!data || !data.length) throw new Error('Variante no encontrada');
+      return json({ data: data[0] });
 
     } else if (action === 'transfer') {
       const { vid, from_field, to_field, from_value, to_value } = params;
@@ -38,10 +38,10 @@ export const POST: APIRoute = async ({ request }) => {
         .from('product_variants')
         .update({ [from_field]: from_value, [to_field]: to_value })
         .eq('id', vid)
-        .select('id,stock_almacen,stock_bodega')
-        .single();
+        .select('id,stock_almacen,stock_bodega');
       if (error) throw error;
-      return json({ data });
+      if (!data || !data.length) throw new Error('Variante no encontrada');
+      return json({ data: data[0] });
 
     } else if (action === 'log_movement') {
       const { type, product_name, brand_name, color, size, quantity, location, from_location, to_location, user_email } = params;
