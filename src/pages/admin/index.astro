@@ -523,6 +523,17 @@ window.__adminSb = window.supabase.createClient(sbUrl, sbAnon);
 <script type="module">
 const supabase = window.__adminSb;
 
+async function uploadImage(file) {
+  const {data:{session}} = await supabase.auth.getSession();
+  const token = session?.access_token || '';
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch('/api/admin/upload-image', {method:'POST', headers:{'Authorization':'Bearer '+token}, body:fd});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'Error al subir imagen');
+  return j.url;
+}
+
 const SIZES_LIST = ['20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','Única'];
 
 let brands=[],categories=[],products=[],genderCards=[],recommended=[],promos={},promoProducts=[],editingProduct=null;
@@ -947,12 +958,10 @@ function handleColorClick(e){
 $('hiddenColorInput').addEventListener('change',async e=>{
   if(activeColorIdx===null)return;
   for(const file of Array.from(e.target.files)){
-    const path=`${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
     loading(true);
-    const{error}=await supabase.storage.from('product-images').upload(path,file);
+    let publicUrl;
+    try{ publicUrl = await uploadImage(file); } catch(err){ loading(false);alert('Error: '+err.message);continue; }
     loading(false);
-    if(error){alert('Error: '+error.message);continue}
-    const{data:{publicUrl}}=supabase.storage.from('product-images').getPublicUrl(path);
     if(!formColors[activeColorIdx].images)formColors[activeColorIdx].images=[];
     formColors[activeColorIdx].images.push({url:publicUrl,existing:false});
   }
@@ -1398,12 +1407,10 @@ function renderPromos(){
 $('hiddenPromoImageInput').addEventListener('change',async e=>{
   const file=e.target.files[0]; if(!file||!activePromoUpload)return;
   const s=activePromoUpload;
-  const path=`promos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
   loading(true);
-  const{error}=await supabase.storage.from('product-images').upload(path,file);
+  let publicUrl;
+  try{ publicUrl = await uploadImage(file); } catch(err){ loading(false);alert('Error: '+err.message);return; }
   loading(false);
-  if(error){alert('Error: '+error.message);return}
-  const{data:{publicUrl}}=supabase.storage.from('product-images').getPublicUrl(path);
   $(`promoImageUrl-${s}`).value=publicUrl;
   $(`promoImgPreview-${s}`).innerHTML=`<div style="position:relative;width:100%;max-width:380px"><img src="${publicUrl}" style="width:100%;border-radius:8px;display:block"/><button type="button" class="x" data-rmpromo="${s}" style="position:absolute;top:6px;right:6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer">×</button></div>`;
   $(`promoImgPreview-${s}`).querySelector('[data-rmpromo]').addEventListener('click',()=>{$(`promoImageUrl-${s}`).value='';$(`promoImgPreview-${s}`).innerHTML=''});
@@ -1562,10 +1569,8 @@ $('hiddenCatalogImgInput').addEventListener('change', async e => {
   if (!files.length) return;
   loading(true);
   for (const file of files) {
-    const path = `catalog/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;
-    const { error } = await supabase.storage.from('product-images').upload(path, file);
-    if (error) { alert('Error subiendo ' + file.name + ': ' + error.message); continue; }
-    const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(path);
+    let publicUrl;
+    try { publicUrl = await uploadImage(file); } catch(err) { alert('Error subiendo ' + file.name + ': ' + err.message); continue; }
     catalogImgUrls.push(publicUrl);
   }
   loading(false);
