@@ -77,6 +77,58 @@ export const POST: APIRoute = async ({ request }) => {
       if (error) throw error;
       return json({ ok: true });
 
+    } else if (action === 'merge_variants') {
+      // Merge inteligente: preserva stock de variantes existentes (match por color+size)
+      // Solo inserta nuevas y borra las eliminadas. Nunca toca stock_almacen/stock_bodega.
+      const { product_id, variants: newVariants } = params;
+      if (!product_id) throw new Error('product_id requerido');
+
+      const { data: existing, error: fetchErr } = await sb
+        .from('product_variants')
+        .select('id,color,size,color_hex,color_hex_2')
+        .eq('product_id', product_id);
+      if (fetchErr) throw fetchErr;
+
+      const existingMap: Record<string, any> = {};
+      (existing || []).forEach((v: any) => { existingMap[`${v.color}|${v.size}`] = v; });
+
+      const toInsert: any[] = [];
+      const toUpdateIds: { id: string; color_hex: string | null; color_hex_2: string | null }[] = [];
+      const accountedIds = new Set<string>();
+
+      for (const v of (newVariants || [])) {
+        const key = `${v.color}|${v.size}`;
+        const ex = existingMap[key];
+        if (ex) {
+          accountedIds.add(ex.id);
+          if (ex.color_hex !== v.color_hex || ex.color_hex_2 !== v.color_hex_2) {
+            toUpdateIds.push({ id: ex.id, color_hex: v.color_hex, color_hex_2: v.color_hex_2 });
+          }
+        } else {
+          toInsert.push(v);
+        }
+      }
+
+      const toDeleteIds = (existing || [])
+        .filter((v: any) => !accountedIds.has(v.id))
+        .map((v: any) => v.id);
+
+      if (toDeleteIds.length) {
+        const { error } = await sb.from('product_variants').delete().in('id', toDeleteIds);
+        if (error) throw error;
+      }
+      if (toInsert.length) {
+        const { error } = await sb.from('product_variants').insert(toInsert);
+        if (error) throw error;
+      }
+      for (const u of toUpdateIds) {
+        const { error } = await sb.from('product_variants')
+          .update({ color_hex: u.color_hex, color_hex_2: u.color_hex_2 })
+          .eq('id', u.id);
+        if (error) throw error;
+      }
+      return json({ ok: true });
+
     } else if (action === 'delete_image') {
       const { image_id } = params;
       const { error } = await sb.from('product_images').delete().eq('id', image_id);

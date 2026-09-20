@@ -1182,8 +1182,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
     const r=await fetch('/api/inventory/mutate',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminToken},body:JSON.stringify(body)});
     const j=await r.json();if(!r.ok)throw new Error(j.error||'Error servidor');return j;
   }
-  await adminMutate({action:'delete_variants',product_id:pid});
-  if(variants.length)await adminMutate({action:'insert_variants',variants});
+  await adminMutate({action:'merge_variants',product_id:pid,variants});
 
   // IMAGES - asociadas a cada color
   // Borrar imágenes existentes que ya no están
