@@ -1181,7 +1181,7 @@ $('formSaveBtn').addEventListener('click',async()=>{
   const allCurrentImgIds = formColors.flatMap(c=>(c.images||[]).filter(i=>i.existing).map(i=>i.id));
   const existingImgs = editingProduct?.product_images || [];
   const toDelete = existingImgs.filter(i => !allCurrentImgIds.includes(i.id));
-  for (const img of toDelete) await supabase.from('product_images').delete().eq('id', img.id);
+  for (const img of toDelete) await adminMutate({action:'delete_image',image_id:img.id});
 
   // Insertar imágenes nuevas
   const newImgs = [];
@@ -1197,16 +1197,15 @@ $('formSaveBtn').addEventListener('click',async()=>{
       });
     });
   });
-  if(newImgs.length)await supabase.from('product_images').insert(newImgs);
+  if(newImgs.length)await adminMutate({action:'insert_images',images:newImgs});
 
   // Actualizar is_primary según el color seleccionado para el index
   const indexColorIdx=formColors.findIndex(c=>c.showInIndex);
   const targetColorName=(formColors[indexColorIdx>=0?indexColorIdx:0]?.name||'').trim();
   const{data:allProdImgs}=await supabase.from('product_images').select('id,color').eq('product_id',pid);
   if(allProdImgs&&allProdImgs.length){
-    await supabase.from('product_images').update({is_primary:false}).eq('product_id',pid);
     const targetImg=allProdImgs.find(i=>i.color===targetColorName)||allProdImgs[0];
-    if(targetImg)await supabase.from('product_images').update({is_primary:true}).eq('id',targetImg.id);
+    await adminMutate({action:'update_images_primary',product_id:pid,primary_id:targetImg?.id||null});
   }
 
   closeProductModal();await loadData();loading(false);showToast('Producto guardado ✓');

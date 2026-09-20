@@ -77,6 +77,35 @@ export const POST: APIRoute = async ({ request }) => {
       if (error) throw error;
       return json({ ok: true });
 
+    } else if (action === 'delete_image') {
+      const { image_id } = params;
+      const { error } = await sb.from('product_images').delete().eq('id', image_id);
+      if (error) throw error;
+      return json({ ok: true });
+
+    } else if (action === 'insert_images') {
+      const { images } = params;
+      if (!images || !images.length) return json({ ok: true });
+      const { error } = await sb.from('product_images').insert(images);
+      if (error) throw error;
+      return json({ ok: true });
+
+    } else if (action === 'update_image') {
+      const { image_id, fields } = params;
+      const { error } = await sb.from('product_images').update(fields).eq('id', image_id);
+      if (error) throw error;
+      return json({ ok: true });
+
+    } else if (action === 'update_images_primary') {
+      const { product_id, primary_id } = params;
+      const { error: e1 } = await sb.from('product_images').update({ is_primary: false }).eq('product_id', product_id);
+      if (e1) throw e1;
+      if (primary_id) {
+        const { error: e2 } = await sb.from('product_images').update({ is_primary: true }).eq('id', primary_id);
+        if (e2) throw e2;
+      }
+      return json({ ok: true });
+
     } else {
       return json({ error: 'Acción desconocida' }, 400);
     }
