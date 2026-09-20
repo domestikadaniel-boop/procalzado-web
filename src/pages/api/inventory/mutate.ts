@@ -64,6 +64,19 @@ export const POST: APIRoute = async ({ request }) => {
       if (error) throw error;
       return json({ data });
 
+    } else if (action === 'delete_variants') {
+      const { product_id } = params;
+      const { error } = await sb.from('product_variants').delete().eq('product_id', product_id);
+      if (error) throw error;
+      return json({ ok: true });
+
+    } else if (action === 'insert_variants') {
+      const { variants } = params;
+      if (!variants || !variants.length) return json({ ok: true });
+      const { error } = await sb.from('product_variants').insert(variants);
+      if (error) throw error;
+      return json({ ok: true });
+
     } else {
       return json({ error: 'Acción desconocida' }, 400);
     }

@@ -1139,13 +1139,11 @@ $('formSaveBtn').addEventListener('click',async()=>{
     );
   }
 
-  // VARIANTS = combinación de cada color con cada talla
-  await supabase.from('product_variants').delete().eq('product_id',pid);
+  // VARIANTS = combinación de cada color con cada talla (via endpoint service role para bypass RLS)
   const sizes = perColorSizes ? [] : getSelectedSizes();
   const validColors = formColors.filter(c=>c.name.trim());
   const variants=[];
   if (perColorSizes) {
-    // Per-color sizes mode
     if (validColors.length === 0) {
       variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:'Única',stock:0,active:true});
     } else {
@@ -1159,7 +1157,6 @@ $('formSaveBtn').addEventListener('click',async()=>{
       });
     }
   } else {
-    // Global sizes mode (original logic)
     if (validColors.length === 0 && sizes.length === 0) {
       variants.push({product_id:pid,color:'Único',color_hex:'#000000',color_hex_2:null,size:'Única',stock:0,active:true});
     } else if (validColors.length === 0) {
@@ -1170,7 +1167,14 @@ $('formSaveBtn').addEventListener('click',async()=>{
       validColors.forEach(c => sizes.forEach(s => variants.push({product_id:pid,color:c.name.trim(),color_hex:c.hex,color_hex_2:c.dual?c.hex2:null,size:s,stock:0,active:true})));
     }
   }
-  if(variants.length)await supabase.from('product_variants').insert(variants);
+  const {data:{session:adminSession}}=await supabase.auth.getSession();
+  const adminToken=adminSession?.access_token||'';
+  async function adminMutate(body){
+    const r=await fetch('/api/inventory/mutate',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminToken},body:JSON.stringify(body)});
+    const j=await r.json();if(!r.ok)throw new Error(j.error||'Error servidor');return j;
+  }
+  await adminMutate({action:'delete_variants',product_id:pid});
+  if(variants.length)await adminMutate({action:'insert_variants',variants});
 
   // IMAGES - asociadas a cada color
   // Borrar imágenes existentes que ya no están
