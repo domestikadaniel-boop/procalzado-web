@@ -150,6 +150,13 @@ export const POST: APIRoute = async ({ request }) => {
       if (error) throw error;
       return json({ ok: true });
 
+    } else if (action === 'update_images_color') {
+      const { image_ids, color } = params;
+      if (!image_ids?.length) return json({ ok: true });
+      const { error } = await sb.from('product_images').update({ color }).in('id', image_ids);
+      if (error) throw error;
+      return json({ ok: true });
+
     } else if (action === 'update_images_primary') {
       const { product_id, primary_id } = params;
       const { error: e1 } = await sb.from('product_images').update({ is_primary: false }).eq('product_id', product_id);

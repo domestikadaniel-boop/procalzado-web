@@ -970,7 +970,7 @@ $('hiddenColorInput').addEventListener('change',async e=>{
   activeColorIdx=null;
 });
 $('addColorBtn').addEventListener('click',()=>{
-  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null,variantIds:{}});
+  formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null,variantIds:{},originalName:null});
   renderColors();
 });
 
@@ -1064,6 +1064,7 @@ function openProductForm(p=null){
       p.product_variants.filter(v=>v.color===cname).forEach(v=>{variantIds[v.size]=v.id;});
       return{
         name:cname,
+        originalName:cname,  // preservar nombre original para detectar renombres
         hex:variant?.color_hex||'#000000',
         hex2:variant?.color_hex_2||'#FFFFFF',
         dual:!!variant?.color_hex_2,
@@ -1091,7 +1092,7 @@ function openProductForm(p=null){
     c.salePct = (rawSale && basePrice) ? Math.round((1 - rawSale/basePrice) * 100) : null;
   });
 
-  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null,variantIds:{}});
+  if(!formColors.length)formColors.push({name:'',hex:'#000000',hex2:'#FFFFFF',dual:false,images:[],sizes:[],price:null,salePct:null,variantIds:{},originalName:null});
   renderColors();
 
   $('productModal').classList.add('open');
@@ -1222,6 +1223,15 @@ $('formSaveBtn').addEventListener('click',async()=>{
     });
   });
   if(newImgs.length)await adminMutate({action:'insert_images',images:newImgs});
+
+  // Si se renombró un color, actualizar el campo color en sus imágenes existentes
+  for(const c of formColors){
+    const newName=c.name.trim();
+    if(c.originalName && c.originalName!==newName){
+      const renamedImgIds=(c.images||[]).filter(i=>i.existing&&i.id).map(i=>i.id);
+      if(renamedImgIds.length) await adminMutate({action:'update_images_color',image_ids:renamedImgIds,color:newName});
+    }
+  }
 
   // Actualizar is_primary según el color seleccionado para el index
   const indexColorIdx=formColors.findIndex(c=>c.showInIndex);
