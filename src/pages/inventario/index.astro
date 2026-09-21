@@ -193,6 +193,7 @@ tbody tr:hover td{filter:brightness(.96)}
     <div class="tab" data-tab="trf">Transferir Mercancia</div>
     <div class="tab" data-tab="loan">Préstamos</div>
     <div class="tab" data-tab="his">Historial</div>
+    <div class="tab" data-tab="ml">MercadoLibre</div>
   </div>
 
   <div class="panel">
@@ -471,6 +472,38 @@ tbody tr:hover td{filter:brightness(.96)}
         </table>
       </div>
       <div id="hcnt" style="margin-top:.45rem;font-size:.7rem;color:#888"></div>
+    </div>
+
+    <div class="sec" id="tab-ml">
+      <div class="toolbar" style="align-items:flex-start;flex-direction:column;gap:.7rem">
+        <div id="mlStatus" style="font-size:.8rem;color:#888">Verificando conexión...</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <a href="/api/ml/auth" target="_blank" class="btn" id="mlConnectBtn">Conectar con MercadoLibre</a>
+          <button class="btn btn-o" id="mlRefreshBtn">Recargar estado</button>
+        </div>
+        <p style="font-size:.75rem;color:#aaa;margin:0">Asigna el <strong>ID de publicación de ML</strong> a cada variante. Si la publicación tiene variaciones (tallas/colores separados dentro de la misma publicación), también ingresa el <strong>ID de variación</strong>.</p>
+      </div>
+      <div class="toolbar" style="margin-top:.5rem">
+        <input type="text" id="mlSearch" placeholder="Buscar producto..." style="max-width:260px"/>
+      </div>
+      <div class="tw">
+        <table id="mlTable">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Color</th>
+              <th>Talla</th>
+              <th>Stock</th>
+              <th>ID Publicación ML</th>
+              <th>ID Variación ML</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="mlTb">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div>
@@ -1121,8 +1154,83 @@ document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
     if(t.dataset.tab==='his'&&!histData.length)loadHistory();
     if(t.dataset.tab==='loan')loadLoans();
+    if(t.dataset.tab==='ml'){loadMLStatus();loadMLVariants();}
   });
 });
+
+// MERCADOLIBRE
+let mlVariantsData=[];
+
+async function loadMLStatus(){
+  const st=$('mlStatus');
+  st.textContent='Verificando conexión...';
+  try{
+    const r=await apiMutate({action:'get_ml_status'});
+    if(r.connected){
+      const exp=r.expired?'<span style="color:#f00"> (token expirado — reconectar)</span>':'';
+      st.innerHTML=`<span style="color:green">● Conectado</span> — Vendedor ID: <strong>${r.ml_user_id||'—'}</strong>${exp}`;
+    } else {
+      st.innerHTML='<span style="color:#aaa">● No conectado</span> — Haz clic en "Conectar con MercadoLibre" para autorizar';
+    }
+  } catch(e){st.textContent='Error verificando estado: '+e.message;}
+}
+
+async function loadMLVariants(){
+  try{
+    const variants=await fetchAll('product_variants','id,product_id,color,size,stock_almacen,stock_bodega,active,ml_item_id,ml_variation_id');
+    const products=await fetchAll('products','id,name');
+    const prodMap={};
+    for(const p of products)prodMap[p.id]=p.name;
+    mlVariantsData=variants.filter(v=>v.active).map(v=>({
+      ...v,
+      productName:prodMap[v.product_id]||'—',
+      totalStock:(v.stock_almacen||0)+(v.stock_bodega||0),
+    }));
+    renderMLTable();
+  }catch(e){
+    $('mlTb').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:1rem;color:red">${e.message}</td></tr>`;
+  }
+}
+
+function renderMLTable(){
+  const q=($('mlSearch').value||'').toLowerCase();
+  const rows=mlVariantsData.filter(v=>!q||v.productName.toLowerCase().includes(q)||v.color.toLowerCase().includes(q));
+  if(!rows.length){$('mlTb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Sin resultados</td></tr>';return;}
+  $('mlTb').innerHTML=rows.map(v=>`
+    <tr data-vid="${v.id}">
+      <td>${v.productName}</td>
+      <td>${v.color}</td>
+      <td>${v.size}</td>
+      <td class="num">${v.totalStock}</td>
+      <td><input type="text" class="ml-item-inp" value="${v.ml_item_id||''}" placeholder="MCO123456789" style="width:140px;padding:.25rem .4rem;font-size:.78rem;border:1px solid #ddd;border-radius:4px"/></td>
+      <td><input type="text" class="ml-var-inp" value="${v.ml_variation_id||''}" placeholder="Opcional" style="width:110px;padding:.25rem .4rem;font-size:.78rem;border:1px solid #ddd;border-radius:4px"/></td>
+      <td><button class="btn btn-o ml-save-btn" style="padding:.22rem .6rem;font-size:.7rem">Guardar</button></td>
+    </tr>
+  `).join('');
+
+  $('mlTb').querySelectorAll('.ml-save-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const tr=btn.closest('tr');
+      const vid=tr.dataset.vid;
+      const mlItemId=tr.querySelector('.ml-item-inp').value.trim();
+      const mlVarId=tr.querySelector('.ml-var-inp').value.trim();
+      btn.disabled=true;btn.textContent='...';
+      try{
+        await apiMutate({action:'set_ml_ids',variant_id:vid,ml_item_id:mlItemId,ml_variation_id:mlVarId});
+        const v=mlVariantsData.find(x=>x.id===vid);
+        if(v){v.ml_item_id=mlItemId||null;v.ml_variation_id=mlVarId||null;}
+        btn.textContent='Guardado';
+        setTimeout(()=>{btn.textContent='Guardar';btn.disabled=false;},1500);
+      }catch(e){
+        toast('Error: '+e.message,false);
+        btn.textContent='Guardar';btn.disabled=false;
+      }
+    });
+  });
+}
+
+$('mlSearch').addEventListener('input',renderMLTable);
+$('mlRefreshBtn').addEventListener('click',()=>{loadMLStatus();loadMLVariants();});
 
 // PRÉSTAMOS
 let loansData=[];

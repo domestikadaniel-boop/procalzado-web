@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 import { env as cfEnv } from 'cloudflare:workers';
+import { syncVariantToML } from '../../../lib/mercadolibre';
 
 export const prerender = false;
 
@@ -30,6 +31,7 @@ export const POST: APIRoute = async ({ request }) => {
         .select('id,stock_almacen,stock_bodega');
       if (error) throw error;
       if (!data || !data.length) throw new Error('Variante no encontrada');
+      syncVariantToML(sb, vid);
       return json({ data: data[0] });
 
     } else if (action === 'transfer') {
@@ -41,6 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
         .select('id,stock_almacen,stock_bodega');
       if (error) throw error;
       if (!data || !data.length) throw new Error('Variante no encontrada');
+      syncVariantToML(sb, vid);
       return json({ data: data[0] });
 
     } else if (action === 'log_movement') {
@@ -208,6 +211,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       const { error: updErr } = await sb.from('product_variants').update({ [field]: newVal }).eq('id', variant_id);
       if (updErr) throw updErr;
+      syncVariantToML(sb, variant_id);
 
       const { error: insErr } = await sb.from('loans').insert({
         type, person_name, variant_id, product_name, brand_name: brand_name || null,
@@ -242,16 +246,20 @@ export const POST: APIRoute = async ({ request }) => {
           // item gone, no change
         } else if (resolution === 'devuelto_mismo') {
           await adjustStock(loan.variant_id, qty, retLoc);
+          syncVariantToML(sb, loan.variant_id);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
           await adjustStock(rVid, rQty, retLoc);
+          syncVariantToML(sb, rVid);
         }
       } else {
         if (resolution === 'pagado') {
           // we keep it, no change
         } else if (resolution === 'devuelto_mismo') {
           await adjustStock(loan.variant_id, -qty, retLoc);
+          syncVariantToML(sb, loan.variant_id);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
           await adjustStock(rVid, -rQty, retLoc);
+          syncVariantToML(sb, rVid);
         }
       }
 
@@ -262,6 +270,26 @@ export const POST: APIRoute = async ({ request }) => {
       }).eq('id', loan_id);
       if (resolveErr) throw resolveErr;
 
+      return json({ ok: true });
+
+    } else if (action === 'get_ml_status') {
+      const { data: cred } = await sb
+        .from('ml_credentials')
+        .select('ml_user_id,expires_at,access_token')
+        .limit(1)
+        .maybeSingle();
+      if (!cred?.access_token) return json({ connected: false });
+      const expired = cred.expires_at ? new Date(cred.expires_at) < new Date() : true;
+      return json({ connected: true, expired, ml_user_id: cred.ml_user_id, expires_at: cred.expires_at });
+
+    } else if (action === 'set_ml_ids') {
+      const { variant_id, ml_item_id, ml_variation_id } = params;
+      if (!variant_id) throw new Error('variant_id requerido');
+      const { error } = await sb.from('product_variants').update({
+        ml_item_id: ml_item_id || null,
+        ml_variation_id: ml_variation_id || null,
+      }).eq('id', variant_id);
+      if (error) throw error;
       return json({ ok: true });
 
     } else {

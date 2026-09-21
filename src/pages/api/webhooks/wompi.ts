@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 import { env as cfEnv } from 'cloudflare:workers';
+import { syncVariantToML } from '../../../lib/mercadolibre';
 
 export const prerender = false;
 
@@ -201,6 +202,66 @@ export const POST: APIRoute = async ({ request }) => {
     // Solo notificar y facturar si el pago fue aprobado
     if (wompiStatus === 'APPROVED' && !order.telegram_notified) {
       const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id);
+
+      // Descontar inventario: prioridad bodega → almacén
+      for (const item of (items || [])) {
+        if (!item.variant_id && (!item.color || !item.size)) continue;
+
+        // Buscar la variante por product_id + color + size
+        let variantId = item.variant_id || null;
+        if (!variantId && item.product_id && item.color && item.size) {
+          const { data: vRows } = await supabase
+            .from('product_variants')
+            .select('id')
+            .eq('product_id', item.product_id)
+            .eq('color', item.color)
+            .eq('size', String(item.size))
+            .limit(1);
+          variantId = vRows?.[0]?.id || null;
+        }
+        if (!variantId) continue;
+
+        const { data: v } = await supabase
+          .from('product_variants')
+          .select('stock_almacen,stock_bodega')
+          .eq('id', variantId)
+          .single();
+        if (!v) continue;
+
+        let qty = item.quantity || 1;
+        let newBodega = v.stock_bodega || 0;
+        let newAlmacen = v.stock_almacen || 0;
+
+        // Descontar de bodega primero
+        if (newBodega >= qty) {
+          newBodega -= qty;
+          qty = 0;
+        } else {
+          qty -= newBodega;
+          newBodega = 0;
+        }
+        // Lo que sobre, del almacén
+        if (qty > 0) {
+          newAlmacen = Math.max(0, newAlmacen - qty);
+        }
+
+        await supabase.from('product_variants')
+          .update({ stock_bodega: newBodega, stock_almacen: newAlmacen })
+          .eq('id', variantId);
+        syncVariantToML(supabase, variantId);
+
+        // Registrar en historial de movimientos
+        await supabase.from('inventory_movements').insert({
+          type: 'venta',
+          product_name: item.product_name || '',
+          brand_name: item.brand_name || null,
+          color: item.color || '',
+          size: String(item.size || ''),
+          quantity: item.quantity || 1,
+          location: 'bodega',
+          user_email: `pedido#${order.order_number}`,
+        });
+      }
 
       // Notificación a Telegram
       if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
