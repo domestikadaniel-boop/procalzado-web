@@ -210,13 +210,6 @@ export const POST: APIRoute = async ({ request }) => {
       });
       if (insErr) throw insErr;
 
-      // Log movement
-      await sb.from('inventory_movements').insert({
-        type: type === 'prestado' ? 'venta' : 'ingreso',
-        product_name, brand_name: brand_name || null, color, size,
-        quantity, location, user_email: user_email || null,
-      });
-
       return json({ ok: true });
 
     } else if (action === 'resolve_loan') {
