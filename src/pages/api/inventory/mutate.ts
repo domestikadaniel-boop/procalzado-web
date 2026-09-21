@@ -224,28 +224,40 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: loan, error: loanErr } = await sb.from('loans').select('*').eq('id', loan_id).single();
       if (loanErr) throw loanErr;
 
-      const field = loan.location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
+      const locField = loan.location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
 
-      // Reverse the original stock change
-      const { data: origVar, error: origErr } = await sb.from('product_variants')
-        .select('stock_almacen,stock_bodega').eq('id', loan.variant_id).single();
-      if (!origErr && origVar) {
-        const origCurrent = loan.location === 'bodega' ? (origVar.stock_bodega || 0) : (origVar.stock_almacen || 0);
-        // prestado originally decreased; recibido originally increased — reverse both
-        const reverseDelta = loan.type === 'prestado' ? loan.quantity : -loan.quantity;
-        await sb.from('product_variants').update({ [field]: Math.max(0, origCurrent + reverseDelta) }).eq('id', loan.variant_id);
+      async function adjustStock(vid: string, delta: number) {
+        const { data: v } = await sb.from('product_variants').select('stock_almacen,stock_bodega').eq('id', vid).single();
+        if (!v) return;
+        const current = loan.location === 'bodega' ? (v.stock_bodega || 0) : (v.stock_almacen || 0);
+        await sb.from('product_variants').update({ [locField]: Math.max(0, current + delta) }).eq('id', vid);
       }
 
-      // For devuelto_otra_talla: apply to the resolved variant
-      if (resolution === 'devuelto_otra_talla' && resolved_variant_id) {
-        const qty = resolved_quantity || loan.quantity;
-        const { data: rVar } = await sb.from('product_variants')
-          .select('stock_almacen,stock_bodega').eq('id', resolved_variant_id).single();
-        if (rVar) {
-          const rCurrent = loan.location === 'bodega' ? (rVar.stock_bodega || 0) : (rVar.stock_almacen || 0);
-          // We get back/give back the other size — same direction as original reverse
-          const rDelta = loan.type === 'prestado' ? qty : -qty;
-          await sb.from('product_variants').update({ [field]: Math.max(0, rCurrent + rDelta) }).eq('id', resolved_variant_id);
+      const qty = loan.quantity;
+      const rQty = resolved_quantity || qty;
+      const rVid = resolved_variant_id;
+
+      if (loan.type === 'prestado') {
+        // Stock was decreased at creation (item left our hands)
+        if (resolution === 'pagado') {
+          // They paid — item gone, stock stays decreased. No change.
+        } else if (resolution === 'devuelto_mismo') {
+          // Exact same item returned — restore stock
+          await adjustStock(loan.variant_id, qty);
+        } else if (resolution === 'devuelto_otra_talla' && rVid) {
+          // Different size came back — add that size to inventory
+          await adjustStock(rVid, rQty);
+        }
+      } else {
+        // recibido: stock was increased at creation (item entered our hands)
+        if (resolution === 'pagado') {
+          // We paid — we keep it, stock stays increased. No change.
+        } else if (resolution === 'devuelto_mismo') {
+          // We return exact same item — decrease stock
+          await adjustStock(loan.variant_id, -qty);
+        } else if (resolution === 'devuelto_otra_talla' && rVid) {
+          // We return a different size — decrease that size from inventory
+          await adjustStock(rVid, -rQty);
         }
       }
 

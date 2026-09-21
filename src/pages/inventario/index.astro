@@ -1190,7 +1190,7 @@ function setupLoans(sp){
       $('lnCInp').value='';selPid=null;$('lnPerson').value='';$('lnNotes').value='';$('lnQty').value='1';
       $('lnCol').innerHTML='<option value="">— primero producto —</option>';$('lnCol').disabled=true;
       $('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=true;$('lnCS').textContent='';
-      render();await loadLoans();
+      await load();await loadLoans();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 }
@@ -1300,7 +1300,7 @@ async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty){
   ld(true);
   try{
     await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty});
-    toast('Préstamo resuelto');render();await loadLoans();
+    toast('Préstamo resuelto');await load();await loadLoans();
   }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
 }
 
