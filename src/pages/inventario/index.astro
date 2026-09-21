@@ -1244,9 +1244,9 @@ window.openResolveLoan=function(loanId){
     <p style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.3rem">${isPrest?'Resolvemos préstamo a':'Devolvemos a'} ${loan.person_name}</p>
     <p style="font-size:.9rem;font-weight:600;margin-bottom:1rem">${loan.brand_name?loan.brand_name+' ':''}${loan.product_name} — ${loan.color} T${loan.size} × ${loan.quantity}</p>
     <div id="_lnOpts" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem">
-      <button class="btn btn-g btn-w" data-res="pagado">${isPrest?'💰 Nos pagaron':'💰 Pagamos (lo compramos)'}</button>
-      <button class="btn btn-b btn-w" data-res="devuelto_mismo">${isPrest?'↩ Devolvieron el mismo par':'↩ Devolvemos el mismo par'}</button>
-      <button class="btn btn-p btn-w" data-res="devuelto_otra_talla">${isPrest?'🔄 Devolvieron otra talla':'🔄 Devolvemos otra talla'}</button>
+      <button class="btn btn-g btn-w" data-res="pagado">${isPrest?'Nos pagaron':'Pagamos (lo compramos)'}</button>
+      <button class="btn btn-b btn-w" data-res="devuelto_mismo">${isPrest?'Devolvieron el mismo par':'Devolvemos el mismo par'}</button>
+      <button class="btn btn-p btn-w" data-res="devuelto_otra_talla">${isPrest?'Devolvieron otra talla':'Devolvemos otra talla'}</button>
     </div>
     <div id="_lnOtraTalla" hidden style="margin-bottom:.75rem">
       <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">Talla a ${isPrest?'recibir':'devolver'}</label>
