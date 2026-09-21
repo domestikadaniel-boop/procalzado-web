@@ -190,7 +190,6 @@ tbody tr:hover td{filter:brightness(.96)}
     <div class="tab active" data-tab="inv">Inventario</div>
     <div class="tab" data-tab="ven">Registrar Ventas</div>
     <div class="tab" data-tab="ing">Ingresos de Mercancia</div>
-    <div class="tab" data-tab="trf">Transferir Mercancia</div>
     <div class="tab" data-tab="loan">Préstamos</div>
     <div class="tab" data-tab="his">Historial</div>
     <div class="tab" data-tab="ml">MercadoLibre</div>
@@ -208,11 +207,6 @@ tbody tr:hover td{filter:brightness(.96)}
           <option value="low">Stock bajo (1-4)</option>
           <option value="ok">Stock OK (5+)</option>
         </select>
-        <select id="floc">
-          <option value="">Todas las ubicaciones</option>
-          <option value="almacen">Almacén</option>
-          <option value="bodega">Bodega</option>
-        </select>
         <select id="fbr"><option value="">Todas las marcas</option></select>
         <button class="btn btn-o" id="reloadBtn">Recargar datos</button>
         <button class="btn btn-b" id="exBtn">Descargar Excel</button>
@@ -226,13 +220,11 @@ tbody tr:hover td{filter:brightness(.96)}
               <th>Producto</th>
               <th>Color</th>
               <th>Talla</th>
-              <th class="num">Almacén</th>
-              <th class="num">Bodega</th>
-              <th class="num">Total</th>
+              <th class="num">Stock Procalzado</th>
             </tr>
           </thead>
           <tbody id="tb">
-            <tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -254,10 +246,6 @@ tbody tr:hover td{filter:brightness(.96)}
         <div class="fl"><label>Talla</label><select id="sSz" disabled><option value="">—</option></select></div>
         <div class="cs" id="sCS"></div>
         <div class="frow">
-          <select class="loc-sel" id="sLoc">
-            <option value="almacen">Almacén</option>
-            <option value="bodega">Bodega</option>
-          </select>
           <input type="number" class="qi" id="sQty" min="1" value="1"/>
           <button class="btn btn-r" id="sSingle">Descontar</button>
         </div>
@@ -266,8 +254,6 @@ tbody tr:hover td{filter:brightness(.96)}
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
           <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Descuento masivo</h3>
           <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">Ubicación</span>
-            <select class="loc-sel" id="vzSLoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select>
             <button class="btn btn-o" id="vzSAddProd">+ Agregar producto</button>
           </div>
         </div>
@@ -293,10 +279,6 @@ tbody tr:hover td{filter:brightness(.96)}
         <div class="fl"><label>Talla</label><select id="eSz" disabled><option value="">—</option></select></div>
         <div class="cs" id="eCS"></div>
         <div class="frow">
-          <select class="loc-sel" id="eLoc">
-            <option value="almacen">Almacén</option>
-            <option value="bodega">Bodega</option>
-          </select>
           <input type="number" class="qi" id="eQty" min="1" value="1"/>
           <button class="btn btn-g" id="eSingle">Agregar</button>
         </div>
@@ -305,69 +287,12 @@ tbody tr:hover td{filter:brightness(.96)}
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
           <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Ingreso masivo</h3>
           <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">Ubicación</span>
-            <select class="loc-sel" id="vzELoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select>
             <button class="btn btn-o" id="vzEAddProd">+ Agregar producto</button>
           </div>
         </div>
         <div id="vzEBlocks" style="display:flex;flex-direction:column;gap:.75rem"></div>
         <div id="vzEApplyWrap" hidden style="margin-top:.75rem">
           <button class="btn btn-g" id="vzEApply">Aplicar ingresos</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TRANSFERIR -->
-    <div class="sec" id="tab-trf">
-      <div class="card">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">Transferir mercancia</h3>
-        <p style="font-size:.78rem;color:#666;margin-bottom:1rem">Mueve unidades de una ubicacion a otra sin afectar el stock total.</p>
-        <div class="fl">
-          <label>Producto</label>
-          <div class="combo" id="tPC">
-            <input type="text" class="combo-inp" id="tCInp" placeholder="Buscar producto..." autocomplete="off"/>
-            <div class="combo-dd" id="tCDd"></div>
-          </div>
-        </div>
-        <div class="fl"><label>Color</label><select id="tCol" disabled><option value="">— primero producto —</option></select></div>
-        <div class="fl"><label>Talla</label><select id="tSz" disabled><option value="">—</option></select></div>
-        <div class="cs" id="tCS"></div>
-
-        <div class="trf-arrow">
-          <select class="trf-loc" id="tFrom">
-            <option value="almacen">Almacén</option>
-            <option value="bodega">Bodega</option>
-          </select>
-          <span class="trf-arrow-icon">→</span>
-          <select class="trf-loc" id="tTo">
-            <option value="bodega">Bodega</option>
-            <option value="almacen">Almacén</option>
-          </select>
-        </div>
-
-        <div class="frow" style="margin-top:.5rem">
-          <div>
-            <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem">Cantidad</label>
-            <input type="number" class="qi" id="tQty" min="1" value="1" style="width:90px"/>
-          </div>
-          <button class="btn btn-p" id="tBtn" style="align-self:flex-end">Transferir</button>
-        </div>
-      </div>
-      <div class="card" style="margin-top:1rem">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
-          <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Transferencia masiva</h3>
-          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">De</span>
-            <select class="trf-loc" id="vzTFrom"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select>
-            <span style="font-size:1.1rem;color:#7c3aed">→</span>
-            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">A</span>
-            <select class="trf-loc" id="vzTTo"><option value="bodega">Bodega</option><option value="almacen">Almacén</option></select>
-            <button class="btn btn-o" id="vzTAddProd">+ Agregar producto</button>
-          </div>
-        </div>
-        <div id="vzTBlocks" style="display:flex;flex-direction:column;gap:.75rem"></div>
-        <div id="vzTApplyWrap" hidden style="margin-top:.75rem">
-          <button class="btn btn-p" id="vzTApply">Aplicar transferencias</button>
         </div>
       </div>
     </div>
@@ -402,7 +327,6 @@ tbody tr:hover td{filter:brightness(.96)}
             <div class="cs" id="lnCS"></div>
           </div>
           <div>
-            <div class="fl"><label>Ubicación (de donde sale / donde entra)</label><select class="loc-sel" id="lnLoc" style="width:100%"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
             <div class="fl"><label>Cantidad</label><input type="number" class="qi" id="lnQty" min="1" value="1" style="width:100%"/></div>
             <div class="fl"><label>Notas (fecha compromiso, etc.)</label><input type="text" class="combo-inp" id="lnNotes" placeholder="Opcional..."/></div>
             <div style="margin-top:.75rem"><button class="btn btn-p btn-w" id="lnBtn">Registrar préstamo</button></div>
@@ -418,9 +342,9 @@ tbody tr:hover td{filter:brightness(.96)}
         <div class="tw"><table>
           <thead><tr>
             <th>Fecha</th><th>Tipo</th><th>Persona</th><th>Producto</th>
-            <th>Color / Talla</th><th class="num">Cant.</th><th>Ubicación</th><th>Notas</th><th></th>
+            <th>Color / Talla</th><th class="num">Cant.</th><th>Notas</th><th></th>
           </tr></thead>
-          <tbody id="lnPendTb"><tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin préstamos pendientes</td></tr></tbody>
+          <tbody id="lnPendTb"><tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Sin préstamos pendientes</td></tr></tbody>
         </table></div>
       </div>
 
@@ -446,7 +370,6 @@ tbody tr:hover td{filter:brightness(.96)}
           <option value="">Todos los movimientos</option>
           <option value="venta">Ventas</option>
           <option value="ingreso">Ingresos</option>
-          <option value="transferencia">Transferencias</option>
         </select>
         <input type="text" id="hfsq" placeholder="Buscar producto..."/>
         <button class="btn btn-o" id="hReloadBtn">Recargar</button>
@@ -462,12 +385,11 @@ tbody tr:hover td{filter:brightness(.96)}
               <th>Color</th>
               <th>Talla</th>
               <th class="num">Cantidad</th>
-              <th>Ubicación</th>
               <th>Usuario</th>
             </tr>
           </thead>
           <tbody id="htb">
-            <tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -580,20 +502,6 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
-// sync from/to en transferencia individual para que nunca sean iguales
-$('tFrom').addEventListener('change',()=>{
-  const f=$('tFrom').value;
-  const to=$('tTo');
-  const other=f==='almacen'?'bodega':'almacen';
-  [...to.options].forEach(o=>{o.selected=o.value===other;});
-});
-$('tTo').addEventListener('change',()=>{
-  const t=$('tTo').value;
-  const from=$('tFrom');
-  const other=t==='almacen'?'bodega':'almacen';
-  [...from.options].forEach(o=>{o.selected=o.value===other;});
-});
-
 // DATA
 let allD=null;
 let _vzReady=false;
@@ -646,20 +554,18 @@ async function load(){
     const sp=[...products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
     setupPS('sCInp','sCDd','sCol','sSz','sCS',sp);
     setupPS('eCInp','eCDd','eCol','eSz','eCS',sp);
-    setupPS('tCInp','tCDd','tCol','tSz','tCS',sp);
     if(!_vzReady){_vzReady=true;setupVelozAll(sp);setupLoans(sp);}
 
     render();
   }finally{ld(false);}
 }
 
-// RENDER — one row per variant with almacen + bodega + total
+// RENDER — one row per variant with stock procalzado
 function render(){
   if(!allD)return;
   const q=$('sq').value.toLowerCase().trim();
   const fs=$('fst').value;
   const fb=$('fbr').value;
-  const floc=$('floc').value; // '' | 'almacen' | 'bodega'
   const{products,byP}=allD;
 
   const rows=[];
@@ -669,19 +575,13 @@ function render(){
     const cm=byP[p.id]||{};
     for(const[color,vs]of Object.entries(cm)){
       for(const v of vs){
-        const sa=v.stock_almacen||0;
-        const sb2=v.stock_bodega||0;
-        const tot=sa+sb2;
-
-        // location filter: if filtering to a specific location, check that location's stock
-        const checkStock=floc==='almacen'?sa:floc==='bodega'?sb2:tot;
-
+        const tot=v.stock_almacen||0;
         const lbl=(brand+' '+p.name+' '+color+' '+v.size).toLowerCase();
         if(q&&!lbl.includes(q))continue;
-        if(fs==='0'&&checkStock!==0)continue;
-        if(fs==='low'&&(checkStock<=0||checkStock>=LOW))continue;
-        if(fs==='ok'&&checkStock<LOW)continue;
-        rows.push({brand,name:p.name,color,size:v.size,sa,sb:sb2,tot,vid:v.id});
+        if(fs==='0'&&tot!==0)continue;
+        if(fs==='low'&&(tot<=0||tot>=LOW))continue;
+        if(fs==='ok'&&tot<LOW)continue;
+        rows.push({brand,name:p.name,color,size:v.size,tot,vid:v.id});
       }
     }
   }
@@ -694,23 +594,19 @@ function render(){
   });
 
   if(!rows.length){
-    $('tb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Sin resultados</td></tr>';
+    $('tb').innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:#888">Sin resultados</td></tr>';
     $('cnt').textContent='';$('sb').innerHTML='';return;
   }
 
-  let n0=0,nL=0,nOk=0,totA=0,totB=0;
+  let n0=0,nL=0,nOk=0;
   $('tb').innerHTML=rows.map(r=>{
-    const checkStock=floc==='almacen'?r.sa:floc==='bodega'?r.sb:r.tot;
-    if(checkStock===0)n0++;else if(checkStock<LOW)nL++;else nOk++;
-    totA+=r.sa;totB+=r.sb;
+    if(r.tot===0)n0++;else if(r.tot<LOW)nL++;else nOk++;
     return`<tr>
       <td>${r.brand}</td>
       <td>${r.name}</td>
       <td>${r.color}</td>
       <td style="text-align:center">${r.size}</td>
-      <td class="num ${floc===''||floc==='almacen'?scls(r.sa):''}">${r.sa}</td>
-      <td class="num ${floc===''||floc==='bodega'?scls(r.sb):''}">${r.sb}</td>
-      <td class="num ${floc===''?scls(r.tot):''}">${r.tot}</td>
+      <td class="num ${scls(r.tot)}">${r.tot}</td>
     </tr>`;
   }).join('');
 
@@ -719,12 +615,10 @@ function render(){
     `<span class="chip" style="background:#FECACA;color:#991B1B">Sin stock: ${n0}</span>`+
     `<span class="chip" style="background:#FEF08A;color:#713F12">Stock bajo: ${nL}</span>`+
     `<span class="chip" style="background:#BBF7D0;color:#14532D">Stock OK: ${nOk}</span>`+
-    `<span class="chip loc-a">Almacén: ${totA}</span>`+
-    `<span class="chip loc-b">Bodega: ${totB}</span>`+
-    `<span class="chip" style="background:#e0e0e0">Total: ${totA+totB}</span>`;
+    `<span class="chip" style="background:#e0e0e0">Total: ${rows.reduce((s,r)=>s+r.tot,0)}</span>`;
 }
 
-['sq','fst','fbr','floc'].forEach(id=>$(id).addEventListener('input',render));
+['sq','fst','fbr'].forEach(id=>$(id).addEventListener('input',render));
 $('reloadBtn').addEventListener('click',()=>load());
 
 // EXCEL
@@ -739,16 +633,16 @@ $('exBtn').addEventListener('click',()=>{
   for(const p of sp){
     for(const[color,vs]of Object.entries(byP[p.id]||{})){
       for(const v of vs){
-        const sa=v.stock_almacen||0,sb2=v.stock_bodega||0,tot=sa+sb2;
+        const tot=v.stock_almacen||0;
         let bg,fg;
         if(tot<=0){bg='#FECACA';fg='#991B1B';}
         else if(tot<LOW){bg='#FEF08A';fg='#713F12';}
         else{bg='#BBF7D0';fg='#14532D';}
-        filas+=`<tr><td>${p.brands?.name||''}</td><td>${p.name}</td><td>${color}</td><td>${v.size}</td><td style="background:#DBEAFE;color:#1D4ED8;font-weight:bold">${sa}</td><td style="background:#F3E8FF;color:#7C3AED;font-weight:bold">${sb2}</td><td style="background:${bg};color:${fg};font-weight:bold">${tot}</td></tr>`;
+        filas+=`<tr><td>${p.brands?.name||''}</td><td>${p.name}</td><td>${color}</td><td>${v.size}</td><td style="background:${bg};color:${fg};font-weight:bold">${tot}</td></tr>`;
       }
     }
   }
-  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"><style>th{background:#000;color:#fff;font-weight:bold;padding:4px 8px;border:1px solid #444}td{padding:3px 8px;border:1px solid #ccc}</style></head><body><table><thead><tr><th>Marca</th><th>Producto</th><th>Color</th><th>Talla</th><th>Almacen</th><th>Bodega</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"><style>th{background:#000;color:#fff;font-weight:bold;padding:4px 8px;border:1px solid #444}td{padding:3px 8px;border:1px solid #ccc}</style></head><body><table><thead><tr><th>Marca</th><th>Producto</th><th>Color</th><th>Talla</th><th>Stock Procalzado</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
   const blob=new Blob(['﻿'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -773,7 +667,7 @@ async function apiMutate(body){
   return json;
 }
 
-async function logMovement(type,vid,qty,loc,fromLoc,toLoc){
+async function logMovement(type,vid,qty){
   try{
     const v=allD?.variants.find(x=>x.id===vid);
     if(!v)return;
@@ -783,38 +677,21 @@ async function logMovement(type,vid,qty,loc,fromLoc,toLoc){
       product_name:p?.name||'',brand_name:p?.brands?.name||'',
       color:v.color||'',size:v.size||'',quantity:qty,
       user_email:currentUserEmail,
-      location:loc||null,from_location:fromLoc||null,to_location:toLoc||null,
+      location:null,from_location:null,to_location:null,
     });
   }catch(_){}
 }
 
-// UPDATE STOCK — loc: 'almacen' | 'bodega'
-async function updS(vid,delta,loc){
+// UPDATE STOCK
+async function updS(vid,delta){
   const v=allD.variants.find(x=>x.id===vid);
   if(!v)throw new Error('No encontrado');
-  const field=loc==='bodega'?'stock_bodega':'stock_almacen';
-  const cur=v[field]||0;
-  // Validar stock suficiente al descontar
-  if(delta<0&&cur+delta<0)throw new Error(`Stock insuficiente en ${loc}: solo hay ${cur} unidades`);
+  const cur=v.stock_almacen||0;
+  if(delta<0&&cur+delta<0)throw new Error(`Stock insuficiente: solo hay ${cur} unidades`);
   const ns=Math.max(0,cur+delta);
-  const{data}=await apiMutate({action:'update_stock',vid,field,value:ns});
-  v.stock_almacen=data.stock_almacen;v.stock_bodega=data.stock_bodega;
-  return v[field];
-}
-
-// TRANSFER STOCK
-async function transferS(vid,fromLoc,qty){
-  const v=allD.variants.find(x=>x.id===vid);
-  if(!v)throw new Error('No encontrado');
-  const fromField=fromLoc==='bodega'?'stock_bodega':'stock_almacen';
-  const toField=fromLoc==='bodega'?'stock_almacen':'stock_bodega';
-  const fromCur=v[fromField]||0;
-  if(fromCur<qty)throw new Error(`Stock insuficiente en ${fromLoc}: ${fromCur} disponibles`);
-  const fromNew=fromCur-qty;
-  const toNew=(v[toField]||0)+qty;
-  const{data}=await apiMutate({action:'transfer',vid,from_field:fromField,to_field:toField,from_value:fromNew,to_value:toNew});
-  v.stock_almacen=data.stock_almacen;v.stock_bodega=data.stock_bodega;
-  return{fromNew:data[fromField],toNew:data[toField]};
+  const{data}=await apiMutate({action:'update_stock',vid,field:'stock_almacen',value:ns});
+  v.stock_almacen=data.stock_almacen;
+  return v.stock_almacen;
 }
 
 // COMBOBOX
@@ -859,33 +736,32 @@ function setupPS(cInpId,cDdId,colId,szId,csId,sortedP){
     $(szId).disabled=!col;$(csId).textContent='';
     if(!selPid||!col||!allD)return;
     (allD.byP[selPid]?.[col]||[]).forEach(v=>{
-      const sa=v.stock_almacen||0,sb2=v.stock_bodega||0;
       const o=document.createElement('option');o.value=v.id;
-      o.textContent=`${v.size} (Alm:${sa} / Bod:${sb2})`;
+      o.textContent=`${v.size} (Stock: ${v.stock_almacen||0})`;
       $(szId).appendChild(o);
     });
   });
   $(szId).addEventListener('change',()=>{
     const vid=$(szId).value;if(!vid||!allD){$(csId).textContent='';return;}
     const v=allD.variants.find(x=>x.id===vid);
-    $(csId).textContent=v?`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`:'';
+    $(csId).textContent=v?`Stock Procalzado: ${v.stock_almacen||0} u`:'';
   });
 
   renderOpts('');
 }
 
 // SINGLE OPS
-async function singleOp(szId,csId,qtyId,locId,delta,successMsg,type){
-  const vid=$(szId).value,qty=parseInt($(qtyId).value)||0,loc=$(locId).value;
+async function singleOp(szId,csId,qtyId,delta,successMsg,type){
+  const vid=$(szId).value,qty=parseInt($(qtyId).value)||0;
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   ld(true);
   try{
-    const ns=await updS(vid,delta*qty,loc);
+    const ns=await updS(vid,delta*qty);
     const v=allD.variants.find(x=>x.id===vid);
-    toast(`${successMsg} en ${loc} — ${loc==='bodega'?'Bod':'Alm'}: ${ns}u`);
-    if(v)$(csId).textContent=`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`;
-    await logMovement(type,vid,qty,loc,null,null);
+    toast(`${successMsg} — Stock: ${ns}u`);
+    if(v)$(csId).textContent=`Stock Procalzado: ${v.stock_almacen||0} u`;
+    await logMovement(type,vid,qty);
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
@@ -911,48 +787,25 @@ function confirmMovement(title,detail){
 }
 
 $('sSingle').addEventListener('click',async()=>{
-  const vid=$('sSz').value,qty=parseInt($('sQty').value)||0,loc=$('sLoc').value;
+  const vid=$('sSz').value,qty=parseInt($('sQty').value)||0;
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   const v=allD?.variants.find(x=>x.id===vid);
-  const detail=v?`${qty} par(es) — ${v.color} T${v.size} en ${loc}`:`${qty} par(es) en ${loc}`;
+  const detail=v?`${qty} par(es) — ${v.color} T${v.size}`:`${qty} par(es)`;
   const ok=await confirmMovement('Descontar venta',detail);
   if(!ok)return;
-  await singleOp('sSz','sCS','sQty','sLoc',-1,'Descontado','venta');
+  await singleOp('sSz','sCS','sQty',-1,'Descontado','venta');
 });
 
 $('eSingle').addEventListener('click',async()=>{
-  const vid=$('eSz').value,qty=parseInt($('eQty').value)||0,loc=$('eLoc').value;
+  const vid=$('eSz').value,qty=parseInt($('eQty').value)||0;
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   const v=allD?.variants.find(x=>x.id===vid);
-  const detail=v?`${qty} par(es) — ${v.color} T${v.size} en ${loc}`:`${qty} par(es) en ${loc}`;
+  const detail=v?`${qty} par(es) — ${v.color} T${v.size}`:`${qty} par(es)`;
   const ok=await confirmMovement('Ingreso de mercancía',detail);
   if(!ok)return;
-  await singleOp('eSz','eCS','eQty','eLoc',1,'Ingreso registrado','ingreso');
-});
-
-// TRANSFER SINGLE
-$('tBtn').addEventListener('click',async()=>{
-  const vid=$('tSz').value,qty=parseInt($('tQty').value)||0;
-  const fromLoc=$('tFrom').value,toLoc=$('tTo').value;
-  if(!vid){toast('Selecciona producto / color / talla',false);return;}
-  if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
-  if(fromLoc===toLoc){toast('Origen y destino no pueden ser iguales',false);return;}
-  const v=allD?.variants.find(x=>x.id===vid);
-  const detail=v?`${qty} u — ${v.color} T${v.size}: ${fromLoc} → ${toLoc}`:`${qty} u: ${fromLoc} → ${toLoc}`;
-  const ok=await confirmMovement('Transferir mercancía',detail);
-  if(!ok)return;
-  ld(true);
-  try{
-    await transferS(vid,fromLoc,qty);
-    const vv=allD.variants.find(x=>x.id===vid);
-    toast(`Transferido: ${qty}u de ${fromLoc} → ${toLoc}`);
-    if(vv)$('tCS').textContent=`Almacén: ${vv.stock_almacen||0} u — Bodega: ${vv.stock_bodega||0} u`;
-    await logMovement('transferencia',vid,qty,null,fromLoc,toLoc);
-    render();
-  }catch(e){toast('Error: '+e.message,false);}
-  finally{ld(false);}
+  await singleOp('eSz','eCS','eQty',1,'Ingreso registrado','ingreso');
 });
 
 // DROPDOWN SINGLETON (usado por blocks masivos)
@@ -992,7 +845,6 @@ function addVzBlock(type){
   const cfg={
     S:{containerId:'vzSBlocks',applyWrapId:'vzSApplyWrap',colHeader:'Cant. a descontar'},
     E:{containerId:'vzEBlocks',applyWrapId:'vzEApplyWrap',colHeader:'Cant. a ingresar'},
-    T:{containerId:'vzTBlocks',applyWrapId:'vzTApplyWrap',colHeader:'Cant. a transferir'},
   }[type];
   const container=$(cfg.containerId),applyWrap=$(cfg.applyWrapId);
 
@@ -1040,7 +892,7 @@ function addVzBlock(type){
   const tblArea=document.createElement('div');tblArea.hidden=true;
   const bw=document.createElement('div');bw.className='bw';
   const tbl=document.createElement('table');tbl.className='bt';
-  tbl.innerHTML=`<thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>${cfg.colHeader}</th></tr></thead>`;
+  tbl.innerHTML=`<thead><tr><th style="width:70px">Talla</th><th class="num">Stock</th><th>${cfg.colHeader}</th></tr></thead>`;
   const tbody=document.createElement('tbody');
   tbl.appendChild(tbody);bw.appendChild(tbl);tblArea.appendChild(bw);
 
@@ -1067,7 +919,6 @@ function addVzBlock(type){
     tbody.innerHTML=vs.map(v=>`<tr data-vid="${v.id}">
       <td style="font-weight:600;text-align:center;font-size:.9rem">${v.size}</td>
       <td class="num">${v.stock_almacen||0}</td>
-      <td class="num">${v.stock_bodega||0}</td>
       <td><input type="number" min="0" value="0" class="qi" style="width:64px"/></td>
     </tr>`).join('');
     tblArea.hidden=false;
@@ -1090,7 +941,7 @@ function getVzBlockOps(containerId){
 function refreshVzBlocks(containerId){
   $(containerId).querySelectorAll('[data-vid]').forEach(tr=>{
     const v=allD.variants.find(x=>x.id===tr.dataset.vid);
-    if(v){tr.cells[1].textContent=v.stock_almacen||0;tr.cells[2].textContent=v.stock_bodega||0;tr.querySelector('input').value='0';}
+    if(v){tr.cells[1].textContent=v.stock_almacen||0;tr.querySelector('input').value='0';}
   });
 }
 
@@ -1122,7 +973,7 @@ function renderHistory(){
   if(q)rows=rows.filter(r=>(r.product_name||'').toLowerCase().includes(q)||(r.brand_name||'').toLowerCase().includes(q)||(r.color||'').toLowerCase().includes(q));
 
   if(!rows.length){
-    $('htb').innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin movimientos</td></tr>';
+    $('htb').innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Sin movimientos</td></tr>';
     $('hcnt').textContent='';return;
   }
 
@@ -1134,13 +985,6 @@ function renderHistory(){
 
   const typeBadge=t=>`<span class="mv-${t}">${t}</span>`;
 
-  const ubicCol=r=>{
-    if(r.type==='transferencia')
-      return`<span class="loc-a">${r.from_location||''}</span> → <span class="loc-b">${r.to_location||''}</span>`;
-    const cls=r.location==='bodega'?'loc-b':'loc-a';
-    return`<span class="${cls}">${r.location||''}</span>`;
-  };
-
   $('htb').innerHTML=rows.map(r=>`<tr>
     <td style="white-space:nowrap">${fmt(r.created_at)}</td>
     <td>${typeBadge(r.type)}</td>
@@ -1149,7 +993,6 @@ function renderHistory(){
     <td>${r.color||''}</td>
     <td style="text-align:center">${r.size||''}</td>
     <td class="num">${r.quantity}</td>
-    <td>${ubicCol(r)}</td>
     <td style="font-size:.72rem;color:#666">${r.user_email||''}</td>
   </tr>`).join('');
   $('hcnt').textContent=`${rows.length} movimientos`;
@@ -1193,7 +1036,7 @@ async function loadMLVariants(){
     mlVariantsData=variants.filter(v=>v.active).map(v=>({
       ...v,
       productName:prodMap[v.product_id]||'—',
-      totalStock:(v.stock_almacen||0)+(v.stock_bodega||0),
+      totalStock:v.stock_almacen||0,
     }));
     // Summary chips
     const total=mlVariantsData.length;
@@ -1355,11 +1198,11 @@ function setupLoans(sp){
     const col=$('lnCol').value;
     $('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=!col;$('lnCS').textContent='';
     if(!selPid||!col)return;
-    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})`;$('lnSz').appendChild(o);});
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size} (Stock:${v.stock_almacen||0})`;$('lnSz').appendChild(o);});
   });
   $('lnSz').addEventListener('change',()=>{
     const v=allD?.variants.find(x=>x.id===$('lnSz').value);
-    $('lnCS').textContent=v?`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`:'';
+    $('lnCS').textContent=v?`Stock Procalzado: ${v.stock_almacen||0} u`:'';
   });
 
   $('lnBtn').addEventListener('click',async()=>{
@@ -1367,7 +1210,6 @@ function setupLoans(sp){
     const person=$('lnPerson').value.trim();
     const vid=$('lnSz').value;
     const qty=parseInt($('lnQty').value)||0;
-    const loc=$('lnLoc').value;
     const notes=$('lnNotes').value.trim();
     if(!person){toast('Indica la persona o empresa',false);return;}
     if(!vid){toast('Selecciona producto, color y talla',false);return;}
@@ -1375,14 +1217,14 @@ function setupLoans(sp){
     const v=allD.variants.find(x=>x.id===vid);
     const p=allD.products.find(x=>x.id===selPid);
     const lab=type==='prestado'?'Prestamos a':'Nos presta';
-    const ok=await confirmMovement('Registrar préstamo',`${lab} ${person}: ${qty} par(es) ${v?.color} T${v?.size} en ${loc}`);
+    const ok=await confirmMovement('Registrar préstamo',`${lab} ${person}: ${qty} par(es) ${v?.color} T${v?.size}`);
     if(!ok)return;
     const{data:{session}}=await sb.auth.getSession();
     ld(true);
     try{
       await apiMutate({action:'create_loan',type,person_name:person,variant_id:vid,
         product_name:p?.name||'',brand_name:p?.brands?.name||'',
-        color:v?.color||'',size:v?.size||'',quantity:qty,location:loc,
+        color:v?.color||'',size:v?.size||'',quantity:qty,
         notes:notes||null,user_email:session?.user?.email||''});
       toast('Préstamo registrado');
       $('lnCInp').value='';selPid=null;$('lnPerson').value='';$('lnNotes').value='';$('lnQty').value='1';
@@ -1407,7 +1249,7 @@ function renderLoans(){
   $('lnHistCnt').textContent=`${resolved.length} resuelto${resolved.length!==1?'s':''}`;
   const fmt=dt=>new Date(dt).toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});
   $('lnPendTb').innerHTML=!pending.length
-    ?'<tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin préstamos pendientes</td></tr>'
+    ?'<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Sin préstamos pendientes</td></tr>'
     :pending.map(l=>`<tr>
       <td style="white-space:nowrap">${fmt(l.created_at)}</td>
       <td><span class="ln-${l.type}">${l.type==='prestado'?'Prestamos':'Nos prestan'}</span></td>
@@ -1415,7 +1257,6 @@ function renderLoans(){
       <td>${l.brand_name?l.brand_name+' ':''}${l.product_name}</td>
       <td>${l.color} / T${l.size}</td>
       <td class="num">${l.quantity}</td>
-      <td><span class="loc-${l.location==='bodega'?'b':'a'}">${l.location}</span></td>
       <td style="font-size:.75rem;color:#666">${l.notes||''}</td>
       <td><button class="btn btn-o" style="font-size:.7rem" onclick="openResolveLoan('${l.id}')">Resolver</button></td>
     </tr>`).join('');
@@ -1461,26 +1302,18 @@ window.openResolveLoan=function(loanId){
       <button class="btn btn-p btn-w" data-res="devuelto_otra_talla">${isPrest?'Devolvieron otra talla':'Devolvemos otra talla'}</button>
     </div>
     <div id="_lnDevMismo" hidden style="margin-bottom:.75rem">
-      <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">¿A dónde ${isPrest?'entra':'sale'}?</label>
-      <select id="_lnMismoLoc" class="loc-sel" style="width:100%;margin-bottom:.75rem">
-        <option value="almacen">Almacén</option><option value="bodega">Bodega</option>
-      </select>
       <button class="btn btn-b btn-w" id="_lnConfMismo">Confirmar</button>
     </div>
     <div id="_lnOtraTalla" hidden style="margin-bottom:.75rem">
       <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">Talla a ${isPrest?'recibir':'devolver'}</label>
       <select id="_lnOthVar" class="loc-sel" style="width:100%;margin-bottom:.5rem">
         <option value="">— seleccionar talla —</option>
-        ${otherVars.map(v=>`<option value="${v.id}">T${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})</option>`).join('')}
+        ${otherVars.map(v=>`<option value="${v.id}">T${v.size} (Stock:${v.stock_almacen||0})</option>`).join('')}
       </select>
       <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
         <label style="font-size:.75rem;font-weight:600;color:#555;white-space:nowrap">Cantidad:</label>
         <input type="number" id="_lnOthQty" min="1" value="${loan.quantity}" class="qi" style="width:80px"/>
       </div>
-      <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">¿A dónde ${isPrest?'entra':'sale'}?</label>
-      <select id="_lnOthLoc" class="loc-sel" style="width:100%;margin-bottom:.75rem">
-        <option value="almacen">Almacén</option><option value="bodega">Bodega</option>
-      </select>
       <button class="btn btn-p btn-w" id="_lnConfOtra">Confirmar</button>
     </div>
     <button class="btn btn-o btn-w" id="_lnCancel">Cancelar</button>`;
@@ -1498,26 +1331,24 @@ window.openResolveLoan=function(loanId){
         box.querySelector('#_lnOpts').hidden=true;
         box.querySelector('#_lnOtraTalla').hidden=false;return;
       }
-      ov.remove();await doResolveLoan(loanId,res,null,null,null);
+      ov.remove();await doResolveLoan(loanId,res,null,null);
     });
   });
   box.querySelector('#_lnConfMismo').addEventListener('click',async()=>{
-    const loc=box.querySelector('#_lnMismoLoc').value;
-    ov.remove();await doResolveLoan(loanId,'devuelto_mismo',null,null,loc);
+    ov.remove();await doResolveLoan(loanId,'devuelto_mismo',null,null);
   });
   box.querySelector('#_lnConfOtra').addEventListener('click',async()=>{
     const vid=box.querySelector('#_lnOthVar').value;
     const qty=parseInt(box.querySelector('#_lnOthQty').value)||loan.quantity;
-    const loc=box.querySelector('#_lnOthLoc').value;
     if(!vid){toast('Selecciona la talla',false);return;}
-    ov.remove();await doResolveLoan(loanId,'devuelto_otra_talla',vid,qty,loc);
+    ov.remove();await doResolveLoan(loanId,'devuelto_otra_talla',vid,qty);
   });
 };
 
-async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty,resolvedLoc){
+async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty){
   ld(true);
   try{
-    await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty,resolved_location:resolvedLoc});
+    await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty});
     toast('Préstamo resuelto');await reloadStock();await loadLoans();
   }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
 }
@@ -1527,13 +1358,12 @@ function setupVelozAll(sp){
   $('vzSAddProd').addEventListener('click',()=>addVzBlock('S'));
   $('vzSApply').addEventListener('click',async()=>{
     const ops=getVzBlockOps('vzSBlocks');
-    const loc=$('vzSLoc').value;
     if(!ops.length){toast('Pon al menos una cantidad',false);return;}
-    const ok=await confirmMovement('Descuento masivo',`${ops.length} variante${ops.length!==1?'s':''} en ${loc}`);
+    const ok=await confirmMovement('Descuento masivo',`${ops.length} variante${ops.length!==1?'s':''}`);
     if(!ok)return;
     ld(true);
     try{
-      for(const o of ops){await updS(o.vid,-o.qty,loc);await logMovement('venta',o.vid,o.qty,loc,null,null);}
+      for(const o of ops){await updS(o.vid,-o.qty);await logMovement('venta',o.vid,o.qty);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} descontadas`);
       refreshVzBlocks('vzSBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
@@ -1543,40 +1373,14 @@ function setupVelozAll(sp){
   $('vzEAddProd').addEventListener('click',()=>addVzBlock('E'));
   $('vzEApply').addEventListener('click',async()=>{
     const ops=getVzBlockOps('vzEBlocks');
-    const loc=$('vzELoc').value;
     if(!ops.length){toast('Pon al menos una cantidad',false);return;}
-    const ok=await confirmMovement('Ingreso masivo',`${ops.length} variante${ops.length!==1?'s':''} en ${loc}`);
+    const ok=await confirmMovement('Ingreso masivo',`${ops.length} variante${ops.length!==1?'s':''}`);
     if(!ok)return;
     ld(true);
     try{
-      for(const o of ops){await updS(o.vid,o.qty,loc);await logMovement('ingreso',o.vid,o.qty,loc,null,null);}
+      for(const o of ops){await updS(o.vid,o.qty);await logMovement('ingreso',o.vid,o.qty);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} ingresadas`);
       refreshVzBlocks('vzEBlocks');render();
-    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
-  });
-
-  // TRANSFERENCIAS masivo
-  $('vzTFrom').addEventListener('change',()=>{
-    const f=$('vzTFrom').value,other=f==='almacen'?'bodega':'almacen';
-    [...$('vzTTo').options].forEach(o=>{o.selected=o.value===other;});
-  });
-  $('vzTTo').addEventListener('change',()=>{
-    const t=$('vzTTo').value,other=t==='almacen'?'bodega':'almacen';
-    [...$('vzTFrom').options].forEach(o=>{o.selected=o.value===other;});
-  });
-  $('vzTAddProd').addEventListener('click',()=>addVzBlock('T'));
-  $('vzTApply').addEventListener('click',async()=>{
-    const ops=getVzBlockOps('vzTBlocks');
-    const from=$('vzTFrom').value,to=$('vzTTo').value;
-    if(from===to){toast('Origen y destino iguales',false);return;}
-    if(!ops.length){toast('Pon al menos una cantidad',false);return;}
-    const ok=await confirmMovement('Transferencia masiva',`${ops.length} variante${ops.length!==1?'s':''}: ${from} → ${to}`);
-    if(!ok)return;
-    ld(true);
-    try{
-      for(const o of ops){await transferS(o.vid,from,o.qty);await logMovement('transferencia',o.vid,o.qty,null,from,to);}
-      toast(`${ops.length} variante${ops.length!==1?'s':''} transferidas`);
-      refreshVzBlocks('vzTBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 }

@@ -35,16 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ data: data[0] });
 
     } else if (action === 'transfer') {
-      const { vid, from_field, to_field, from_value, to_value } = params;
-      const { data, error } = await sb
-        .from('product_variants')
-        .update({ [from_field]: from_value, [to_field]: to_value })
-        .eq('id', vid)
-        .select('id,stock_almacen,stock_bodega');
-      if (error) throw error;
-      if (!data || !data.length) throw new Error('Variante no encontrada');
-      syncVariantToML(sb, vid);
-      return json({ data: data[0] });
+      return json({ error: 'Transferencias deshabilitadas' }, 400);
 
     } else if (action === 'log_movement') {
       const { type, product_name, brand_name, color, size, quantity, location, from_location, to_location, user_email } = params;
@@ -193,29 +184,27 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ data });
 
     } else if (action === 'create_loan') {
-      const { type, person_name, variant_id, product_name, brand_name, color, size, quantity, location, notes, user_email } = params;
+      const { type, person_name, variant_id, product_name, brand_name, color, size, quantity, notes, user_email } = params;
       if (!type || !person_name || !variant_id || !quantity) throw new Error('Faltan campos requeridos');
 
-      // Adjust inventory: prestado = decrease, recibido = increase
       const { data: variant, error: fetchErr } = await sb
         .from('product_variants')
-        .select('stock_almacen,stock_bodega')
+        .select('stock_almacen')
         .eq('id', variant_id)
         .single();
       if (fetchErr) throw fetchErr;
 
-      const field = location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
-      const current = location === 'bodega' ? (variant.stock_bodega || 0) : (variant.stock_almacen || 0);
+      const current = variant.stock_almacen || 0;
       const delta = type === 'prestado' ? -quantity : quantity;
       const newVal = Math.max(0, current + delta);
 
-      const { error: updErr } = await sb.from('product_variants').update({ [field]: newVal }).eq('id', variant_id);
+      const { error: updErr } = await sb.from('product_variants').update({ stock_almacen: newVal }).eq('id', variant_id);
       if (updErr) throw updErr;
       syncVariantToML(sb, variant_id);
 
       const { error: insErr } = await sb.from('loans').insert({
         type, person_name, variant_id, product_name, brand_name: brand_name || null,
-        color, size, quantity, location, notes: notes || null, user_email: user_email || null,
+        color, size, quantity, location: 'almacen', notes: notes || null, user_email: user_email || null,
       });
       if (insErr) throw insErr;
 
@@ -228,37 +217,30 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: loan, error: loanErr } = await sb.from('loans').select('*').eq('id', loan_id).single();
       if (loanErr) throw loanErr;
 
-      async function adjustStock(vid: string, delta: number, location: string) {
-        const field = location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
-        const { data: v } = await sb.from('product_variants').select('stock_almacen,stock_bodega').eq('id', vid).single();
+      async function adjustStock(vid: string, delta: number) {
+        const { data: v } = await sb.from('product_variants').select('stock_almacen').eq('id', vid).single();
         if (!v) return;
-        const current = location === 'bodega' ? (v.stock_bodega || 0) : (v.stock_almacen || 0);
-        await sb.from('product_variants').update({ [field]: Math.max(0, current + delta) }).eq('id', vid);
+        await sb.from('product_variants').update({ stock_almacen: Math.max(0, (v.stock_almacen || 0) + delta) }).eq('id', vid);
       }
 
       const qty = loan.quantity;
       const rQty = resolved_quantity || qty;
       const rVid = resolved_variant_id;
-      const retLoc = resolved_location || loan.location; // where it returns to/from
 
       if (loan.type === 'prestado') {
-        if (resolution === 'pagado') {
-          // item gone, no change
-        } else if (resolution === 'devuelto_mismo') {
-          await adjustStock(loan.variant_id, qty, retLoc);
+        if (resolution === 'devuelto_mismo') {
+          await adjustStock(loan.variant_id, qty);
           syncVariantToML(sb, loan.variant_id);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
-          await adjustStock(rVid, rQty, retLoc);
+          await adjustStock(rVid, rQty);
           syncVariantToML(sb, rVid);
         }
       } else {
-        if (resolution === 'pagado') {
-          // we keep it, no change
-        } else if (resolution === 'devuelto_mismo') {
-          await adjustStock(loan.variant_id, -qty, retLoc);
+        if (resolution === 'devuelto_mismo') {
+          await adjustStock(loan.variant_id, -qty);
           syncVariantToML(sb, loan.variant_id);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
-          await adjustStock(rVid, -rQty, retLoc);
+          await adjustStock(rVid, -rQty);
           syncVariantToML(sb, rVid);
         }
       }

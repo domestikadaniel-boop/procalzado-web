@@ -43,7 +43,7 @@ export async function syncVariantToML(sb: SupabaseClient, variantId: string): Pr
   try {
     const { data: v } = await sb
       .from('product_variants')
-      .select('ml_item_id,ml_variation_id,stock_almacen,stock_bodega')
+      .select('ml_item_id,ml_variation_id,stock_almacen')
       .eq('id', variantId)
       .single();
 
@@ -52,7 +52,7 @@ export async function syncVariantToML(sb: SupabaseClient, variantId: string): Pr
     const token = await getMLAccessToken(sb);
     if (!token) return;
 
-    const totalStock = (v.stock_almacen || 0) + (v.stock_bodega || 0);
+    const totalStock = v.stock_almacen || 0;
     const url = v.ml_variation_id
       ? `${ML_API}/items/${v.ml_item_id}/variations/${v.ml_variation_id}`
       : `${ML_API}/items/${v.ml_item_id}`;

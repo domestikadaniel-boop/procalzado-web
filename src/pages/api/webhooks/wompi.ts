@@ -223,30 +223,15 @@ export const POST: APIRoute = async ({ request }) => {
 
         const { data: v } = await supabase
           .from('product_variants')
-          .select('stock_almacen,stock_bodega')
+          .select('stock_almacen')
           .eq('id', variantId)
           .single();
         if (!v) continue;
 
-        let qty = item.quantity || 1;
-        let newBodega = v.stock_bodega || 0;
-        let newAlmacen = v.stock_almacen || 0;
-
-        // Descontar de bodega primero
-        if (newBodega >= qty) {
-          newBodega -= qty;
-          qty = 0;
-        } else {
-          qty -= newBodega;
-          newBodega = 0;
-        }
-        // Lo que sobre, del almacén
-        if (qty > 0) {
-          newAlmacen = Math.max(0, newAlmacen - qty);
-        }
+        const newAlmacen = Math.max(0, (v.stock_almacen || 0) - (item.quantity || 1));
 
         await supabase.from('product_variants')
-          .update({ stock_bodega: newBodega, stock_almacen: newAlmacen })
+          .update({ stock_almacen: newAlmacen })
           .eq('id', variantId);
         syncVariantToML(supabase, variantId);
 
