@@ -373,11 +373,13 @@ tbody tr:hover td{filter:brightness(.96)}
         </select>
         <input type="text" id="hfsq" placeholder="Buscar producto..."/>
         <button class="btn btn-o" id="hReloadBtn">Recargar</button>
+        <button class="btn" id="hDeleteBtn" hidden style="background:#e33;color:#fff;border:none">Borrar seleccionados (0)</button>
       </div>
       <div class="tw">
         <table>
           <thead>
             <tr>
+              <th style="width:32px"></th>
               <th>Fecha y hora</th>
               <th>Tipo</th>
               <th>Marca</th>
@@ -389,11 +391,26 @@ tbody tr:hover td{filter:brightness(.96)}
             </tr>
           </thead>
           <tbody id="htb">
-            <tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
       <div id="hcnt" style="margin-top:.45rem;font-size:.7rem;color:#888"></div>
+
+      <!-- Modal contraseña para borrar -->
+      <div id="delPassModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:var(--card-bg,#fff);border-radius:10px;padding:1.5rem;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+          <h3 style="margin:0 0 .75rem;font-size:1rem;color:var(--text,#111)">Confirmar eliminación</h3>
+          <p id="delPassMsg" style="font-size:.85rem;color:#666;margin:0 0 1rem"></p>
+          <input type="password" id="delPassInput" placeholder="Contraseña" autocomplete="off"
+            style="width:100%;padding:.5rem .65rem;border:1px solid #ccc;border-radius:6px;font-size:.9rem;box-sizing:border-box;margin-bottom:.5rem;background:var(--input-bg,#fff);color:var(--text,#111)"/>
+          <p id="delPassErr" style="color:#e33;font-size:.8rem;margin:0 0 .75rem;min-height:1.1rem"></p>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="btn btn-o" id="delPassCancel">Cancelar</button>
+            <button class="btn" id="delPassConfirm" style="background:#e33;color:#fff;border:none">Eliminar</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="sec" id="tab-ml">
@@ -974,7 +991,7 @@ function renderHistory(){
   if(q)rows=rows.filter(r=>(r.product_name||'').toLowerCase().includes(q)||(r.brand_name||'').toLowerCase().includes(q)||(r.color||'').toLowerCase().includes(q));
 
   if(!rows.length){
-    $('htb').innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Sin movimientos</td></tr>';
+    $('htb').innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin movimientos</td></tr>';
     $('hcnt').textContent='';return;
   }
 
@@ -1002,7 +1019,8 @@ function renderHistory(){
   for(const g of groups){
     if(g.items.length===1){
       const r=g.items[0];
-      html+=`<tr>
+      html+=`<tr data-id="${r.id}">
+        <td style="text-align:center"><input type="checkbox" class="h-chk h-chk-row" data-id="${r.id}" onclick="event.stopPropagation()"></td>
         <td style="white-space:nowrap">${fmt(r.created_at)}</td>
         <td>${typeBadge(r.type)}</td>
         <td>${r.brand_name||''}</td>
@@ -1017,7 +1035,9 @@ function renderHistory(){
       const first=g.items[0];
       const totalQty=g.items.reduce((s,r)=>s+r.quantity,0);
       const bid=g.batch;
+      const allIds=g.items.map(r=>r.id).join(',');
       html+=`<tr class="batch-hdr" data-bid="${bid}" style="cursor:pointer;background:#f8f8f8" onclick="toggleBatch('${bid}')">
+        <td style="text-align:center"><input type="checkbox" class="h-chk h-chk-batch" data-bid="${bid}" data-ids="${allIds}" onclick="event.stopPropagation()"></td>
         <td style="white-space:nowrap">${fmt(first.created_at)}</td>
         <td>${typeBadge(first.type)}</td>
         <td colspan="3" style="color:#555;font-style:italic">${g.items.length} productos — clic para ver</td>
@@ -1026,7 +1046,8 @@ function renderHistory(){
         <td style="font-size:.72rem;color:#666">${first.user_email||''}</td>
       </tr>`;
       for(const r of g.items){
-        html+=`<tr class="batch-row" data-bid="${bid}" hidden>
+        html+=`<tr class="batch-row" data-bid="${bid}" data-id="${r.id}" hidden>
+          <td style="text-align:center"><input type="checkbox" class="h-chk h-chk-row" data-id="${r.id}" onclick="event.stopPropagation()"></td>
           <td style="white-space:nowrap;padding-left:1.5rem;color:#888;font-size:.75rem">${fmt(r.created_at)}</td>
           <td></td>
           <td>${r.brand_name||''}</td>
@@ -1041,6 +1062,19 @@ function renderHistory(){
   }
   $('htb').innerHTML=html;
   $('hcnt').textContent=`${rows.length} movimientos`;
+  // Wiring de checkboxes tras renderizar
+  document.querySelectorAll('#htb .h-chk-batch').forEach(cb=>{
+    cb.addEventListener('change',function(){
+      const ids=this.dataset.ids.split(',');
+      document.querySelectorAll('#htb .h-chk-row').forEach(rc=>{
+        if(ids.includes(rc.dataset.id))rc.checked=this.checked;
+      });
+      updateHDeleteBtn();
+    });
+  });
+  document.querySelectorAll('#htb .h-chk-row').forEach(cb=>{
+    cb.addEventListener('change',updateHDeleteBtn);
+  });
 }
 
 window.toggleBatch=function(bid){
@@ -1048,8 +1082,66 @@ window.toggleBatch=function(bid){
   const hdr=document.querySelector(`.batch-hdr[data-bid="${bid}"]`);
   const open=rows[0]&&!rows[0].hidden;
   rows.forEach(r=>{r.hidden=open;});
-  if(hdr){const cell=hdr.cells[2];cell.textContent=open?`${rows.length} productos — clic para ver`:`${rows.length} productos — clic para cerrar`;}
+  if(hdr){const cell=hdr.cells[3];cell.textContent=open?`${rows.length} productos — clic para ver`:`${rows.length} productos — clic para cerrar`;}
 };
+
+// ── Borrar seleccionados ──────────────────────────────────────────────────
+const HPASS='e7270e5e0e1951dccef17269b2a45345ad831c9035ff513b3cc9606bedcb4745';
+
+async function hashPass(s){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function getSelectedHIds(){
+  const ids=new Set();
+  document.querySelectorAll('#htb .h-chk-batch:checked').forEach(cb=>{
+    cb.dataset.ids.split(',').forEach(id=>ids.add(id));
+  });
+  document.querySelectorAll('#htb .h-chk-row:checked').forEach(cb=>{
+    ids.add(cb.dataset.id);
+  });
+  return [...ids];
+}
+
+function updateHDeleteBtn(){
+  const n=getSelectedHIds().length;
+  const btn=$('hDeleteBtn');
+  btn.hidden=n===0;
+  btn.textContent=`Borrar seleccionados (${n})`;
+}
+
+$('hDeleteBtn').addEventListener('click',()=>{
+  const ids=getSelectedHIds();
+  if(!ids.length)return;
+  $('delPassMsg').textContent=`Se eliminarán ${ids.length} movimiento${ids.length!==1?'s':''} del historial. Esta acción no se puede deshacer.`;
+  $('delPassInput').value='';
+  $('delPassErr').textContent='';
+  $('delPassModal').style.display='flex';
+  setTimeout(()=>$('delPassInput').focus(),80);
+});
+
+$('delPassCancel').addEventListener('click',()=>{$('delPassModal').style.display='none';});
+
+$('delPassConfirm').addEventListener('click',async()=>{
+  const pass=$('delPassInput').value;
+  if(!pass){$('delPassErr').textContent='Ingresa la contraseña.';return;}
+  const h=await hashPass(pass);
+  if(h!==HPASS){$('delPassErr').textContent='Contraseña incorrecta.';$('delPassInput').value='';$('delPassInput').focus();return;}
+  $('delPassModal').style.display='none';
+  const ids=getSelectedHIds();
+  ld(true);
+  try{
+    const r=await apiMutate({action:'delete_movements',ids});
+    if(r.error)throw new Error(r.error);
+    toast(`${ids.length} movimiento${ids.length!==1?'s':''} eliminado${ids.length!==1?'s':''}`);
+    await loadHistory();
+  }catch(e){toast('Error al eliminar: '+e.message,false);}
+  finally{ld(false);}
+});
+
+// Cerrar modal al clicar fuera
+$('delPassModal').addEventListener('click',e=>{if(e.target===$('delPassModal'))$('delPassModal').style.display='none';});
 
 ['hftype','hfsq'].forEach(id=>$(id).addEventListener('input',renderHistory));
 $('hReloadBtn').addEventListener('click',loadHistory);

@@ -170,6 +170,13 @@ export const POST: APIRoute = async ({ request }) => {
       }
       return json({ ok: true });
 
+    } else if (action === 'delete_movements') {
+      const { ids } = params;
+      if (!ids?.length) return json({ ok: true });
+      const { error } = await sb.from('inventory_movements').delete().in('id', ids);
+      if (error) throw error;
+      return json({ ok: true });
+
     } else if (action === 'clear_loans_history') {
       const { error } = await sb.from('loans').delete().neq('status', 'pendiente');
       if (error) throw error;
