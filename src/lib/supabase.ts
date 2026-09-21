@@ -95,7 +95,7 @@ export async function getProducts() {
       brands ( id, slug, name, logo_url ),
       categories!products_category_id_fkey ( id, slug, name ),
       product_images ( id, color, url, alt_text, is_primary, display_order ),
-      product_variants ( id, size, color, color_hex, color_hex_2, stock, active )
+      product_variants ( id, size, color, color_hex, color_hex_2, stock, stock_almacen, stock_bodega, active )
     `)
     .eq('active', true)
     .order('display_order', { ascending: true })

@@ -80,6 +80,7 @@ function productData(p: Product) {
     shortDesc: p.short_description || '',
     effectivePrice: p.sale_price || p.price || 0,
     sizes, colors,
+    totalStock: variants.reduce((sum, v) => sum + ((v as any).stock_almacen || 0) + ((v as any).stock_bodega || 0), 0),
   };
 }
 const items = products.map(productData);
@@ -320,9 +321,10 @@ const pageDesc = `${config.sub} Procalzado, distribuidor autorizado con envíos 
                 Destacado
               </span>
             )}
-            {it.salePrice && it.showPrice && it.price && (
-              <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
-            )}
+            {it.salePrice && it.showPrice && it.price
+              ? <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+              : it.totalStock === 0 && <span class="card-badge-agotado">Agotado</span>
+            }
             <div class="card-img">
               {it.primaryImg
                 ? <>

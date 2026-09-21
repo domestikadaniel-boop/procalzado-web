@@ -37,12 +37,14 @@ function productData(p: Product) {
   const catSlugs = cats.map(c => c.slug);
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
   const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
+  const totalStock = (p.product_variants || []).filter((v: any) => v.active).reduce((sum: number, v: any) => sum + (v.stock_almacen || 0) + (v.stock_bodega || 0), 0);
   return {
     slug: p.slug, name: p.name, brandName,
     primaryImg, secondImg, featured: p.featured,
     price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     catSlugs, primaryCatSlug: primaryCat?.slug || '',
     shortDesc: p.short_description || '',
+    totalStock,
   };
 }
 const items = products.map(productData);
@@ -88,9 +90,10 @@ const pageDesc = 'Compra botas de caucho, botas de lluvia, botas de moto, botas 
                 Destacado
               </span>
             )}
-            {it.salePrice && it.showPrice && it.price && (
-              <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
-            )}
+            {it.salePrice && it.showPrice && it.price
+              ? <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+              : it.totalStock === 0 && <span class="card-badge-agotado">Agotado</span>
+            }
             <div class="card-img">
               {it.primaryImg
                 ? <>

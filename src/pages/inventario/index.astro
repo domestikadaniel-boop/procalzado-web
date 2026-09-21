@@ -561,6 +561,24 @@ async function fetchAll(tbl,sel){
   return r;
 }
 
+async function reloadStock(){
+  try{
+    const variants=await fetchAll('product_variants','id,product_id,color,size,stock_almacen,stock_bodega,active');
+    if(!allD)return;
+    allD.variants=variants;
+    const byP={};
+    for(const v of variants){
+      if(!v.active)continue;
+      if(!byP[v.product_id])byP[v.product_id]={};
+      if(!byP[v.product_id][v.color])byP[v.product_id][v.color]=[];
+      byP[v.product_id][v.color].push(v);
+    }
+    for(const pid in byP)for(const c in byP[pid])byP[pid][c].sort((a,b)=>{const na=parseFloat(a.size),nb=parseFloat(b.size);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.size.localeCompare(b.size);});
+    allD.byP=byP;
+    render();
+  }catch(e){toast('Error actualizando stock: '+e.message,false);}
+}
+
 async function load(){
   ld(true);
   try{
@@ -1164,7 +1182,7 @@ function setupLoans(sp){
       $('lnCInp').value='';selPid=null;$('lnPerson').value='';$('lnNotes').value='';$('lnQty').value='1';
       $('lnCol').innerHTML='<option value="">— primero producto —</option>';$('lnCol').disabled=true;
       $('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=true;$('lnCS').textContent='';
-      await load();await loadLoans();
+      await reloadStock();await loadLoans();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 }
@@ -1294,7 +1312,7 @@ async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty,resolvedL
   ld(true);
   try{
     await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty,resolved_location:resolvedLoc});
-    toast('Préstamo resuelto');await load();await loadLoans();
+    toast('Préstamo resuelto');await reloadStock();await loadLoans();
   }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
 }
 

@@ -14,12 +14,14 @@ function productData(p: Product) {
   const primaryCat = (p.product_categories?.find(pc => pc.is_primary)?.categories as Category) || cats[0] || null;
   const primaryImg = p.product_images?.find(i => i.is_primary) || p.product_images?.[0];
   const secondImg = p.product_images?.filter(i => i !== primaryImg)?.[0] || null;
+  const totalStock = (p.product_variants || []).filter((v: any) => v.active).reduce((sum: number, v: any) => sum + ((v as any).stock_almacen || 0) + ((v as any).stock_bodega || 0), 0);
   return {
     slug: p.slug, name: p.name, brandName,
     primaryImg, secondImg, featured: p.featured,
     price: p.price, salePrice: p.sale_price, showPrice: p.show_price,
     catName: primaryCat?.name || '',
     shortDesc: p.short_description || '',
+    totalStock,
   };
 }
 const items = products.map(productData);
@@ -54,9 +56,10 @@ const pageDesc = 'Productos destacados y ofertas en Procalzado. Distribuidor aut
               Destacado
             </span>
           )}
-          {it.salePrice && it.showPrice && it.price && (
-            <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
-          )}
+          {it.salePrice && it.showPrice && it.price
+            ? <span class="card-badge-sale">-{Math.round((1 - it.salePrice / it.price) * 100)}%</span>
+            : it.totalStock === 0 && <span class="card-badge-agotado">Agotado</span>
+          }
           <div class="card-img">
             {it.primaryImg
               ? <>
