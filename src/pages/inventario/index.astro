@@ -146,6 +146,12 @@ tbody tr:hover td{filter:brightness(.96)}
 .toast.ok{border-left:4px solid #22c55e}
 .toast.err{border-left:4px solid #f00}
 
+/* PRÉSTAMOS */
+.ln-prestado{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#FEF3C7;color:#92400E;letter-spacing:.04em;text-transform:uppercase}
+.ln-recibido{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#E0E7FF;color:#3730A3;letter-spacing:.04em;text-transform:uppercase}
+.ln-pagado{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#BBF7D0;color:#14532D;letter-spacing:.04em;text-transform:uppercase}
+.ln-devuelto{display:inline-block;padding:.1rem .4rem;border-radius:3px;font-size:.65rem;font-weight:700;background:#DBEAFE;color:#1D4ED8;letter-spacing:.04em;text-transform:uppercase}
+
 @media(max-width:760px){.two-col{grid-template-columns:1fr}}
 </style>
 </head>
@@ -185,6 +191,7 @@ tbody tr:hover td{filter:brightness(.96)}
     <div class="tab" data-tab="ven">Registrar Ventas</div>
     <div class="tab" data-tab="ing">Ingresos de Mercancia</div>
     <div class="tab" data-tab="trf">Transferir Mercancia</div>
+    <div class="tab" data-tab="loan">Préstamos</div>
     <div class="tab" data-tab="his">Historial</div>
   </div>
 
@@ -364,6 +371,73 @@ tbody tr:hover td{filter:brightness(.96)}
       </div>
     </div>
 
+    <!-- PRÉSTAMOS -->
+    <div class="sec" id="tab-loan">
+      <div class="card" style="margin-bottom:1rem">
+        <h3>Registrar préstamo</h3>
+        <div style="display:flex;gap:1.5rem;margin-bottom:.9rem;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.82rem;font-weight:600">
+            <input type="radio" name="lnType" id="lnTypeP" value="prestado" checked> Prestamos a alguien
+          </label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.82rem;font-weight:600">
+            <input type="radio" name="lnType" id="lnTypeR" value="recibido"> Nos prestan a nosotros
+          </label>
+        </div>
+        <div class="two-col" style="gap:.75rem">
+          <div>
+            <div class="fl">
+              <label>Persona / empresa</label>
+              <input type="text" class="combo-inp" id="lnPerson" placeholder="¿A quién prestamos / quién nos presta?"/>
+            </div>
+            <div class="fl">
+              <label>Producto</label>
+              <div class="combo">
+                <input type="text" class="combo-inp" id="lnCInp" placeholder="Buscar producto..." autocomplete="off"/>
+                <div class="combo-dd" id="lnCDd"></div>
+              </div>
+            </div>
+            <div class="fl"><label>Color</label><select id="lnCol" class="loc-sel" style="width:100%" disabled><option value="">— primero producto —</option></select></div>
+            <div class="fl"><label>Talla</label><select id="lnSz" class="loc-sel" style="width:100%" disabled><option value="">—</option></select></div>
+            <div class="cs" id="lnCS"></div>
+          </div>
+          <div>
+            <div class="fl"><label>Ubicación (de donde sale / donde entra)</label><select class="loc-sel" id="lnLoc" style="width:100%"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
+            <div class="fl"><label>Cantidad</label><input type="number" class="qi" id="lnQty" min="1" value="1" style="width:100%"/></div>
+            <div class="fl"><label>Notas (fecha compromiso, etc.)</label><input type="text" class="combo-inp" id="lnNotes" placeholder="Opcional..."/></div>
+            <div style="margin-top:.75rem"><button class="btn btn-p btn-w" id="lnBtn">Registrar préstamo</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+          <h3 style="margin:0">Préstamos pendientes</h3>
+          <span id="lnPendCnt" style="font-size:.75rem;color:#888"></span>
+        </div>
+        <div class="tw"><table>
+          <thead><tr>
+            <th>Fecha</th><th>Tipo</th><th>Persona</th><th>Producto</th>
+            <th>Color / Talla</th><th class="num">Cant.</th><th>Ubicación</th><th>Notas</th><th></th>
+          </tr></thead>
+          <tbody id="lnPendTb"><tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin préstamos pendientes</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+          <h3 style="margin:0">Historial de préstamos</h3>
+          <span id="lnHistCnt" style="font-size:.75rem;color:#888"></span>
+        </div>
+        <div class="tw"><table>
+          <thead><tr>
+            <th>Fecha</th><th>Tipo</th><th>Persona</th><th>Producto</th>
+            <th>Color / Talla</th><th class="num">Cant.</th><th>Resolución</th><th>Notas</th>
+          </tr></thead>
+          <tbody id="lnHistTb"><tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Sin historial</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
     <!-- HISTORIAL -->
     <div class="sec" id="tab-his">
       <div class="toolbar">
@@ -514,7 +588,7 @@ async function load(){
     setupPS('sCInp','sCDd','sCol','sSz','sCS',sp);
     setupPS('eCInp','eCDd','eCol','eSz','eCS',sp);
     setupPS('tCInp','tCDd','tCol','tSz','tCS',sp);
-    if(!_vzReady){_vzReady=true;setupVelozAll(sp);}
+    if(!_vzReady){_vzReady=true;setupVelozAll(sp);setupLoans(sp);}
 
     render();
   }finally{ld(false);}
@@ -1036,12 +1110,185 @@ $('hClearBtn').addEventListener('click',async()=>{
   finally{ld(false);}
 });
 
-// cargar historial al entrar al tab
+// cargar historial / préstamos al entrar al tab
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
     if(t.dataset.tab==='his'&&!histData.length)loadHistory();
+    if(t.dataset.tab==='loan')loadLoans();
   });
 });
+
+// PRÉSTAMOS
+let loansData=[];
+
+function setupLoans(sp){
+  const opts=sp.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
+  let selPid=null;
+
+  function onPick(id,label){
+    selPid=id;$('lnCInp').value=label;
+    $('lnCol').innerHTML='<option value="">Color...</option>';
+    $('lnCol').disabled=!id;
+    $('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=true;$('lnCS').textContent='';
+    if(id)Object.keys(allD.byP[id]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;$('lnCol').appendChild(o);});
+  }
+
+  $('lnCInp').addEventListener('focus',()=>_bDdOpen($('lnCInp'),opts,onPick));
+  $('lnCInp').addEventListener('input',()=>{
+    if(_bDdCtx&&_bDdCtx.inp===$('lnCInp'))_bDdRender($('lnCInp').value);
+    else _bDdOpen($('lnCInp'),opts,onPick);
+    if(selPid){selPid=null;$('lnCol').innerHTML='<option value="">Color...</option>';$('lnCol').disabled=true;$('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=true;}
+  });
+  $('lnCol').addEventListener('change',()=>{
+    const col=$('lnCol').value;
+    $('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=!col;$('lnCS').textContent='';
+    if(!selPid||!col)return;
+    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`T${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})`;$('lnSz').appendChild(o);});
+  });
+  $('lnSz').addEventListener('change',()=>{
+    const v=allD?.variants.find(x=>x.id===$('lnSz').value);
+    $('lnCS').textContent=v?`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`:'';
+  });
+
+  $('lnBtn').addEventListener('click',async()=>{
+    const type=document.querySelector('input[name="lnType"]:checked').value;
+    const person=$('lnPerson').value.trim();
+    const vid=$('lnSz').value;
+    const qty=parseInt($('lnQty').value)||0;
+    const loc=$('lnLoc').value;
+    const notes=$('lnNotes').value.trim();
+    if(!person){toast('Indica la persona o empresa',false);return;}
+    if(!vid){toast('Selecciona producto, color y talla',false);return;}
+    if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
+    const v=allD.variants.find(x=>x.id===vid);
+    const p=allD.products.find(x=>x.id===selPid);
+    const lab=type==='prestado'?'Prestamos a':'Nos presta';
+    const ok=await confirmMovement('Registrar préstamo',`${lab} ${person}: ${qty} par(es) ${v?.color} T${v?.size} en ${loc}`);
+    if(!ok)return;
+    const{data:{session}}=await sb.auth.getSession();
+    ld(true);
+    try{
+      await apiMutate({action:'create_loan',type,person_name:person,variant_id:vid,
+        product_name:p?.name||'',brand_name:p?.brands?.name||'',
+        color:v?.color||'',size:v?.size||'',quantity:qty,location:loc,
+        notes:notes||null,user_email:session?.user?.email||''});
+      toast('Préstamo registrado');
+      $('lnCInp').value='';selPid=null;$('lnPerson').value='';$('lnNotes').value='';$('lnQty').value='1';
+      $('lnCol').innerHTML='<option value="">— primero producto —</option>';$('lnCol').disabled=true;
+      $('lnSz').innerHTML='<option value="">—</option>';$('lnSz').disabled=true;$('lnCS').textContent='';
+      render();await loadLoans();
+    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
+  });
+}
+
+async function loadLoans(){
+  try{
+    const{data}=await apiMutate({action:'get_loans'});
+    loansData=data||[];renderLoans();
+  }catch(e){toast('Error cargando préstamos: '+e.message,false);}
+}
+
+function renderLoans(){
+  const pending=loansData.filter(l=>l.status==='pendiente');
+  const resolved=loansData.filter(l=>l.status!=='pendiente');
+  $('lnPendCnt').textContent=`${pending.length} pendiente${pending.length!==1?'s':''}`;
+  $('lnHistCnt').textContent=`${resolved.length} resuelto${resolved.length!==1?'s':''}`;
+  const fmt=dt=>new Date(dt).toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  $('lnPendTb').innerHTML=!pending.length
+    ?'<tr><td colspan="9" style="text-align:center;padding:2rem;color:#888">Sin préstamos pendientes</td></tr>'
+    :pending.map(l=>`<tr>
+      <td style="white-space:nowrap">${fmt(l.created_at)}</td>
+      <td><span class="ln-${l.type}">${l.type==='prestado'?'Prestamos':'Nos prestan'}</span></td>
+      <td><strong>${l.person_name}</strong></td>
+      <td>${l.brand_name?l.brand_name+' ':''}${l.product_name}</td>
+      <td>${l.color} / T${l.size}</td>
+      <td class="num">${l.quantity}</td>
+      <td><span class="loc-${l.location==='bodega'?'b':'a'}">${l.location}</span></td>
+      <td style="font-size:.75rem;color:#666">${l.notes||''}</td>
+      <td><button class="btn btn-o" style="font-size:.7rem" onclick="openResolveLoan('${l.id}')">Resolver</button></td>
+    </tr>`).join('');
+  const rl={pagado:'Pagado',devuelto_mismo:'Devuelto (mismo)',devuelto_otra_talla:'Devuelto (otra talla)'};
+  $('lnHistTb').innerHTML=!resolved.length
+    ?'<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Sin historial</td></tr>'
+    :resolved.map(l=>`<tr>
+      <td style="white-space:nowrap">${fmt(l.created_at)}</td>
+      <td><span class="ln-${l.type}">${l.type==='prestado'?'Prestamos':'Nos prestan'}</span></td>
+      <td>${l.person_name}</td>
+      <td>${l.brand_name?l.brand_name+' ':''}${l.product_name}</td>
+      <td>${l.color} / T${l.size}</td>
+      <td class="num">${l.quantity}</td>
+      <td><span class="ln-${l.status==='pagado'?'pagado':'devuelto'}">${rl[l.status]||l.status}</span></td>
+      <td style="font-size:.75rem;color:#666">${l.notes||''}</td>
+    </tr>`).join('');
+}
+
+window.openResolveLoan=function(loanId){
+  const loan=loansData.find(l=>l.id===loanId);if(!loan)return;
+  const isPrest=loan.type==='prestado';
+  let otherVars=[];
+  if(allD){
+    for(const[,cm]of Object.entries(allD.byP)){
+      for(const[col,vs]of Object.entries(cm)){
+        if(col===loan.color&&vs.some(v=>v.id===loan.variant_id)){
+          otherVars=vs.filter(v=>v.id!==loan.variant_id);break;
+        }
+      }
+      if(otherVars.length)break;
+    }
+  }
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
+  const box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:8px;padding:1.5rem;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25);font-family:inherit;border-top:4px solid #7c3aed';
+  box.innerHTML=`
+    <p style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.3rem">${isPrest?'Resolvemos préstamo a':'Devolvemos a'} ${loan.person_name}</p>
+    <p style="font-size:.9rem;font-weight:600;margin-bottom:1rem">${loan.brand_name?loan.brand_name+' ':''}${loan.product_name} — ${loan.color} T${loan.size} × ${loan.quantity}</p>
+    <div id="_lnOpts" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem">
+      <button class="btn btn-g btn-w" data-res="pagado">${isPrest?'💰 Nos pagaron':'💰 Pagamos (lo compramos)'}</button>
+      <button class="btn btn-b btn-w" data-res="devuelto_mismo">${isPrest?'↩ Devolvieron el mismo par':'↩ Devolvemos el mismo par'}</button>
+      <button class="btn btn-p btn-w" data-res="devuelto_otra_talla">${isPrest?'🔄 Devolvieron otra talla':'🔄 Devolvemos otra talla'}</button>
+    </div>
+    <div id="_lnOtraTalla" hidden style="margin-bottom:.75rem">
+      <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">Talla a ${isPrest?'recibir':'devolver'}</label>
+      <select id="_lnOthVar" class="loc-sel" style="width:100%;margin-bottom:.5rem">
+        <option value="">— seleccionar talla —</option>
+        ${otherVars.map(v=>`<option value="${v.id}">T${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})</option>`).join('')}
+      </select>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+        <label style="font-size:.75rem;font-weight:600;color:#555;white-space:nowrap">Cantidad:</label>
+        <input type="number" id="_lnOthQty" min="1" value="${loan.quantity}" class="qi" style="width:80px"/>
+      </div>
+      <button class="btn btn-p btn-w" id="_lnConfOtra">Confirmar</button>
+    </div>
+    <button class="btn btn-o btn-w" id="_lnCancel">Cancelar</button>`;
+  ov.appendChild(box);document.body.appendChild(ov);
+  box.querySelector('#_lnCancel').addEventListener('click',()=>ov.remove());
+  ov.addEventListener('pointerdown',e=>{if(e.target===ov)ov.remove();});
+  box.querySelectorAll('[data-res]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const res=btn.dataset.res;
+      if(res==='devuelto_otra_talla'){
+        box.querySelector('#_lnOpts').hidden=true;
+        box.querySelector('#_lnOtraTalla').hidden=false;return;
+      }
+      ov.remove();await doResolveLoan(loanId,res,null,null);
+    });
+  });
+  box.querySelector('#_lnConfOtra').addEventListener('click',async()=>{
+    const vid=box.querySelector('#_lnOthVar').value;
+    const qty=parseInt(box.querySelector('#_lnOthQty').value)||loan.quantity;
+    if(!vid){toast('Selecciona la talla',false);return;}
+    ov.remove();await doResolveLoan(loanId,'devuelto_otra_talla',vid,qty);
+  });
+};
+
+async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty){
+  ld(true);
+  try{
+    await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty});
+    toast('Préstamo resuelto');render();await loadLoans();
+  }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
+}
 
 function setupVelozAll(sp){
   // VENTAS masivo

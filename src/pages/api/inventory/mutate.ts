@@ -176,6 +176,90 @@ export const POST: APIRoute = async ({ request }) => {
       }
       return json({ ok: true });
 
+    } else if (action === 'get_loans') {
+      const { data, error } = await sb
+        .from('loans')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return json({ data });
+
+    } else if (action === 'create_loan') {
+      const { type, person_name, variant_id, product_name, brand_name, color, size, quantity, location, notes, user_email } = params;
+      if (!type || !person_name || !variant_id || !quantity) throw new Error('Faltan campos requeridos');
+
+      // Adjust inventory: prestado = decrease, recibido = increase
+      const { data: variant, error: fetchErr } = await sb
+        .from('product_variants')
+        .select('stock_almacen,stock_bodega')
+        .eq('id', variant_id)
+        .single();
+      if (fetchErr) throw fetchErr;
+
+      const field = location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
+      const current = location === 'bodega' ? (variant.stock_bodega || 0) : (variant.stock_almacen || 0);
+      const delta = type === 'prestado' ? -quantity : quantity;
+      const newVal = Math.max(0, current + delta);
+
+      const { error: updErr } = await sb.from('product_variants').update({ [field]: newVal }).eq('id', variant_id);
+      if (updErr) throw updErr;
+
+      const { error: insErr } = await sb.from('loans').insert({
+        type, person_name, variant_id, product_name, brand_name: brand_name || null,
+        color, size, quantity, location, notes: notes || null, user_email: user_email || null,
+      });
+      if (insErr) throw insErr;
+
+      // Log movement
+      await sb.from('inventory_movements').insert({
+        type: type === 'prestado' ? 'venta' : 'ingreso',
+        product_name, brand_name: brand_name || null, color, size,
+        quantity, location, user_email: user_email || null,
+      });
+
+      return json({ ok: true });
+
+    } else if (action === 'resolve_loan') {
+      const { loan_id, resolution, resolved_variant_id, resolved_quantity } = params;
+      if (!loan_id || !resolution) throw new Error('Faltan campos requeridos');
+
+      const { data: loan, error: loanErr } = await sb.from('loans').select('*').eq('id', loan_id).single();
+      if (loanErr) throw loanErr;
+
+      const field = loan.location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
+
+      // Reverse the original stock change
+      const { data: origVar, error: origErr } = await sb.from('product_variants')
+        .select('stock_almacen,stock_bodega').eq('id', loan.variant_id).single();
+      if (!origErr && origVar) {
+        const origCurrent = loan.location === 'bodega' ? (origVar.stock_bodega || 0) : (origVar.stock_almacen || 0);
+        // prestado originally decreased; recibido originally increased — reverse both
+        const reverseDelta = loan.type === 'prestado' ? loan.quantity : -loan.quantity;
+        await sb.from('product_variants').update({ [field]: Math.max(0, origCurrent + reverseDelta) }).eq('id', loan.variant_id);
+      }
+
+      // For devuelto_otra_talla: apply to the resolved variant
+      if (resolution === 'devuelto_otra_talla' && resolved_variant_id) {
+        const qty = resolved_quantity || loan.quantity;
+        const { data: rVar } = await sb.from('product_variants')
+          .select('stock_almacen,stock_bodega').eq('id', resolved_variant_id).single();
+        if (rVar) {
+          const rCurrent = loan.location === 'bodega' ? (rVar.stock_bodega || 0) : (rVar.stock_almacen || 0);
+          // We get back/give back the other size — same direction as original reverse
+          const rDelta = loan.type === 'prestado' ? qty : -qty;
+          await sb.from('product_variants').update({ [field]: Math.max(0, rCurrent + rDelta) }).eq('id', resolved_variant_id);
+        }
+      }
+
+      const { error: resolveErr } = await sb.from('loans').update({
+        status: resolution,
+        resolved_at: new Date().toISOString(),
+        resolved_variant_id: resolved_variant_id || null,
+      }).eq('id', loan_id);
+      if (resolveErr) throw resolveErr;
+
+      return json({ ok: true });
+
     } else {
       return json({ error: 'Acción desconocida' }, 400);
     }
