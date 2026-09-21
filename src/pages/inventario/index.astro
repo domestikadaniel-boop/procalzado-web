@@ -1018,11 +1018,16 @@ async function loadMLStatus(){
   st.textContent='Verificando conexión...';
   try{
     const r=await apiMutate({action:'get_ml_status'});
-    if(r.connected){
-      const exp=r.expired?'<span style="color:#f00"> (token expirado — reconectar)</span>':'';
-      st.innerHTML=`<span style="color:green">● Conectado</span> — Vendedor ID: <strong>${r.ml_user_id||'—'}</strong>${exp}`;
+    if(r.connected&&!r.expired){
+      const expStr=r.expires_at?` — vence ${new Date(r.expires_at).toLocaleString('es-CO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}`:'';
+      st.innerHTML=`<span style="color:green">● Conectado</span> — Vendedor ID: <strong>${r.ml_user_id||'—'}</strong><span style="color:#888;font-size:.75rem">${expStr}</span>`;
+      $('mlConnectBtn').style.display='none';
+    } else if(r.connected&&r.expired){
+      st.innerHTML=`<span style="color:#f00">● Token vencido</span> — Vuelve a conectar para restaurar la sincronización`;
+      $('mlConnectBtn').style.display='';
     } else {
       st.innerHTML='<span style="color:#aaa">● No conectado</span> — Haz clic en "Conectar con MercadoLibre" para autorizar';
+      $('mlConnectBtn').style.display='';
     }
   } catch(e){st.textContent='Error verificando estado: '+e.message;}
 }

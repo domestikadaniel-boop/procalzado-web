@@ -270,12 +270,17 @@ export const POST: APIRoute = async ({ request }) => {
     } else if (action === 'get_ml_status') {
       const { data: cred } = await sb
         .from('ml_credentials')
-        .select('ml_user_id,expires_at,access_token')
+        .select('ml_user_id,expires_at,access_token,refresh_token')
         .limit(1)
         .maybeSingle();
       if (!cred?.access_token) return json({ connected: false });
-      const expired = cred.expires_at ? new Date(cred.expires_at) < new Date() : true;
-      return json({ connected: true, expired, ml_user_id: cred.ml_user_id, expires_at: cred.expires_at });
+      // Intentar renovar si está por vencer o ya venció
+      const { getMLAccessToken } = await import('../../../lib/mercadolibre');
+      const token = await getMLAccessToken(sb);
+      if (!token) return json({ connected: true, expired: true, ml_user_id: cred.ml_user_id });
+      // Leer expires_at actualizado tras el refresh
+      const { data: fresh } = await sb.from('ml_credentials').select('ml_user_id,expires_at').limit(1).maybeSingle();
+      return json({ connected: true, expired: false, ml_user_id: fresh?.ml_user_id || cred.ml_user_id, expires_at: fresh?.expires_at });
 
     } else if (action === 'set_ml_ids') {
       const { variant_id, ml_item_id, ml_variation_id } = params;
