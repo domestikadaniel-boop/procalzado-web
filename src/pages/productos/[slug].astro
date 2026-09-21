@@ -109,7 +109,7 @@ const schemaProduct = {
       {images.length > 0 && (
         <script type="application/json" id="galleryData" set:html={JSON.stringify(images.map(i => ({ url: i.url, color: i.color, alt: i.alt_text })))}></script>
       )}
-      <script type="application/json" id="variantsData" set:html={JSON.stringify(variants.map(v => ({ size: v.size, color: v.color, stock: (v as any).stock ?? null })))}></script>
+      <script type="application/json" id="variantsData" set:html={JSON.stringify(variants.map(v => ({ size: v.size, color: v.color, stock: ((v as any).stock_almacen || 0) + ((v as any).stock_bodega || 0) })))}></script>
       {(product as any).per_color_prices && (
         <script type="application/json" id="colorPricesData" set:html={JSON.stringify((product as any).color_prices || {})}></script>
       )}
@@ -289,6 +289,21 @@ const schemaProduct = {
     preload.src = imgData.url;
   });
 
+  const btnBuyNow = document.getElementById('btnBuyNow');
+  const btnAddCart = document.getElementById('btnAddCart');
+
+  function stockForVariant(color, size) {
+    const v = allVariants.find(v => v.color === color && v.size === size);
+    return v ? (v.stock ?? 0) : 0;
+  }
+
+  function updateCartButtons() {
+    const stock = stockForVariant(selectedColor, selectedSize);
+    const hasStock = stock > 0;
+    if (btnBuyNow) { btnBuyNow.disabled = !hasStock; btnBuyNow.style.opacity = hasStock ? '' : '.4'; btnBuyNow.style.cursor = hasStock ? '' : 'not-allowed'; btnBuyNow.title = hasStock ? '' : 'Sin stock'; }
+    if (btnAddCart) { btnAddCart.disabled = !hasStock; btnAddCart.style.opacity = hasStock ? '' : '.4'; btnAddCart.style.cursor = hasStock ? '' : 'not-allowed'; btnAddCart.title = hasStock ? '' : 'Sin stock'; }
+  }
+
   // Función para actualizar tallas visibles según color seleccionado
   const sizeBtns = document.querySelectorAll('.size-tag-btn');
   function updateSizesForColor(color) {
@@ -301,9 +316,11 @@ const schemaProduct = {
       const s = btn.dataset.size;
       if (!sizesForColor.includes(s)) { btn.style.display = 'none'; return; }
       btn.style.display = '';
-      btn.classList.remove('no-stock');
-      btn.disabled = false;
-      if (s === selectedSize) currentSizeSelectable = true;
+      const v = variantsForColor.find(v => v.size === s);
+      const hasStock = v && (v.stock ?? 0) > 0;
+      btn.classList.toggle('no-stock', !hasStock);
+      btn.disabled = !hasStock;
+      if (s === selectedSize && hasStock) currentSizeSelectable = true;
     });
     if (!currentSizeSelectable) {
       sizeBtns.forEach(b => b.classList.remove('selected'));
@@ -311,18 +328,28 @@ const schemaProduct = {
       if (first) { first.classList.add('selected'); selectedSize = first.dataset.size; }
       else { const anyVisible = [...sizeBtns].find(b => b.style.display !== 'none'); if (anyVisible) { anyVisible.classList.add('selected'); selectedSize = anyVisible.dataset.size; } }
     }
+    updateCartButtons();
   }
 
-  // Inicializar tallas (sin filtro de color: marcar sin-stock globalmente)
+  // Inicializar tallas
   if (sizeBtns.length > 0) {
-    // Si no hay colores, marcar tallas con stock=0
-    const firstSelectable = sizeBtns[0];
-    selectedSize = (firstSelectable || sizeBtns[0]).dataset.size;
+    selectedSize = sizeBtns[0].dataset.size;
+    // Marcar sin stock si no hay colores (producto de un solo color o "Único")
+    if (!colorBtns.length) {
+      sizeBtns.forEach(btn => {
+        const v = allVariants.find(v => v.size === btn.dataset.size);
+        const hasStock = v && (v.stock ?? 0) > 0;
+        btn.classList.toggle('no-stock', !hasStock);
+        btn.disabled = !hasStock;
+      });
+      updateCartButtons();
+    }
     sizeBtns.forEach(btn => btn.addEventListener('click', () => {
-      // stock-check desactivado temporalmente
+      if (btn.classList.contains('no-stock') || btn.disabled) return;
       sizeBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedSize = btn.dataset.size;
+      updateCartButtons();
     }));
   }
 
@@ -334,6 +361,7 @@ const schemaProduct = {
     if (colorNameSpan) colorNameSpan.textContent = '— ' + selectedColor;
     updateSizesForColor(selectedColor);
     updatePriceForColor(selectedColor);
+    updateCartButtons();
 
     colorBtns.forEach(btn => btn.addEventListener('click', () => {
       colorBtns.forEach(b => b.classList.remove('selected'));
