@@ -375,6 +375,7 @@ tbody tr:hover td{filter:brightness(.96)}
         </select>
         <input type="text" id="hfsq" placeholder="Buscar producto..."/>
         <button class="btn btn-o" id="hReloadBtn">Recargar</button>
+        <button class="btn btn-r" id="hClearBtn" style="margin-left:auto">Limpiar historial</button>
       </div>
       <div class="tw">
         <table>
@@ -965,8 +966,16 @@ let histData=[];
 async function loadHistory(){
   ld(true);
   try{
-    const{data}=await apiMutate({action:'get_movements'});
-    histData=data||[];
+    let all=[],offset=0;
+    const limit=1000;
+    while(true){
+      const{data}=await apiMutate({action:'get_movements',offset,limit});
+      if(!data||!data.length)break;
+      all=all.concat(data);
+      if(data.length<limit)break;
+      offset+=limit;
+    }
+    histData=all;
     renderHistory();
   }catch(e){toast('Error cargando historial: '+e.message,false);}
   finally{ld(false);}
@@ -1015,6 +1024,17 @@ function renderHistory(){
 
 ['hftype','hfsq'].forEach(id=>$(id).addEventListener('input',renderHistory));
 $('hReloadBtn').addEventListener('click',loadHistory);
+$('hClearBtn').addEventListener('click',async()=>{
+  const ok=await confirmMovement('Limpiar historial','Se borrarán TODOS los movimientos registrados. Esta acción no se puede deshacer.');
+  if(!ok)return;
+  ld(true);
+  try{
+    await apiMutate({action:'clear_movements'});
+    histData=[];renderHistory();
+    toast('Historial limpiado');
+  }catch(e){toast('Error: '+e.message,false);}
+  finally{ld(false);}
+});
 
 // cargar historial al entrar al tab
 document.querySelectorAll('.tab').forEach(t=>{

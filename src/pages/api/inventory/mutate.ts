@@ -56,13 +56,22 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ ok: true });
 
     } else if (action === 'get_movements') {
+      const { offset = 0, limit = 1000 } = params;
       const { data, error } = await sb
         .from('inventory_movements')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(500);
+        .range(offset, offset + limit - 1);
       if (error) throw error;
       return json({ data });
+
+    } else if (action === 'clear_movements') {
+      const { error } = await sb
+        .from('inventory_movements')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+      return json({ ok: true });
 
     } else if (action === 'delete_variants') {
       const { product_id } = params;
