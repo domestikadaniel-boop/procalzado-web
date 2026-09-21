@@ -475,25 +475,33 @@ tbody tr:hover td{filter:brightness(.96)}
     </div>
 
     <div class="sec" id="tab-ml">
-      <div class="toolbar" style="align-items:flex-start;flex-direction:column;gap:.7rem">
-        <div id="mlStatus" style="font-size:.8rem;color:#888">Verificando conexión...</div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-          <a href="/api/ml/auth" target="_blank" class="btn" id="mlConnectBtn">Conectar con MercadoLibre</a>
-          <button class="btn btn-o" id="mlRefreshBtn">Recargar estado</button>
+      <!-- Header ML -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;margin-bottom:.85rem">
+        <div>
+          <div id="mlStatus" style="font-size:.8rem;color:#888;margin-bottom:.3rem">Verificando conexión...</div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <a href="/api/ml/auth" target="_blank" class="btn btn-o" id="mlConnectBtn" style="font-size:.72rem;padding:.35rem .75rem">Conectar con MercadoLibre</a>
+            <button class="btn btn-o" id="mlRefreshBtn" style="font-size:.72rem;padding:.35rem .75rem">↻ Recargar</button>
+          </div>
         </div>
-        <p style="font-size:.75rem;color:#aaa;margin:0">Asigna el <strong>ID de publicación de ML</strong> a cada variante. Si la publicación tiene variaciones (tallas/colores separados dentro de la misma publicación), también ingresa el <strong>ID de variación</strong>.</p>
+        <div id="mlSummary" style="display:flex;gap:.5rem;flex-wrap:wrap"></div>
       </div>
-      <div class="toolbar" style="margin-top:.5rem">
-        <input type="text" id="mlSearch" placeholder="Buscar producto..." style="max-width:260px"/>
+      <!-- Filtros -->
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem">
+        <input type="text" id="mlSearch" placeholder="Buscar producto..." style="padding:.42rem .75rem;border:1.5px solid #ddd;border-radius:4px;font-size:.8rem;font-family:inherit;outline:none;width:220px"/>
+        <label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:#555;cursor:pointer">
+          <input type="checkbox" id="mlShowAll" style="accent-color:#f00"/> Ver todos (incl. sin ML)
+        </label>
       </div>
+      <!-- Tabla -->
       <div class="tw">
         <table id="mlTable">
           <thead>
             <tr>
               <th>Producto</th>
               <th>Color</th>
-              <th>Talla</th>
-              <th>Stock</th>
+              <th class="num">Talla</th>
+              <th class="num">Stock</th>
               <th>ID Publicación ML</th>
               <th>ID Variación ML</th>
               <th></th>
@@ -504,6 +512,7 @@ tbody tr:hover td{filter:brightness(.96)}
           </tbody>
         </table>
       </div>
+      <div id="mlCnt" style="margin-top:.4rem;font-size:.7rem;color:#888"></div>
     </div>
 
   </div>
@@ -1186,6 +1195,15 @@ async function loadMLVariants(){
       productName:prodMap[v.product_id]||'—',
       totalStock:(v.stock_almacen||0)+(v.stock_bodega||0),
     }));
+    // Summary chips
+    const total=mlVariantsData.length;
+    const linked=mlVariantsData.filter(v=>v.ml_item_id).length;
+    const products_linked=new Set(mlVariantsData.filter(v=>v.ml_item_id).map(v=>v.product_id)).size;
+    $('mlSummary').innerHTML=`
+      <span class="chip" style="background:#dcfce7;color:#166534;border-color:#bbf7d0">✓ ${linked} variantes vinculadas</span>
+      <span class="chip" style="background:#dbeafe;color:#1e40af;border-color:#bfdbfe">${products_linked} productos</span>
+      <span class="chip" style="background:#fef9c3;color:#713f12;border-color:#fde68a">${total-linked} sin ML</span>
+    `;
     renderMLTable();
   }catch(e){
     $('mlTb').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:1rem;color:red">${e.message}</td></tr>`;
@@ -1194,22 +1212,64 @@ async function loadMLVariants(){
 
 function renderMLTable(){
   const q=($('mlSearch').value||'').toLowerCase();
-  const rows=mlVariantsData.filter(v=>!q||v.productName.toLowerCase().includes(q)||v.color.toLowerCase().includes(q));
+  const showAll=$('mlShowAll').checked;
+  let rows=mlVariantsData.filter(v=>{
+    if(!showAll&&!v.ml_item_id)return false;
+    if(q&&!v.productName.toLowerCase().includes(q)&&!v.color.toLowerCase().includes(q))return false;
+    return true;
+  });
+  // Sort A-Z por producto, luego color, luego talla numérica
+  rows.sort((a,b)=>{
+    const np=a.productName.localeCompare(b.productName,'es');
+    if(np!==0)return np;
+    const nc=a.color.localeCompare(b.color,'es');
+    if(nc!==0)return nc;
+    return Number(a.size)-Number(b.size);
+  });
+  $('mlCnt').textContent=rows.length?`${rows.length} variante${rows.length!==1?'s':''}`:'' ;
   if(!rows.length){$('mlTb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888">Sin resultados</td></tr>';return;}
-  $('mlTb').innerHTML=rows.map(v=>`
-    <tr data-vid="${v.id}">
-      <td>${v.productName}</td>
-      <td>${v.color}</td>
-      <td>${v.size}</td>
-      <td class="num">${v.totalStock}</td>
-      <td><input type="text" class="ml-item-inp" value="${v.ml_item_id||''}" placeholder="MCO123456789" style="width:140px;padding:.25rem .4rem;font-size:.78rem;border:1px solid #ddd;border-radius:4px"/></td>
-      <td><input type="text" class="ml-var-inp" value="${v.ml_variation_id||''}" placeholder="Opcional" style="width:110px;padding:.25rem .4rem;font-size:.78rem;border:1px solid #ddd;border-radius:4px"/></td>
-      <td style="display:flex;gap:.3rem;flex-wrap:wrap">
-        <button class="btn btn-o ml-save-btn" style="padding:.22rem .6rem;font-size:.7rem">Guardar</button>
-        <button class="btn btn-o ml-vars-btn" style="padding:.22rem .6rem;font-size:.7rem;background:#f5f5f5" title="Ver IDs de variaciones de esta publicación">Tallas ML</button>
+
+  // Agrupar por producto con fila separadora
+  let lastProd='';
+  $('mlTb').innerHTML=rows.map(v=>{
+    let groupRow='';
+    if(v.productName!==lastProd){
+      lastProd=v.productName;
+      groupRow=`<tr><td colspan="7" style="background:#f5f5f5;padding:.3rem .75rem;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#555;border-bottom:1px solid #ddd">${v.productName}</td></tr>`;
+    }
+    const s=v.totalStock;
+    const scls=s<=0?'s0':s<5?'slow':'sok';
+    const mlTag=v.ml_item_id
+      ?`<span style="font-family:monospace;font-size:.75rem;background:#f0f4ff;color:#1e40af;padding:.15rem .45rem;border-radius:3px;border:1px solid #c7d2fe">${v.ml_item_id}</span>`
+      :`<span style="font-size:.72rem;color:#aaa;font-style:italic">— sin ML</span>`;
+    const varTag=v.ml_variation_id
+      ?`<span style="font-family:monospace;font-size:.72rem;background:#f5f0ff;color:#6b21a8;padding:.15rem .4rem;border-radius:3px;border:1px solid #e9d5ff">${v.ml_variation_id}</span>`
+      :`<span style="color:#ccc;font-size:.72rem">—</span>`;
+    return groupRow+`<tr data-vid="${v.id}">
+      <td style="padding:.35rem .75rem;color:#888;font-size:.78rem;font-style:italic">${v.productName}</td>
+      <td style="padding:.35rem .75rem">${v.color}</td>
+      <td class="num" style="padding:.35rem .75rem">${v.size}</td>
+      <td class="num ${scls}" style="padding:.35rem .75rem">${s}</td>
+      <td style="padding:.35rem .75rem">
+        <div style="display:flex;align-items:center;gap:.4rem">
+          ${mlTag}
+          <input type="text" class="ml-item-inp" value="${v.ml_item_id||''}" placeholder="MCO…" style="width:130px;padding:.22rem .4rem;font-size:.75rem;border:1px solid #ddd;border-radius:4px;font-family:monospace"/>
+        </div>
       </td>
-    </tr>
-  `).join('');
+      <td style="padding:.35rem .75rem">
+        <div style="display:flex;align-items:center;gap:.4rem">
+          ${varTag}
+          <input type="text" class="ml-var-inp" value="${v.ml_variation_id||''}" placeholder="Opcional" style="width:100px;padding:.22rem .4rem;font-size:.75rem;border:1px solid #ddd;border-radius:4px;font-family:monospace"/>
+        </div>
+      </td>
+      <td style="padding:.35rem .75rem;white-space:nowrap">
+        <div style="display:flex;gap:.25rem">
+          <button class="btn btn-b ml-save-btn" style="padding:.2rem .55rem;font-size:.68rem">Guardar</button>
+          <button class="btn btn-o ml-vars-btn" style="padding:.2rem .55rem;font-size:.68rem" title="Ver variaciones de ML">Vars</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
 
   $('mlTb').querySelectorAll('.ml-vars-btn').forEach(btn=>{
     btn.addEventListener('click',async()=>{
@@ -1226,23 +1286,22 @@ function renderMLTable(){
           const color=v.attribute_combinations?.find(a=>a.id==='COLOR'||a.name==='Color')?.value_name||'';
           return `<tr><td style="padding:.3rem .6rem;font-family:monospace;user-select:all;cursor:text">${v.id}</td><td style="padding:.3rem .6rem">Talla ${talla}${color?' — '+color:''}</td><td style="padding:.3rem .6rem;color:#888">${v.available_quantity??'?'} u.</td></tr>`;
         }).join('');
-        // Mostrar modal copiable
         let mod=document.getElementById('mlVarsModal');
         if(!mod){mod=document.createElement('div');mod.id='mlVarsModal';mod.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';document.body.appendChild(mod);}
         mod.innerHTML=`<div style="background:#fff;border-radius:8px;padding:1.5rem;max-width:560px;width:90%;max-height:80vh;overflow-y:auto">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-            <strong>Variaciones de ${mlItemId}</strong>
+            <strong style="font-family:monospace;font-size:.85rem">${mlItemId}</strong>
             <button onclick="document.getElementById('mlVarsModal').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888">×</button>
           </div>
-          <p style="font-size:.78rem;color:#888;margin-bottom:.8rem">Haz clic en un ID para seleccionarlo y copiarlo.</p>
+          <p style="font-size:.75rem;color:#888;margin-bottom:.8rem">Clic en un ID para seleccionarlo.</p>
           <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-            <thead><tr style="border-bottom:2px solid #eee"><th style="padding:.3rem .6rem;text-align:left">ID Variación</th><th style="padding:.3rem .6rem;text-align:left">Descripción</th><th style="padding:.3rem .6rem;text-align:left">Stock ML</th></tr></thead>
+            <thead><tr style="background:#000;color:#fff"><th style="padding:.35rem .6rem;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase">ID Variación</th><th style="padding:.35rem .6rem;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Descripción</th><th style="padding:.35rem .6rem;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Stock ML</th></tr></thead>
             <tbody>${lines}</tbody>
           </table>
         </div>`;
         mod.querySelectorAll('td[style*="monospace"]').forEach(td=>{td.addEventListener('click',()=>{const sel=window.getSelection();const r=document.createRange();r.selectNodeContents(td);sel.removeAllRanges();sel.addRange(r);});});
       }catch(e){toast('Error: '+e.message,false);}
-      finally{btn.textContent='Tallas ML';btn.disabled=false;}
+      finally{btn.textContent='Vars';btn.disabled=false;}
     });
   });
 
@@ -1257,8 +1316,8 @@ function renderMLTable(){
         await apiMutate({action:'set_ml_ids',variant_id:vid,ml_item_id:mlItemId,ml_variation_id:mlVarId});
         const v=mlVariantsData.find(x=>x.id===vid);
         if(v){v.ml_item_id=mlItemId||null;v.ml_variation_id=mlVarId||null;}
-        btn.textContent='Guardado';
-        setTimeout(()=>{btn.textContent='Guardar';btn.disabled=false;},1500);
+        renderMLTable();
+        toast('Guardado ✓');
       }catch(e){
         toast('Error: '+e.message,false);
         btn.textContent='Guardar';btn.disabled=false;
@@ -1268,6 +1327,7 @@ function renderMLTable(){
 }
 
 $('mlSearch').addEventListener('input',renderMLTable);
+$('mlShowAll').addEventListener('change',renderMLTable);
 $('mlRefreshBtn').addEventListener('click',()=>{loadMLStatus();loadMLVariants();});
 
 // PRÉSTAMOS
