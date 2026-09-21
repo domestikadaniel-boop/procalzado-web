@@ -507,7 +507,6 @@ const schemaProduct = {
   }
 
   // Botón "Comprar" — agrega al carrito y va directo al checkout
-  const btnBuyNow = document.getElementById('btnBuyNow');
   if (btnBuyNow) {
     btnBuyNow.addEventListener('click', () => {
       const qty = parseInt(qtyInput?.value) || 1;
