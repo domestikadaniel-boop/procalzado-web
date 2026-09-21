@@ -667,7 +667,8 @@ async function apiMutate(body){
   return json;
 }
 
-async function logMovement(type,vid,qty){
+function genBatch(){return crypto.randomUUID();}
+async function logMovement(type,vid,qty,batchId){
   try{
     const v=allD?.variants.find(x=>x.id===vid);
     if(!v)return;
@@ -677,7 +678,7 @@ async function logMovement(type,vid,qty){
       product_name:p?.name||'',brand_name:p?.brands?.name||'',
       color:v.color||'',size:v.size||'',quantity:qty,
       user_email:currentUserEmail,
-      location:null,from_location:null,to_location:null,
+      location:null,from_location:batchId||null,to_location:null,
     });
   }catch(_){}
 }
@@ -982,21 +983,73 @@ function renderHistory(){
     return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'})+
       ' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   };
-
   const typeBadge=t=>`<span class="mv-${t}">${t}</span>`;
 
-  $('htb').innerHTML=rows.map(r=>`<tr>
-    <td style="white-space:nowrap">${fmt(r.created_at)}</td>
-    <td>${typeBadge(r.type)}</td>
-    <td>${r.brand_name||''}</td>
-    <td>${r.product_name||''}</td>
-    <td>${r.color||''}</td>
-    <td style="text-align:center">${r.size||''}</td>
-    <td class="num">${r.quantity}</td>
-    <td style="font-size:.72rem;color:#666">${r.user_email||''}</td>
-  </tr>`).join('');
+  // Agrupar: filas con mismo from_location (batch_id) van juntas; las sin batch son individuales
+  const groups=[];
+  const batchMap={};
+  for(const r of rows){
+    const bid=r.from_location||null;
+    if(bid){
+      if(!batchMap[bid]){batchMap[bid]=[];groups.push({batch:bid,items:batchMap[bid]});}
+      batchMap[bid].push(r);
+    }else{
+      groups.push({batch:null,items:[r]});
+    }
+  }
+
+  let html='';
+  for(const g of groups){
+    if(g.items.length===1){
+      const r=g.items[0];
+      html+=`<tr>
+        <td style="white-space:nowrap">${fmt(r.created_at)}</td>
+        <td>${typeBadge(r.type)}</td>
+        <td>${r.brand_name||''}</td>
+        <td>${r.product_name||''}</td>
+        <td>${r.color||''}</td>
+        <td style="text-align:center">${r.size||''}</td>
+        <td class="num">${r.quantity}</td>
+        <td style="font-size:.72rem;color:#666">${r.user_email||''}</td>
+      </tr>`;
+    } else {
+      // Fila resumen colapsable
+      const first=g.items[0];
+      const totalQty=g.items.reduce((s,r)=>s+r.quantity,0);
+      const bid=g.batch;
+      html+=`<tr class="batch-hdr" data-bid="${bid}" style="cursor:pointer;background:#f8f8f8" onclick="toggleBatch('${bid}')">
+        <td style="white-space:nowrap">${fmt(first.created_at)}</td>
+        <td>${typeBadge(first.type)}</td>
+        <td colspan="3" style="color:#555;font-style:italic">${g.items.length} productos — clic para ver</td>
+        <td style="text-align:center">—</td>
+        <td class="num">${totalQty}</td>
+        <td style="font-size:.72rem;color:#666">${first.user_email||''}</td>
+      </tr>`;
+      for(const r of g.items){
+        html+=`<tr class="batch-row" data-bid="${bid}" hidden>
+          <td style="white-space:nowrap;padding-left:1.5rem;color:#888;font-size:.75rem">${fmt(r.created_at)}</td>
+          <td></td>
+          <td>${r.brand_name||''}</td>
+          <td>${r.product_name||''}</td>
+          <td>${r.color||''}</td>
+          <td style="text-align:center">${r.size||''}</td>
+          <td class="num">${r.quantity}</td>
+          <td></td>
+        </tr>`;
+      }
+    }
+  }
+  $('htb').innerHTML=html;
   $('hcnt').textContent=`${rows.length} movimientos`;
 }
+
+window.toggleBatch=function(bid){
+  const rows=document.querySelectorAll(`.batch-row[data-bid="${bid}"]`);
+  const hdr=document.querySelector(`.batch-hdr[data-bid="${bid}"]`);
+  const open=rows[0]&&!rows[0].hidden;
+  rows.forEach(r=>{r.hidden=open;});
+  if(hdr){const cell=hdr.cells[2];cell.textContent=open?`${rows.length} productos — clic para ver`:`${rows.length} productos — clic para cerrar`;}
+};
 
 ['hftype','hfsq'].forEach(id=>$(id).addEventListener('input',renderHistory));
 $('hReloadBtn').addEventListener('click',loadHistory);
@@ -1368,7 +1421,8 @@ function setupVelozAll(sp){
     if(!ok)return;
     ld(true);
     try{
-      for(const o of ops){await updS(o.vid,-o.qty);await logMovement('venta',o.vid,o.qty);}
+      const bid=genBatch();
+      for(const o of ops){await updS(o.vid,-o.qty);await logMovement('venta',o.vid,o.qty,bid);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} descontadas`);
       refreshVzBlocks('vzSBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
@@ -1383,7 +1437,8 @@ function setupVelozAll(sp){
     if(!ok)return;
     ld(true);
     try{
-      for(const o of ops){await updS(o.vid,o.qty);await logMovement('ingreso',o.vid,o.qty);}
+      const bid=genBatch();
+      for(const o of ops){await updS(o.vid,o.qty);await logMovement('ingreso',o.vid,o.qty,bid);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} ingresadas`);
       refreshVzBlocks('vzEBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
