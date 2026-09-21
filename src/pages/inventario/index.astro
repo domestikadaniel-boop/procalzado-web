@@ -426,7 +426,10 @@ tbody tr:hover td{filter:brightness(.96)}
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
           <h3 style="margin:0">Historial de préstamos</h3>
-          <span id="lnHistCnt" style="font-size:.75rem;color:#888"></span>
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <span id="lnHistCnt" style="font-size:.75rem;color:#888"></span>
+            <button class="btn btn-r" id="lnClearBtn" style="font-size:.72rem">Limpiar historial</button>
+          </div>
         </div>
         <div class="tw"><table>
           <thead><tr>
@@ -1148,6 +1151,17 @@ function setupLoans(sp){
   $('lnSz').addEventListener('change',()=>{
     const v=allD?.variants.find(x=>x.id===$('lnSz').value);
     $('lnCS').textContent=v?`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`:'';
+  });
+
+  $('lnClearBtn').addEventListener('click',async()=>{
+    const ok=await confirmMovement('Limpiar historial de préstamos','Se borrarán todos los préstamos resueltos. Los pendientes se conservan.');
+    if(!ok)return;
+    ld(true);
+    try{
+      await apiMutate({action:'clear_loans_history'});
+      loansData=loansData.filter(l=>l.status==='pendiente');
+      renderLoans();toast('Historial limpiado');
+    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 
   $('lnBtn').addEventListener('click',async()=>{
