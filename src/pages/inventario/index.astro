@@ -1224,9 +1224,23 @@ function renderMLTable(){
         const lines=vars.map(v=>{
           const talla=v.attribute_combinations?.find(a=>a.id==='SIZE'||a.name==='Talla')?.value_name||'?';
           const color=v.attribute_combinations?.find(a=>a.id==='COLOR'||a.name==='Color')?.value_name||'';
-          return `ID: ${v.id}  →  Talla: ${talla}${color?' | Color: '+color:''}  (stock ML: ${v.available_quantity??'?'})`;
-        }).join('\n');
-        alert(`Variaciones de ${mlItemId}:\n\n${lines}\n\nCopia el ID que corresponda a cada variante en el campo "ID Variación ML".`);
+          return `<tr><td style="padding:.3rem .6rem;font-family:monospace;user-select:all;cursor:text">${v.id}</td><td style="padding:.3rem .6rem">Talla ${talla}${color?' — '+color:''}</td><td style="padding:.3rem .6rem;color:#888">${v.available_quantity??'?'} u.</td></tr>`;
+        }).join('');
+        // Mostrar modal copiable
+        let mod=document.getElementById('mlVarsModal');
+        if(!mod){mod=document.createElement('div');mod.id='mlVarsModal';mod.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';document.body.appendChild(mod);}
+        mod.innerHTML=`<div style="background:#fff;border-radius:8px;padding:1.5rem;max-width:560px;width:90%;max-height:80vh;overflow-y:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <strong>Variaciones de ${mlItemId}</strong>
+            <button onclick="document.getElementById('mlVarsModal').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888">×</button>
+          </div>
+          <p style="font-size:.78rem;color:#888;margin-bottom:.8rem">Haz clic en un ID para seleccionarlo y copiarlo.</p>
+          <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+            <thead><tr style="border-bottom:2px solid #eee"><th style="padding:.3rem .6rem;text-align:left">ID Variación</th><th style="padding:.3rem .6rem;text-align:left">Descripción</th><th style="padding:.3rem .6rem;text-align:left">Stock ML</th></tr></thead>
+            <tbody>${lines}</tbody>
+          </table>
+        </div>`;
+        mod.querySelectorAll('td[style*="monospace"]').forEach(td=>{td.addEventListener('click',()=>{const sel=window.getSelection();const r=document.createRange();r.selectNodeContents(td);sel.removeAllRanges();sel.addRange(r);});});
       }catch(e){toast('Error: '+e.message,false);}
       finally{btn.textContent='Tallas ML';btn.disabled=false;}
     });
