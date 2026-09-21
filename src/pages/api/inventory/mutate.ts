@@ -218,46 +218,40 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ ok: true });
 
     } else if (action === 'resolve_loan') {
-      const { loan_id, resolution, resolved_variant_id, resolved_quantity } = params;
+      const { loan_id, resolution, resolved_variant_id, resolved_quantity, resolved_location } = params;
       if (!loan_id || !resolution) throw new Error('Faltan campos requeridos');
 
       const { data: loan, error: loanErr } = await sb.from('loans').select('*').eq('id', loan_id).single();
       if (loanErr) throw loanErr;
 
-      const locField = loan.location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
-
-      async function adjustStock(vid: string, delta: number) {
+      async function adjustStock(vid: string, delta: number, location: string) {
+        const field = location === 'bodega' ? 'stock_bodega' : 'stock_almacen';
         const { data: v } = await sb.from('product_variants').select('stock_almacen,stock_bodega').eq('id', vid).single();
         if (!v) return;
-        const current = loan.location === 'bodega' ? (v.stock_bodega || 0) : (v.stock_almacen || 0);
-        await sb.from('product_variants').update({ [locField]: Math.max(0, current + delta) }).eq('id', vid);
+        const current = location === 'bodega' ? (v.stock_bodega || 0) : (v.stock_almacen || 0);
+        await sb.from('product_variants').update({ [field]: Math.max(0, current + delta) }).eq('id', vid);
       }
 
       const qty = loan.quantity;
       const rQty = resolved_quantity || qty;
       const rVid = resolved_variant_id;
+      const retLoc = resolved_location || loan.location; // where it returns to/from
 
       if (loan.type === 'prestado') {
-        // Stock was decreased at creation (item left our hands)
         if (resolution === 'pagado') {
-          // They paid — item gone, stock stays decreased. No change.
+          // item gone, no change
         } else if (resolution === 'devuelto_mismo') {
-          // Exact same item returned — restore stock
-          await adjustStock(loan.variant_id, qty);
+          await adjustStock(loan.variant_id, qty, retLoc);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
-          // Different size came back — add that size to inventory
-          await adjustStock(rVid, rQty);
+          await adjustStock(rVid, rQty, retLoc);
         }
       } else {
-        // recibido: stock was increased at creation (item entered our hands)
         if (resolution === 'pagado') {
-          // We paid — we keep it, stock stays increased. No change.
+          // we keep it, no change
         } else if (resolution === 'devuelto_mismo') {
-          // We return exact same item — decrease stock
-          await adjustStock(loan.variant_id, -qty);
+          await adjustStock(loan.variant_id, -qty, retLoc);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
-          // We return a different size — decrease that size from inventory
-          await adjustStock(rVid, -rQty);
+          await adjustStock(rVid, -rQty, retLoc);
         }
       }
 

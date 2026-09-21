@@ -1262,16 +1262,27 @@ window.openResolveLoan=function(loanId){
       <button class="btn btn-b btn-w" data-res="devuelto_mismo">${isPrest?'Devolvieron el mismo par':'Devolvemos el mismo par'}</button>
       <button class="btn btn-p btn-w" data-res="devuelto_otra_talla">${isPrest?'Devolvieron otra talla':'Devolvemos otra talla'}</button>
     </div>
+    <div id="_lnDevMismo" hidden style="margin-bottom:.75rem">
+      <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">¿A dónde ${isPrest?'entra':'sale'}?</label>
+      <select id="_lnMismoLoc" class="loc-sel" style="width:100%;margin-bottom:.75rem">
+        <option value="almacen">Almacén</option><option value="bodega">Bodega</option>
+      </select>
+      <button class="btn btn-b btn-w" id="_lnConfMismo">Confirmar</button>
+    </div>
     <div id="_lnOtraTalla" hidden style="margin-bottom:.75rem">
       <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">Talla a ${isPrest?'recibir':'devolver'}</label>
       <select id="_lnOthVar" class="loc-sel" style="width:100%;margin-bottom:.5rem">
         <option value="">— seleccionar talla —</option>
         ${otherVars.map(v=>`<option value="${v.id}">T${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})</option>`).join('')}
       </select>
-      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
         <label style="font-size:.75rem;font-weight:600;color:#555;white-space:nowrap">Cantidad:</label>
         <input type="number" id="_lnOthQty" min="1" value="${loan.quantity}" class="qi" style="width:80px"/>
       </div>
+      <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.35rem">¿A dónde ${isPrest?'entra':'sale'}?</label>
+      <select id="_lnOthLoc" class="loc-sel" style="width:100%;margin-bottom:.75rem">
+        <option value="almacen">Almacén</option><option value="bodega">Bodega</option>
+      </select>
       <button class="btn btn-p btn-w" id="_lnConfOtra">Confirmar</button>
     </div>
     <button class="btn btn-o btn-w" id="_lnCancel">Cancelar</button>`;
@@ -1281,25 +1292,34 @@ window.openResolveLoan=function(loanId){
   box.querySelectorAll('[data-res]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
       const res=btn.dataset.res;
+      if(res==='devuelto_mismo'){
+        box.querySelector('#_lnOpts').hidden=true;
+        box.querySelector('#_lnDevMismo').hidden=false;return;
+      }
       if(res==='devuelto_otra_talla'){
         box.querySelector('#_lnOpts').hidden=true;
         box.querySelector('#_lnOtraTalla').hidden=false;return;
       }
-      ov.remove();await doResolveLoan(loanId,res,null,null);
+      ov.remove();await doResolveLoan(loanId,res,null,null,null);
     });
+  });
+  box.querySelector('#_lnConfMismo').addEventListener('click',async()=>{
+    const loc=box.querySelector('#_lnMismoLoc').value;
+    ov.remove();await doResolveLoan(loanId,'devuelto_mismo',null,null,loc);
   });
   box.querySelector('#_lnConfOtra').addEventListener('click',async()=>{
     const vid=box.querySelector('#_lnOthVar').value;
     const qty=parseInt(box.querySelector('#_lnOthQty').value)||loan.quantity;
+    const loc=box.querySelector('#_lnOthLoc').value;
     if(!vid){toast('Selecciona la talla',false);return;}
-    ov.remove();await doResolveLoan(loanId,'devuelto_otra_talla',vid,qty);
+    ov.remove();await doResolveLoan(loanId,'devuelto_otra_talla',vid,qty,loc);
   });
 };
 
-async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty){
+async function doResolveLoan(loanId,resolution,resolvedVid,resolvedQty,resolvedLoc){
   ld(true);
   try{
-    await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty});
+    await apiMutate({action:'resolve_loan',loan_id:loanId,resolution,resolved_variant_id:resolvedVid,resolved_quantity:resolvedQty,resolved_location:resolvedLoc});
     toast('Préstamo resuelto');await load();await loadLoans();
   }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
 }
