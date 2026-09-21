@@ -272,6 +272,19 @@ export const POST: APIRoute = async ({ request }) => {
 
       return json({ ok: true });
 
+    } else if (action === 'get_ml_item') {
+      const { ml_item_id } = params;
+      if (!ml_item_id) throw new Error('ml_item_id requerido');
+      const { getMLAccessToken } = await import('../../../lib/mercadolibre');
+      const token = await getMLAccessToken(sb);
+      if (!token) throw new Error('No hay token de ML. Vuelve a conectar.');
+      const res = await fetch(`https://api.mercadolibre.com/items/${ml_item_id}?attributes=id,title,variations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`ML respondió ${res.status}`);
+      const data = await res.json();
+      return json({ data });
+
     } else if (action === 'get_ml_status') {
       const { data: cred } = await sb
         .from('ml_credentials')

@@ -1204,9 +1204,33 @@ function renderMLTable(){
       <td class="num">${v.totalStock}</td>
       <td><input type="text" class="ml-item-inp" value="${v.ml_item_id||''}" placeholder="MCO123456789" style="width:140px;padding:.25rem .4rem;font-size:.78rem;border:1px solid #ddd;border-radius:4px"/></td>
       <td><input type="text" class="ml-var-inp" value="${v.ml_variation_id||''}" placeholder="Opcional" style="width:110px;padding:.25rem .4rem;font-size:.78rem;border:1px solid #ddd;border-radius:4px"/></td>
-      <td><button class="btn btn-o ml-save-btn" style="padding:.22rem .6rem;font-size:.7rem">Guardar</button></td>
+      <td style="display:flex;gap:.3rem;flex-wrap:wrap">
+        <button class="btn btn-o ml-save-btn" style="padding:.22rem .6rem;font-size:.7rem">Guardar</button>
+        <button class="btn btn-o ml-vars-btn" style="padding:.22rem .6rem;font-size:.7rem;background:#f5f5f5" title="Ver IDs de variaciones de esta publicación">Tallas ML</button>
+      </td>
     </tr>
   `).join('');
+
+  $('mlTb').querySelectorAll('.ml-vars-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const tr=btn.closest('tr');
+      const mlItemId=tr.querySelector('.ml-item-inp').value.trim();
+      if(!mlItemId){toast('Primero escribe el ID de publicación ML',false);return;}
+      btn.disabled=true;btn.textContent='...';
+      try{
+        const r=await apiMutate({action:'get_ml_item',ml_item_id:mlItemId});
+        const vars=(r.data?.variations||[]);
+        if(!vars.length){alert('Esta publicación no tiene variaciones — deja "ID Variación ML" vacío.');return;}
+        const lines=vars.map(v=>{
+          const talla=v.attribute_combinations?.find(a=>a.id==='SIZE'||a.name==='Talla')?.value_name||'?';
+          const color=v.attribute_combinations?.find(a=>a.id==='COLOR'||a.name==='Color')?.value_name||'';
+          return `ID: ${v.id}  →  Talla: ${talla}${color?' | Color: '+color:''}  (stock ML: ${v.available_quantity??'?'})`;
+        }).join('\n');
+        alert(`Variaciones de ${mlItemId}:\n\n${lines}\n\nCopia el ID que corresponda a cada variante en el campo "ID Variación ML".`);
+      }catch(e){toast('Error: '+e.message,false);}
+      finally{btn.textContent='Tallas ML';btn.disabled=false;}
+    });
+  });
 
   $('mlTb').querySelectorAll('.ml-save-btn').forEach(btn=>{
     btn.addEventListener('click',async()=>{
