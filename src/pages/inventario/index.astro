@@ -233,184 +233,133 @@ tbody tr:hover td{filter:brightness(.96)}
 
     <!-- VENTAS -->
     <div class="sec" id="tab-ven">
-      <div class="two-col">
-        <div class="card">
-          <h3>Venta individual</h3>
-          <div class="fl">
-            <label>Producto</label>
-            <div class="combo" id="sPC">
-              <input type="text" class="combo-inp" id="sCInp" placeholder="Buscar producto..." autocomplete="off"/>
-              <div class="combo-dd" id="sCDd"></div>
-            </div>
-          </div>
-          <div class="fl"><label>Color</label><select id="sCol" disabled><option value="">— primero producto —</option></select></div>
-          <div class="fl"><label>Talla</label><select id="sSz" disabled><option value="">—</option></select></div>
-          <div class="cs" id="sCS"></div>
-          <div class="frow">
-            <select class="loc-sel" id="sLoc">
-              <option value="almacen">Almacén</option>
-              <option value="bodega">Bodega</option>
-            </select>
-            <input type="number" class="qi" id="sQty" min="1" value="1"/>
-            <button class="btn btn-r" id="sSingle">Descontar</button>
+      <div class="card">
+        <h3>Venta individual</h3>
+        <div class="fl">
+          <label>Producto</label>
+          <div class="combo" id="sPC">
+            <input type="text" class="combo-inp" id="sCInp" placeholder="Buscar producto..." autocomplete="off"/>
+            <div class="combo-dd" id="sCDd"></div>
           </div>
         </div>
-        <div class="card">
-          <h3>Descuento masivo</h3>
-          <div class="bw"><table class="bt">
-            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Ubicación</th><th>Cant.</th><th></th></tr></thead>
-            <tbody id="sBulkBody"><tr id="sBE"><td colspan="6" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
-          </table></div>
-          <div class="bf">
-            <button class="btn btn-o" id="addSR">+ Fila</button>
-            <button class="btn btn-r" id="sBulk">Aplicar descuentos</button>
-          </div>
+        <div class="fl"><label>Color</label><select id="sCol" disabled><option value="">— primero producto —</option></select></div>
+        <div class="fl"><label>Talla</label><select id="sSz" disabled><option value="">—</option></select></div>
+        <div class="cs" id="sCS"></div>
+        <div class="frow">
+          <select class="loc-sel" id="sLoc">
+            <option value="almacen">Almacén</option>
+            <option value="bodega">Bodega</option>
+          </select>
+          <input type="number" class="qi" id="sQty" min="1" value="1"/>
+          <button class="btn btn-r" id="sSingle">Descontar</button>
         </div>
       </div>
       <div class="card" style="margin-top:1rem">
-        <h3>Descuento masivo veloz</h3>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">
-          <div class="fl" style="flex:1;min-width:180px;margin-bottom:0">
-            <label>Producto</label>
-            <div class="combo"><input type="text" class="combo-inp" id="vzSCInp" placeholder="Buscar producto..." autocomplete="off"/><div class="combo-dd" id="vzSCDd"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
+          <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Descuento masivo</h3>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">Ubicación</span>
+            <select class="loc-sel" id="vzSLoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select>
+            <button class="btn btn-o" id="vzSAddProd">+ Agregar producto</button>
           </div>
-          <div class="fl" style="margin-bottom:0"><label>Color</label><select id="vzSCol" class="loc-sel" disabled><option value="">— producto primero —</option></select></div>
-          <div class="fl" style="margin-bottom:0"><label>Ubicacion</label><select class="loc-sel" id="vzSLoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
         </div>
-        <div id="vzSTbl" hidden>
-          <div class="bw"><table class="bt">
-            <thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>Cant. a descontar</th></tr></thead>
-            <tbody id="vzSTBody"></tbody>
-          </table></div>
-          <div class="bf" style="margin-top:.5rem"><button class="btn btn-r" id="vzSApply">Aplicar descuentos</button></div>
+        <div id="vzSBlocks" style="display:flex;flex-direction:column;gap:.75rem"></div>
+        <div id="vzSApplyWrap" hidden style="margin-top:.75rem">
+          <button class="btn btn-r" id="vzSApply">Aplicar descuentos</button>
         </div>
       </div>
     </div>
 
     <!-- INGRESOS -->
     <div class="sec" id="tab-ing">
-      <div class="two-col">
-        <div class="card">
-          <h3>Ingreso individual</h3>
-          <div class="fl">
-            <label>Producto</label>
-            <div class="combo" id="ePC">
-              <input type="text" class="combo-inp" id="eCInp" placeholder="Buscar producto..." autocomplete="off"/>
-              <div class="combo-dd" id="eCDd"></div>
-            </div>
-          </div>
-          <div class="fl"><label>Color</label><select id="eCol" disabled><option value="">— primero producto —</option></select></div>
-          <div class="fl"><label>Talla</label><select id="eSz" disabled><option value="">—</option></select></div>
-          <div class="cs" id="eCS"></div>
-          <div class="frow">
-            <select class="loc-sel" id="eLoc">
-              <option value="almacen">Almacén</option>
-              <option value="bodega">Bodega</option>
-            </select>
-            <input type="number" class="qi" id="eQty" min="1" value="1"/>
-            <button class="btn btn-g" id="eSingle">Agregar</button>
+      <div class="card">
+        <h3>Ingreso individual</h3>
+        <div class="fl">
+          <label>Producto</label>
+          <div class="combo" id="ePC">
+            <input type="text" class="combo-inp" id="eCInp" placeholder="Buscar producto..." autocomplete="off"/>
+            <div class="combo-dd" id="eCDd"></div>
           </div>
         </div>
-        <div class="card">
-          <h3>Ingreso masivo</h3>
-          <div class="bw"><table class="bt">
-            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>Ubicación</th><th>Cant.</th><th></th></tr></thead>
-            <tbody id="eBulkBody"><tr id="eBE"><td colspan="6" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
-          </table></div>
-          <div class="bf">
-            <button class="btn btn-o" id="addER">+ Fila</button>
-            <button class="btn btn-g" id="eBulk">Aplicar ingresos</button>
-          </div>
+        <div class="fl"><label>Color</label><select id="eCol" disabled><option value="">— primero producto —</option></select></div>
+        <div class="fl"><label>Talla</label><select id="eSz" disabled><option value="">—</option></select></div>
+        <div class="cs" id="eCS"></div>
+        <div class="frow">
+          <select class="loc-sel" id="eLoc">
+            <option value="almacen">Almacén</option>
+            <option value="bodega">Bodega</option>
+          </select>
+          <input type="number" class="qi" id="eQty" min="1" value="1"/>
+          <button class="btn btn-g" id="eSingle">Agregar</button>
         </div>
       </div>
       <div class="card" style="margin-top:1rem">
-        <h3>Ingreso masivo veloz</h3>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">
-          <div class="fl" style="flex:1;min-width:180px;margin-bottom:0">
-            <label>Producto</label>
-            <div class="combo"><input type="text" class="combo-inp" id="vzECInp" placeholder="Buscar producto..." autocomplete="off"/><div class="combo-dd" id="vzECDd"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
+          <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Ingreso masivo</h3>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">Ubicación</span>
+            <select class="loc-sel" id="vzELoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select>
+            <button class="btn btn-o" id="vzEAddProd">+ Agregar producto</button>
           </div>
-          <div class="fl" style="margin-bottom:0"><label>Color</label><select id="vzECol" class="loc-sel" disabled><option value="">— producto primero —</option></select></div>
-          <div class="fl" style="margin-bottom:0"><label>Ubicacion</label><select class="loc-sel" id="vzELoc"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
         </div>
-        <div id="vzETbl" hidden>
-          <div class="bw"><table class="bt">
-            <thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>Cant. a ingresar</th></tr></thead>
-            <tbody id="vzETBody"></tbody>
-          </table></div>
-          <div class="bf" style="margin-top:.5rem"><button class="btn btn-g" id="vzEApply">Aplicar ingresos</button></div>
+        <div id="vzEBlocks" style="display:flex;flex-direction:column;gap:.75rem"></div>
+        <div id="vzEApplyWrap" hidden style="margin-top:.75rem">
+          <button class="btn btn-g" id="vzEApply">Aplicar ingresos</button>
         </div>
       </div>
     </div>
 
     <!-- TRANSFERIR -->
     <div class="sec" id="tab-trf">
-      <div class="two-col">
-        <div class="trf-card">
-          <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">Transferir mercancia</h3>
-          <p style="font-size:.78rem;color:#666;margin-bottom:1rem">Mueve unidades de una ubicacion a otra sin afectar el stock total.</p>
-          <div class="fl">
-            <label>Producto</label>
-            <div class="combo" id="tPC">
-              <input type="text" class="combo-inp" id="tCInp" placeholder="Buscar producto..." autocomplete="off"/>
-              <div class="combo-dd" id="tCDd"></div>
-            </div>
-          </div>
-          <div class="fl"><label>Color</label><select id="tCol" disabled><option value="">— primero producto —</option></select></div>
-          <div class="fl"><label>Talla</label><select id="tSz" disabled><option value="">—</option></select></div>
-          <div class="cs" id="tCS"></div>
-
-          <div class="trf-arrow">
-            <select class="trf-loc" id="tFrom">
-              <option value="almacen">Almacén</option>
-              <option value="bodega">Bodega</option>
-            </select>
-            <span class="trf-arrow-icon">→</span>
-            <select class="trf-loc" id="tTo">
-              <option value="bodega">Bodega</option>
-              <option value="almacen">Almacén</option>
-            </select>
-          </div>
-
-          <div class="frow" style="margin-top:.5rem">
-            <div>
-              <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem">Cantidad</label>
-              <input type="number" class="qi" id="tQty" min="1" value="1" style="width:90px"/>
-            </div>
-            <button class="btn btn-p" id="tBtn" style="align-self:flex-end">Transferir</button>
+      <div class="trf-card">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">Transferir mercancia</h3>
+        <p style="font-size:.78rem;color:#666;margin-bottom:1rem">Mueve unidades de una ubicacion a otra sin afectar el stock total.</p>
+        <div class="fl">
+          <label>Producto</label>
+          <div class="combo" id="tPC">
+            <input type="text" class="combo-inp" id="tCInp" placeholder="Buscar producto..." autocomplete="off"/>
+            <div class="combo-dd" id="tCDd"></div>
           </div>
         </div>
+        <div class="fl"><label>Color</label><select id="tCol" disabled><option value="">— primero producto —</option></select></div>
+        <div class="fl"><label>Talla</label><select id="tSz" disabled><option value="">—</option></select></div>
+        <div class="cs" id="tCS"></div>
 
-        <div class="card">
-          <h3>Transferencia masiva</h3>
-          <div class="bw"><table class="bt">
-            <thead><tr><th>Producto</th><th>Color</th><th>Talla</th><th>De</th><th>A</th><th>Cant.</th><th></th></tr></thead>
-            <tbody id="tBulkBody"><tr id="tBE"><td colspan="7" style="color:#888;text-align:center;padding:.6rem;font-size:.75rem">Sin filas</td></tr></tbody>
-          </table></div>
-          <div class="bf">
-            <button class="btn btn-o" id="addTR">+ Fila</button>
-            <button class="btn btn-p" id="tBulk">Aplicar transferencias</button>
+        <div class="trf-arrow">
+          <select class="trf-loc" id="tFrom">
+            <option value="almacen">Almacén</option>
+            <option value="bodega">Bodega</option>
+          </select>
+          <span class="trf-arrow-icon">→</span>
+          <select class="trf-loc" id="tTo">
+            <option value="bodega">Bodega</option>
+            <option value="almacen">Almacén</option>
+          </select>
+        </div>
+
+        <div class="frow" style="margin-top:.5rem">
+          <div>
+            <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem">Cantidad</label>
+            <input type="number" class="qi" id="tQty" min="1" value="1" style="width:90px"/>
           </div>
+          <button class="btn btn-p" id="tBtn" style="align-self:flex-end">Transferir</button>
         </div>
       </div>
       <div class="card" style="margin-top:1rem">
-        <h3>Transferencia masiva veloz</h3>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">
-          <div class="fl" style="flex:1;min-width:180px;margin-bottom:0">
-            <label>Producto</label>
-            <div class="combo"><input type="text" class="combo-inp" id="vzTCInp" placeholder="Buscar producto..." autocomplete="off"/><div class="combo-dd" id="vzTCDd"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
+          <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Transferencia masiva</h3>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">De</span>
+            <select class="trf-loc" id="vzTFrom"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select>
+            <span style="font-size:1.1rem;color:#7c3aed">→</span>
+            <span style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666">A</span>
+            <select class="trf-loc" id="vzTTo"><option value="bodega">Bodega</option><option value="almacen">Almacén</option></select>
+            <button class="btn btn-o" id="vzTAddProd">+ Agregar producto</button>
           </div>
-          <div class="fl" style="margin-bottom:0"><label>Color</label><select id="vzTCol" class="loc-sel" disabled><option value="">— producto primero —</option></select></div>
-          <div class="fl" style="margin-bottom:0"><label>De</label><select class="trf-loc" id="vzTFrom"><option value="almacen">Almacén</option><option value="bodega">Bodega</option></select></div>
-          <span style="align-self:flex-end;padding-bottom:.55rem;font-size:1.2rem;color:#7c3aed">→</span>
-          <div class="fl" style="margin-bottom:0"><label>A</label><select class="trf-loc" id="vzTTo"><option value="bodega">Bodega</option><option value="almacen">Almacén</option></select></div>
         </div>
-        <div id="vzTTbl" hidden>
-          <div class="bw"><table class="bt">
-            <thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>Cant. a transferir</th></tr></thead>
-            <tbody id="vzTTBody"></tbody>
-          </table></div>
-          <div class="bf" style="margin-top:.5rem"><button class="btn btn-p" id="vzTApply">Aplicar transferencias</button></div>
+        <div id="vzTBlocks" style="display:flex;flex-direction:column;gap:.75rem"></div>
+        <div id="vzTApplyWrap" hidden style="margin-top:.75rem">
+          <button class="btn btn-p" id="vzTApply">Aplicar transferencias</button>
         </div>
       </div>
     </div>
@@ -808,8 +757,46 @@ async function singleOp(szId,csId,qtyId,locId,delta,successMsg,type){
   finally{ld(false);}
 }
 
-$('sSingle').addEventListener('click',()=>singleOp('sSz','sCS','sQty','sLoc',-1,'Descontado','venta'));
-$('eSingle').addEventListener('click',()=>singleOp('eSz','eCS','eQty','eLoc',1,'Ingreso registrado','ingreso'));
+function confirmMovement(title,detail){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
+    const box=document.createElement('div');
+    box.style.cssText='background:#fff;border-radius:8px;padding:1.5rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25);font-family:inherit;border-top:4px solid #f00';
+    box.innerHTML=`<p style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.4rem">${title}</p>
+<p style="font-size:.88rem;margin-bottom:1.1rem;line-height:1.5">¿Estás seguro de realizar este movimiento? Se afectará el inventario.<br><strong>${detail}</strong></p>
+<div style="display:flex;gap:.5rem;justify-content:flex-end">
+  <button class="btn btn-o" id="_cfNo">Cancelar</button>
+  <button class="btn btn-r" id="_cfYes">Confirmar</button>
+</div>`;
+    ov.appendChild(box);document.body.appendChild(ov);
+    box.querySelector('#_cfYes').addEventListener('click',()=>{ov.remove();resolve(true);});
+    box.querySelector('#_cfNo').addEventListener('click',()=>{ov.remove();resolve(false);});
+    ov.addEventListener('pointerdown',e=>{if(e.target===ov){ov.remove();resolve(false);}});
+  });
+}
+
+$('sSingle').addEventListener('click',async()=>{
+  const vid=$('sSz').value,qty=parseInt($('sQty').value)||0,loc=$('sLoc').value;
+  if(!vid){toast('Selecciona producto / color / talla',false);return;}
+  if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
+  const v=allD?.variants.find(x=>x.id===vid);
+  const detail=v?`${qty} par(es) — ${v.color} T${v.size} en ${loc}`:`${qty} par(es) en ${loc}`;
+  const ok=await confirmMovement('Descontar venta',detail);
+  if(!ok)return;
+  await singleOp('sSz','sCS','sQty','sLoc',-1,'Descontado','venta');
+});
+
+$('eSingle').addEventListener('click',async()=>{
+  const vid=$('eSz').value,qty=parseInt($('eQty').value)||0,loc=$('eLoc').value;
+  if(!vid){toast('Selecciona producto / color / talla',false);return;}
+  if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
+  const v=allD?.variants.find(x=>x.id===vid);
+  const detail=v?`${qty} par(es) — ${v.color} T${v.size} en ${loc}`:`${qty} par(es) en ${loc}`;
+  const ok=await confirmMovement('Ingreso de mercancía',detail);
+  if(!ok)return;
+  await singleOp('eSz','eCS','eQty','eLoc',1,'Ingreso registrado','ingreso');
+});
 
 // TRANSFER SINGLE
 $('tBtn').addEventListener('click',async()=>{
@@ -818,19 +805,23 @@ $('tBtn').addEventListener('click',async()=>{
   if(!vid){toast('Selecciona producto / color / talla',false);return;}
   if(qty<=0){toast('Cantidad debe ser mayor a 0',false);return;}
   if(fromLoc===toLoc){toast('Origen y destino no pueden ser iguales',false);return;}
+  const v=allD?.variants.find(x=>x.id===vid);
+  const detail=v?`${qty} u — ${v.color} T${v.size}: ${fromLoc} → ${toLoc}`:`${qty} u: ${fromLoc} → ${toLoc}`;
+  const ok=await confirmMovement('Transferir mercancía',detail);
+  if(!ok)return;
   ld(true);
   try{
-    const{fromNew,toNew}=await transferS(vid,fromLoc,qty);
-    const v=allD.variants.find(x=>x.id===vid);
+    await transferS(vid,fromLoc,qty);
+    const vv=allD.variants.find(x=>x.id===vid);
     toast(`Transferido: ${qty}u de ${fromLoc} → ${toLoc}`);
-    if(v)$('tCS').textContent=`Almacén: ${v.stock_almacen||0} u — Bodega: ${v.stock_bodega||0} u`;
+    if(vv)$('tCS').textContent=`Almacén: ${vv.stock_almacen||0} u — Bodega: ${vv.stock_bodega||0} u`;
     await logMovement('transferencia',vid,qty,null,fromLoc,toLoc);
     render();
   }catch(e){toast('Error: '+e.message,false);}
   finally{ld(false);}
 });
 
-// BULK DROPDOWN SINGLETON
+// DROPDOWN SINGLETON (usado por blocks masivos)
 const _bDd=document.createElement('div');_bDd.id='_bDd';document.body.appendChild(_bDd);
 let _bDdCtx=null;
 
@@ -861,175 +852,113 @@ document.addEventListener('pointerdown',e=>{
   }
 },{passive:true});
 
-// BULK ROW — for ventas/ingresos (incluye location select)
-function addBR(tbodyId,emptyId){
+// MULTI-BLOCK MASIVO
+function addVzBlock(type){
   if(!allD){toast('Carga los datos primero',false);return;}
-  $(emptyId).style.display='none';
-  const tbody=$(tbodyId);
-  const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;tr._loc='almacen';
+  const cfg={
+    S:{containerId:'vzSBlocks',applyWrapId:'vzSApplyWrap',colHeader:'Cant. a descontar'},
+    E:{containerId:'vzEBlocks',applyWrapId:'vzEApplyWrap',colHeader:'Cant. a ingresar'},
+    T:{containerId:'vzTBlocks',applyWrapId:'vzTApplyWrap',colHeader:'Cant. a transferir'},
+  }[type];
+  const container=$(cfg.containerId),applyWrap=$(cfg.applyWrapId);
 
-  const pWrap=document.createElement('div');pWrap.className='bcomb';
-  const pInp=document.createElement('input');pInp.type='text';pInp.className='bcomb-inp';pInp.placeholder='Buscar...';pInp.autocomplete='off';
-  pWrap.appendChild(pInp);
+  const block=document.createElement('div');
+  block.style.cssText='border:1px solid #ddd;border-radius:5px;padding:.85rem;background:#fafafa';
 
-  const sortedP=[...allD.products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
+  const sortedP=[...allD.products].sort((a,b)=>{
+    const ba=a.brands?.name||'',bb=b.brands?.name||'';
+    return ba.localeCompare(bb)||a.name.localeCompare(b.name);
+  });
   const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
   let selPid=null;
 
-  function mkSel(placeholder){const s=document.createElement('select');s.innerHTML=`<option value="">${placeholder}</option>`;return s;}
-  const cSel=mkSel('Color...'); cSel.disabled=true;
-  const sSel=mkSel('Talla...'); sSel.disabled=true;
-  const lSel=document.createElement('select');
-  lSel.innerHTML='<option value="almacen">Almacén</option><option value="bodega">Bodega</option>';
-  lSel.style.cssText='width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none';
-  lSel.addEventListener('change',()=>{tr._loc=lSel.value;});
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:.6rem';
 
-  function onSel(id,label){
-    selPid=id;pInp.value=label;
-    cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
-    cSel.disabled=!selPid;sSel.disabled=true;tr._vid=null;
-    if(selPid)Object.keys(allD.byP[selPid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
+  const pWrap=document.createElement('div');
+  pWrap.style.cssText='flex:1;min-width:160px';
+  const pLabel=document.createElement('label');
+  pLabel.style.cssText='display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem';
+  pLabel.textContent='Producto';
+  const pComb=document.createElement('div');pComb.className='combo';
+  const pInp=document.createElement('input');
+  pInp.type='text';pInp.className='combo-inp';pInp.placeholder='Buscar producto...';pInp.autocomplete='off';
+  const pDd=document.createElement('div');pDd.className='combo-dd';
+  pComb.append(pInp,pDd);pWrap.append(pLabel,pComb);
+
+  const colWrap=document.createElement('div');
+  const colLabel=document.createElement('label');
+  colLabel.style.cssText='display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem';
+  colLabel.textContent='Color';
+  const colSel=document.createElement('select');
+  colSel.className='loc-sel';colSel.disabled=true;
+  colSel.innerHTML='<option value="">— producto primero —</option>';
+  colWrap.append(colLabel,colSel);
+
+  const rmBtn=document.createElement('button');
+  rmBtn.type='button';rmBtn.className='btn btn-o';
+  rmBtn.style.cssText='color:#dc2626;border-color:#dc2626;align-self:flex-end';
+  rmBtn.textContent='✕ Quitar';
+  rmBtn.addEventListener('click',()=>{block.remove();applyWrap.hidden=container.children.length===0;});
+
+  hdr.append(pWrap,colWrap,rmBtn);
+
+  const tblArea=document.createElement('div');tblArea.hidden=true;
+  const bw=document.createElement('div');bw.className='bw';
+  const tbl=document.createElement('table');tbl.className='bt';
+  tbl.innerHTML=`<thead><tr><th style="width:70px">Talla</th><th class="num">Almacén</th><th class="num">Bodega</th><th>${cfg.colHeader}</th></tr></thead>`;
+  const tbody=document.createElement('tbody');
+  tbl.appendChild(tbody);bw.appendChild(tbl);tblArea.appendChild(bw);
+
+  function openDd(){
+    _bDdOpen(pInp,opts,(id,label)=>{
+      selPid=id;pInp.value=label;
+      colSel.innerHTML='<option value="">Color...</option>';
+      colSel.disabled=!id;tblArea.hidden=true;tbody.innerHTML='';
+      if(id)Object.keys(allD.byP[id]||{}).sort().forEach(c=>{
+        const o=document.createElement('option');o.value=c;o.textContent=c;colSel.appendChild(o);
+      });
+    });
   }
-
-  pInp.addEventListener('focus',()=>_bDdOpen(pInp,opts,onSel));
+  pInp.addEventListener('focus',openDd);
   pInp.addEventListener('input',()=>{
     if(_bDdCtx&&_bDdCtx.inp===pInp)_bDdRender(pInp.value);
-    else _bDdOpen(pInp,opts,onSel);
-    if(selPid){selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;}
+    else openDd();
+    if(selPid){selPid=null;colSel.innerHTML='<option value="">Color...</option>';colSel.disabled=true;tblArea.hidden=true;tbody.innerHTML='';}
+  });
+  colSel.addEventListener('change',()=>{
+    const col=colSel.value;
+    if(!col||!selPid){tblArea.hidden=true;tbody.innerHTML='';return;}
+    const vs=allD.byP[selPid]?.[col]||[];
+    tbody.innerHTML=vs.map(v=>`<tr data-vid="${v.id}">
+      <td style="font-weight:600;text-align:center;font-size:.9rem">${v.size}</td>
+      <td class="num">${v.stock_almacen||0}</td>
+      <td class="num">${v.stock_bodega||0}</td>
+      <td><input type="number" min="0" value="0" class="qi" style="width:64px"/></td>
+    </tr>`).join('');
+    tblArea.hidden=false;
   });
 
-  cSel.addEventListener('change',()=>{
-    const col=cSel.value;
-    sSel.innerHTML='<option value="">Talla...</option>';sSel.disabled=!col;tr._vid=null;
-    if(!selPid||!col)return;
-    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})`;sSel.appendChild(o);});
-  });
-  sSel.addEventListener('change',()=>{tr._vid=sSel.value||null;});
-
-  const qi=document.createElement('input');qi.type='number';qi.min='1';qi.value='1';
-  const rb=document.createElement('button');rb.className='rm';rb.textContent='x';
-  rb.addEventListener('click',()=>{tr.remove();if(!tbody.querySelectorAll('[data-bulk]').length)$(emptyId).style.display='';});
-
-  function cell(el){const td=document.createElement('td');td.appendChild(el);return td;}
-  tr.append(cell(pWrap),cell(cSel),cell(sSel),cell(lSel),cell(qi),cell(rb));
-  tbody.appendChild(tr);
+  block.append(hdr,tblArea);
+  container.appendChild(block);
+  applyWrap.hidden=false;
 }
 
-$('addSR').addEventListener('click',()=>addBR('sBulkBody','sBE'));
-$('addER').addEventListener('click',()=>addBR('eBulkBody','eBE'));
-
-async function applyBulk(tbodyId,emptyId,delta,type){
-  const rows=[...$(tbodyId).querySelectorAll('[data-bulk]')];
-  if(!rows.length){toast('No hay filas',false);return;}
-  const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0,loc:tr._loc||'almacen'})).filter(o=>o.vid&&o.qty>0);
-  if(!ops.length){toast('Completa las filas',false);return;}
-  ld(true);
-  try{
-    for(const o of ops){
-      await updS(o.vid,delta*o.qty,o.loc);
-      await logMovement(type,o.vid,o.qty,o.loc,null,null);
-    }
-    toast(`${ops.length} variantes actualizadas`);
-    $(tbodyId).querySelectorAll('[data-bulk]').forEach(r=>r.remove());
-    $(emptyId).style.display='';
-    render();
-  }catch(e){toast('Error: '+e.message,false);}
-  finally{ld(false);}
+function getVzBlockOps(containerId){
+  const ops=[];
+  $(containerId).querySelectorAll('[data-vid]').forEach(tr=>{
+    const qty=parseInt(tr.querySelector('input[type=number]').value)||0;
+    if(qty>0)ops.push({vid:tr.dataset.vid,qty});
+  });
+  return ops;
 }
 
-$('sBulk').addEventListener('click',()=>applyBulk('sBulkBody','sBE',-1,'venta'));
-$('eBulk').addEventListener('click',()=>applyBulk('eBulkBody','eBE',1,'ingreso'));
-
-// BULK TRANSFER ROWS
-function addTBR(){
-  if(!allD){toast('Carga los datos primero',false);return;}
-  $('tBE').style.display='none';
-  const tbody=$('tBulkBody');
-  const tr=document.createElement('tr');tr.dataset.bulk='1';tr._vid=null;tr._from='almacen';tr._to='bodega';
-
-  const pWrap=document.createElement('div');pWrap.className='bcomb';
-  const pInp=document.createElement('input');pInp.type='text';pInp.className='bcomb-inp';pInp.placeholder='Buscar...';pInp.autocomplete='off';
-  pWrap.appendChild(pInp);
-
-  const sortedP=[...allD.products].sort((a,b)=>{const ba=a.brands?.name||'',bb=b.brands?.name||'';return ba.localeCompare(bb)||a.name.localeCompare(b.name);});
-  const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
-  let selPid=null;
-
-  function mkSel(placeholder){const s=document.createElement('select');s.innerHTML=`<option value="">${placeholder}</option>`;return s;}
-  const cSel=mkSel('Color...'); cSel.disabled=true;
-  const sSel=mkSel('Talla...'); sSel.disabled=true;
-
-  const fromSel=document.createElement('select');
-  fromSel.innerHTML='<option value="almacen">Almacén</option><option value="bodega">Bodega</option>';
-  fromSel.style.cssText='width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none';
-
-  const toSel=document.createElement('select');
-  toSel.innerHTML='<option value="bodega">Bodega</option><option value="almacen">Almacén</option>';
-  toSel.style.cssText='width:100%;padding:.28rem .4rem;border:1.5px solid #ddd;border-radius:3px;font-size:.75rem;font-family:inherit;outline:none';
-
-  fromSel.addEventListener('change',()=>{
-    tr._from=fromSel.value;
-    const other=fromSel.value==='almacen'?'bodega':'almacen';
-    [...toSel.options].forEach(o=>{o.selected=o.value===other;});
-    tr._to=other;
+function refreshVzBlocks(containerId){
+  $(containerId).querySelectorAll('[data-vid]').forEach(tr=>{
+    const v=allD.variants.find(x=>x.id===tr.dataset.vid);
+    if(v){tr.cells[1].textContent=v.stock_almacen||0;tr.cells[2].textContent=v.stock_bodega||0;tr.querySelector('input').value='0';}
   });
-  toSel.addEventListener('change',()=>{
-    tr._to=toSel.value;
-    const other=toSel.value==='almacen'?'bodega':'almacen';
-    [...fromSel.options].forEach(o=>{o.selected=o.value===other;});
-    tr._from=other;
-  });
-
-  function onSel(id,label){
-    selPid=id;pInp.value=label;
-    cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';
-    cSel.disabled=!selPid;sSel.disabled=true;tr._vid=null;
-    if(selPid)Object.keys(allD.byP[selPid]||{}).sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cSel.appendChild(o);});
-  }
-
-  pInp.addEventListener('focus',()=>_bDdOpen(pInp,opts,onSel));
-  pInp.addEventListener('input',()=>{
-    if(_bDdCtx&&_bDdCtx.inp===pInp)_bDdRender(pInp.value);
-    else _bDdOpen(pInp,opts,onSel);
-    if(selPid){selPid=null;cSel.innerHTML='<option value="">Color...</option>';sSel.innerHTML='<option value="">Talla...</option>';cSel.disabled=true;sSel.disabled=true;tr._vid=null;}
-  });
-  cSel.addEventListener('change',()=>{
-    const col=cSel.value;
-    sSel.innerHTML='<option value="">Talla...</option>';sSel.disabled=!col;tr._vid=null;
-    if(!selPid||!col)return;
-    (allD.byP[selPid]?.[col]||[]).forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=`${v.size} (Alm:${v.stock_almacen||0}/Bod:${v.stock_bodega||0})`;sSel.appendChild(o);});
-  });
-  sSel.addEventListener('change',()=>{tr._vid=sSel.value||null;});
-
-  const qi=document.createElement('input');qi.type='number';qi.min='1';qi.value='1';
-  const rb=document.createElement('button');rb.className='rm';rb.textContent='x';
-  rb.addEventListener('click',()=>{tr.remove();if(!tbody.querySelectorAll('[data-bulk]').length)$('tBE').style.display='';});
-
-  function cell(el){const td=document.createElement('td');td.appendChild(el);return td;}
-  tr.append(cell(pWrap),cell(cSel),cell(sSel),cell(fromSel),cell(toSel),cell(qi),cell(rb));
-  tbody.appendChild(tr);
 }
-
-$('addTR').addEventListener('click',addTBR);
-
-$('tBulk').addEventListener('click',async()=>{
-  const rows=[...$('tBulkBody').querySelectorAll('[data-bulk]')];
-  if(!rows.length){toast('No hay filas',false);return;}
-  const ops=rows.map(tr=>({vid:tr._vid,qty:parseInt(tr.querySelector('input[type=number]').value)||0,from:tr._from,to:tr._to})).filter(o=>o.vid&&o.qty>0&&o.from!==o.to);
-  if(!ops.length){toast('Completa las filas correctamente',false);return;}
-  ld(true);
-  try{
-    for(const o of ops){
-      await transferS(o.vid,o.from,o.qty);
-      await logMovement('transferencia',o.vid,o.qty,null,o.from,o.to);
-    }
-    toast(`${ops.length} transferencias aplicadas`);
-    $('tBulkBody').querySelectorAll('[data-bulk]').forEach(r=>r.remove());
-    $('tBE').style.display='';
-    render();
-  }catch(e){toast('Error: '+e.message,false);}
-  finally{ld(false);}
-});
 
 // HISTORIAL
 let histData=[];
@@ -1094,86 +1023,40 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
-// VELOZ
-function initVelozCombo(cInpId,cDdId,colId,tblId,sp,onColorChange){
-  const inp=$(cInpId),dd=$(cDdId),colSel=$(colId),tbl=$(tblId);
-  const opts=sp.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name}));
-  let selPid=null;
-
-  function onPick(id,label){
-    selPid=id;inp.value=label;
-    colSel.innerHTML='<option value="">Color...</option>';
-    colSel.disabled=!id;tbl.hidden=true;
-    if(id)Object.keys(allD.byP[id]||{}).sort().forEach(c=>{
-      const o=document.createElement('option');o.value=c;o.textContent=c;colSel.appendChild(o);
-    });
-  }
-
-  inp.addEventListener('focus',()=>_bDdOpen(inp,opts,onPick));
-  inp.addEventListener('input',()=>{
-    if(_bDdCtx&&_bDdCtx.inp===inp)_bDdRender(inp.value);
-    else _bDdOpen(inp,opts,onPick);
-    if(selPid){selPid=null;colSel.innerHTML='<option value="">Color...</option>';colSel.disabled=true;tbl.hidden=true;}
-  });
-
-  colSel.addEventListener('change',()=>{
-    const col=colSel.value;
-    if(!col||!selPid){tbl.hidden=true;return;}
-    onColorChange(selPid,col);
-    tbl.hidden=false;
-  });
-}
-
-function renderVzRows(tbodyId,pid,col){
-  const vs=allD.byP[pid]?.[col]||[];
-  $(tbodyId).innerHTML=vs.map(v=>`
-    <tr data-vid="${v.id}">
-      <td style="font-weight:600;text-align:center;font-size:.9rem">${v.size}</td>
-      <td class="num">${v.stock_almacen||0}</td>
-      <td class="num">${v.stock_bodega||0}</td>
-      <td><input type="number" min="0" value="0" class="qi" style="width:64px"/></td>
-    </tr>`).join('');
-}
-
-function refreshVzRows(tbodyId){
-  $(tbodyId).querySelectorAll('tr[data-vid]').forEach(tr=>{
-    const v=allD.variants.find(x=>x.id===tr.dataset.vid);
-    if(v){tr.cells[1].textContent=v.stock_almacen||0;tr.cells[2].textContent=v.stock_bodega||0;tr.querySelector('input').value='0';}
-  });
-}
-
 function setupVelozAll(sp){
-  // VENTAS veloz
-  initVelozCombo('vzSCInp','vzSCDd','vzSCol','vzSTbl',sp,(pid,col)=>renderVzRows('vzSTBody',pid,col));
+  // VENTAS masivo
+  $('vzSAddProd').addEventListener('click',()=>addVzBlock('S'));
   $('vzSApply').addEventListener('click',async()=>{
-    const rows=[...$('vzSTBody').querySelectorAll('tr[data-vid]')];
+    const ops=getVzBlockOps('vzSBlocks');
     const loc=$('vzSLoc').value;
-    const ops=rows.map(tr=>({vid:tr.dataset.vid,qty:parseInt(tr.querySelector('input').value)||0})).filter(o=>o.qty>0);
     if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    const ok=await confirmMovement('Descuento masivo',`${ops.length} variante${ops.length!==1?'s':''} en ${loc}`);
+    if(!ok)return;
     ld(true);
     try{
       for(const o of ops){await updS(o.vid,-o.qty,loc);await logMovement('venta',o.vid,o.qty,loc,null,null);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} descontadas`);
-      refreshVzRows('vzSTBody');render();
+      refreshVzBlocks('vzSBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 
-  // INGRESOS veloz
-  initVelozCombo('vzECInp','vzECDd','vzECol','vzETbl',sp,(pid,col)=>renderVzRows('vzETBody',pid,col));
+  // INGRESOS masivo
+  $('vzEAddProd').addEventListener('click',()=>addVzBlock('E'));
   $('vzEApply').addEventListener('click',async()=>{
-    const rows=[...$('vzETBody').querySelectorAll('tr[data-vid]')];
+    const ops=getVzBlockOps('vzEBlocks');
     const loc=$('vzELoc').value;
-    const ops=rows.map(tr=>({vid:tr.dataset.vid,qty:parseInt(tr.querySelector('input').value)||0})).filter(o=>o.qty>0);
     if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    const ok=await confirmMovement('Ingreso masivo',`${ops.length} variante${ops.length!==1?'s':''} en ${loc}`);
+    if(!ok)return;
     ld(true);
     try{
       for(const o of ops){await updS(o.vid,o.qty,loc);await logMovement('ingreso',o.vid,o.qty,loc,null,null);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} ingresadas`);
-      refreshVzRows('vzETBody');render();
+      refreshVzBlocks('vzEBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 
-  // TRANSFER veloz
+  // TRANSFERENCIAS masivo
   $('vzTFrom').addEventListener('change',()=>{
     const f=$('vzTFrom').value,other=f==='almacen'?'bodega':'almacen';
     [...$('vzTTo').options].forEach(o=>{o.selected=o.value===other;});
@@ -1182,18 +1065,19 @@ function setupVelozAll(sp){
     const t=$('vzTTo').value,other=t==='almacen'?'bodega':'almacen';
     [...$('vzTFrom').options].forEach(o=>{o.selected=o.value===other;});
   });
-  initVelozCombo('vzTCInp','vzTCDd','vzTCol','vzTTbl',sp,(pid,col)=>renderVzRows('vzTTBody',pid,col));
+  $('vzTAddProd').addEventListener('click',()=>addVzBlock('T'));
   $('vzTApply').addEventListener('click',async()=>{
-    const rows=[...$('vzTTBody').querySelectorAll('tr[data-vid]')];
+    const ops=getVzBlockOps('vzTBlocks');
     const from=$('vzTFrom').value,to=$('vzTTo').value;
     if(from===to){toast('Origen y destino iguales',false);return;}
-    const ops=rows.map(tr=>({vid:tr.dataset.vid,qty:parseInt(tr.querySelector('input').value)||0})).filter(o=>o.qty>0);
     if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    const ok=await confirmMovement('Transferencia masiva',`${ops.length} variante${ops.length!==1?'s':''}: ${from} → ${to}`);
+    if(!ok)return;
     ld(true);
     try{
       for(const o of ops){await transferS(o.vid,from,o.qty);await logMovement('transferencia',o.vid,o.qty,null,from,to);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} transferidas`);
-      refreshVzRows('vzTTBody');render();
+      refreshVzBlocks('vzTBlocks');render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 }
