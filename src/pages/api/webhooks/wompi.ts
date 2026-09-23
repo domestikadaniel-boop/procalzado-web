@@ -244,7 +244,7 @@ export const POST: APIRoute = async ({ request }) => {
           size: String(item.size || ''),
           quantity: item.quantity || 1,
           location: 'bodega',
-          user_email: `pedido#${order.order_number}`,
+          user_email: 'procalzado.com',
         });
       }
 
