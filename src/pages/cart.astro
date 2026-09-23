@@ -15,6 +15,18 @@ const pageTitle = 'Tu Carrito | Procalzado';
     <a href="/" class="cart-back-btn">Ver productos</a>
   </div>
 
+  <!-- Modal confirmación vaciar carrito -->
+  <div id="clearModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:var(--white);border-radius:14px;padding:2rem;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+      <h3 style="font-family:var(--fd);font-size:1.2rem;letter-spacing:.02em;margin:0 0 .5rem">¿Vaciar carrito?</h3>
+      <p style="font-size:.87rem;color:var(--muted);margin:0 0 1.5rem;line-height:1.5">Se eliminarán todos los productos que tienes en el carrito.</p>
+      <div style="display:flex;gap:.7rem">
+        <button id="clearCancel" style="flex:1;padding:.75rem;border:1.5px solid var(--grey2);border-radius:8px;background:none;font-family:inherit;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:var(--black);transition:border-color .15s">Cancelar</button>
+        <button id="clearConfirm" style="flex:1;padding:.75rem;border:none;border-radius:8px;background:var(--red);color:var(--white);font-family:inherit;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:background .15s">Vaciar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="cart-content" id="cartContent" style="display:none">
     <div class="cart-items" id="cartItems"></div>
     <div class="cart-summary" id="cartSummary">
@@ -165,9 +177,18 @@ const pageTitle = 'Tu Carrito | Procalzado';
     if (badge) { badge.textContent = total; badge.classList.toggle('show', total > 0); }
   }
 
+  const clearModal = document.getElementById('clearModal');
   document.getElementById('cartPageClear')?.addEventListener('click', () => {
-    if (confirm('¿Vaciar todo el carrito?')) { cart = []; save(); render(); updateBadge(); }
+    clearModal.style.display = 'flex';
   });
+  document.getElementById('clearCancel')?.addEventListener('click', () => {
+    clearModal.style.display = 'none';
+  });
+  document.getElementById('clearConfirm')?.addEventListener('click', () => {
+    clearModal.style.display = 'none';
+    cart = []; save(); render(); updateBadge();
+  });
+  clearModal?.addEventListener('click', e => { if (e.target === clearModal) clearModal.style.display = 'none'; });
 
   function updateBuyButton() {
     const btn = document.getElementById('cartPagoOnline');
