@@ -177,6 +177,7 @@ const schemaProduct = {
           <div class="size-list" id="sizeList">
             {sizes.map((s, i) => <button type="button" class={`size-tag-btn ${i === 0 ? 'selected' : ''}`} data-size={s}>{s}</button>)}
           </div>
+          <div id="stockAlert" style="display:none;margin-top:.45rem;font-size:.78rem;font-weight:700;color:var(--red);letter-spacing:.01em"></div>
         </div>
       )}
 
@@ -295,14 +296,21 @@ const schemaProduct = {
   const colorBtns = document.querySelectorAll('.color-dot-btn');
   const colorNameSpan = document.getElementById('selectedColorName');
 
+  const stockAlertEl = document.getElementById('stockAlert');
   function updateCartButtons() {
     // Si no hay datos de stock, no bloquear
     if (!allVariants.length) return;
     const v = allVariants.find(x => x.color === selectedColor && x.size === selectedSize)
            || allVariants.find(x => x.size === selectedSize);
-    const hasStock = v ? (v.stock ?? 0) > 0 : false;
+    const stock = v ? (v.stock ?? 0) : 0;
+    const hasStock = stock > 0;
     if (btnBuyNow) { btnBuyNow.disabled = !hasStock; btnBuyNow.style.opacity = hasStock ? '' : '.4'; btnBuyNow.style.cursor = hasStock ? '' : 'not-allowed'; }
     if (btnAddCart) { btnAddCart.disabled = !hasStock; btnAddCart.style.opacity = hasStock ? '' : '.4'; btnAddCart.style.cursor = hasStock ? '' : 'not-allowed'; }
+    if (stockAlertEl) {
+      if (stock === 1) { stockAlertEl.textContent = '¡Última unidad!'; stockAlertEl.style.display = ''; }
+      else if (stock === 2) { stockAlertEl.textContent = '¡Últimas 2 unidades!'; stockAlertEl.style.display = ''; }
+      else { stockAlertEl.style.display = 'none'; }
+    }
   }
 
   // Función para actualizar tallas visibles según color seleccionado
