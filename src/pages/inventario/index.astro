@@ -335,6 +335,37 @@ tbody tr:hover td{filter:brightness(.96)}
       </div>
 
       <div class="card" style="margin-bottom:1rem">
+        <div style="margin-bottom:.85rem;border-bottom:2px solid #eee;padding-bottom:.35rem">
+          <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em">Préstamo masivo</h3>
+        </div>
+        <div style="display:flex;gap:1.5rem;margin-bottom:.75rem;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.82rem;font-weight:600">
+            <input type="radio" name="lnMassType" id="lnMassTypeP" value="prestado" checked> Prestamos a alguien
+          </label>
+          <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.82rem;font-weight:600">
+            <input type="radio" name="lnMassType" id="lnMassTypeR" value="recibido"> Nos prestan a nosotros
+          </label>
+        </div>
+        <div style="display:flex;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem">Persona / empresa</label>
+            <input type="text" class="combo-inp" id="lnMassPerson" placeholder="¿A quién prestamos / quién nos presta?" style="width:100%"/>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <label style="display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem">Notas (opcional)</label>
+            <input type="text" class="combo-inp" id="lnMassNotes" placeholder="Fecha compromiso, etc." style="width:100%"/>
+          </div>
+        </div>
+        <div id="vzLBlocks" style="display:flex;flex-direction:column;gap:.75rem"></div>
+        <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-o" id="vzLAddProd">+ Agregar producto</button>
+          <div id="vzLApplyWrap" hidden style="display:contents">
+            <button class="btn btn-p" id="vzLApply">Registrar préstamos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
           <h3 style="margin:0">Préstamos pendientes</h3>
           <span id="lnPendCnt" style="font-size:.75rem;color:#888"></span>
@@ -1533,6 +1564,122 @@ function setupVelozAll(sp){
       for(const o of ops){await updS(o.vid,o.qty);await logMovement('ingreso',o.vid,o.qty,bid);}
       toast(`${ops.length} variante${ops.length!==1?'s':''} ingresadas`);
       refreshVzBlocks('vzEBlocks');render();
+    }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
+  });
+
+  // PRÉSTAMOS masivo
+  function addLnBlock(){
+    if(!allD){toast('Carga los datos primero',false);return;}
+    const container=$('vzLBlocks'),applyWrap=$('vzLApplyWrap');
+    const block=document.createElement('div');
+    block.style.cssText='border:1px solid #ddd;border-radius:5px;padding:.85rem;background:#fafafa';
+
+    const sortedP=[...allD.products].sort((a,b)=>{
+      const ba=a.brands?.name||'',bb=b.brands?.name||'';
+      return ba.localeCompare(bb)||a.name.localeCompare(b.name);
+    });
+    const opts=sortedP.map(p=>({id:p.id,label:(p.brands?.name?p.brands.name+' ':'')+p.name,name:p.name,brand:p.brands?.name||''}));
+    let selPid=null,selProd=null;
+
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:.6rem';
+
+    const pWrap=document.createElement('div');pWrap.style.cssText='flex:1;min-width:160px';
+    const pLabel=document.createElement('label');
+    pLabel.style.cssText='display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem';
+    pLabel.textContent='Producto';
+    const pComb=document.createElement('div');pComb.className='combo';
+    const pInp=document.createElement('input');
+    pInp.type='text';pInp.className='combo-inp';pInp.placeholder='Buscar producto...';pInp.autocomplete='off';
+    const pDd=document.createElement('div');pDd.className='combo-dd';
+    pComb.append(pInp,pDd);pWrap.append(pLabel,pComb);
+
+    const colWrap=document.createElement('div');
+    const colLabel=document.createElement('label');
+    colLabel.style.cssText='display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:.22rem';
+    colLabel.textContent='Color';
+    const colSel=document.createElement('select');
+    colSel.className='loc-sel';colSel.disabled=true;
+    colSel.innerHTML='<option value="">— producto primero —</option>';
+    colWrap.append(colLabel,colSel);
+
+    const rmBtn=document.createElement('button');
+    rmBtn.type='button';rmBtn.className='btn btn-o';
+    rmBtn.style.cssText='color:#dc2626;border-color:#dc2626;align-self:flex-end';
+    rmBtn.textContent='✕ Quitar';
+    rmBtn.addEventListener('click',()=>{block.remove();applyWrap.hidden=container.children.length===0;});
+
+    hdr.append(pWrap,colWrap,rmBtn);
+
+    const tblArea=document.createElement('div');tblArea.hidden=true;
+    const bw=document.createElement('div');bw.className='bw';
+    const tbl=document.createElement('table');tbl.className='bt';
+    tbl.innerHTML='<thead><tr><th style="width:70px">Talla</th><th class="num">Stock</th><th>Cant. a prestar</th></tr></thead>';
+    const tbody=document.createElement('tbody');
+    tbl.appendChild(tbody);bw.appendChild(tbl);tblArea.appendChild(bw);
+
+    function openDd(){
+      _bDdOpen(pInp,opts,(id,label)=>{
+        selPid=id;selProd=opts.find(o=>o.id===id);
+        pInp.value=label;
+        colSel.innerHTML='<option value="">Color...</option>';
+        colSel.disabled=!id;tblArea.hidden=true;tbody.innerHTML='';
+        if(id)Object.keys(allD.byP[id]||{}).sort().forEach(c=>{
+          const o=document.createElement('option');o.value=c;o.textContent=c;colSel.appendChild(o);
+        });
+      });
+    }
+    pInp.addEventListener('focus',openDd);
+    pInp.addEventListener('input',()=>{
+      if(_bDdCtx&&_bDdCtx.inp===pInp)_bDdRender(pInp.value);else openDd();
+      if(selPid){selPid=null;selProd=null;colSel.innerHTML='<option value="">Color...</option>';colSel.disabled=true;tblArea.hidden=true;tbody.innerHTML='';}
+    });
+    colSel.addEventListener('change',()=>{
+      const col=colSel.value;
+      if(!col||!selPid){tblArea.hidden=true;tbody.innerHTML='';return;}
+      const vs=allD.byP[selPid]?.[col]||[];
+      tbody.innerHTML=vs.map(v=>`<tr data-vid="${v.id}" data-pname="${selProd?.name||''}" data-brand="${selProd?.brand||''}" data-color="${col}" data-size="${v.size}">
+        <td style="font-weight:600;text-align:center;font-size:.9rem">${v.size}</td>
+        <td class="num">${v.stock_almacen||0}</td>
+        <td><input type="number" min="0" value="0" class="qi" style="width:64px"/></td>
+      </tr>`).join('');
+      tblArea.hidden=false;
+    });
+
+    block.append(hdr,tblArea);
+    container.appendChild(block);
+    applyWrap.hidden=false;
+  }
+
+  function getLnBlockOps(){
+    const ops=[];
+    $('vzLBlocks').querySelectorAll('[data-vid]').forEach(tr=>{
+      const qty=parseInt(tr.querySelector('input[type=number]').value)||0;
+      if(qty>0)ops.push({vid:tr.dataset.vid,qty,pname:tr.dataset.pname,brand:tr.dataset.brand,color:tr.dataset.color,size:tr.dataset.size});
+    });
+    return ops;
+  }
+
+  $('vzLAddProd').addEventListener('click',addLnBlock);
+  $('vzLApply').addEventListener('click',async()=>{
+    const ops=getLnBlockOps();
+    if(!ops.length){toast('Pon al menos una cantidad',false);return;}
+    const person=$('lnMassPerson').value.trim();
+    if(!person){toast('Indica la persona o empresa',false);return;}
+    const type=document.querySelector('input[name=lnMassType]:checked').value;
+    const notes=$('lnMassNotes').value.trim();
+    const ok=await confirmMovement('Préstamo masivo',`${ops.length} variante${ops.length!==1?'s':''} — ${type==='prestado'?'Prestamos a':'Nos presta'} ${person}`);
+    if(!ok)return;
+    ld(true);
+    try{
+      for(const o of ops){
+        await apiMutate({action:'create_loan',type,person_name:person,variant_id:o.vid,
+          product_name:o.pname,brand_name:o.brand,color:o.color,size:o.size,quantity:o.qty,notes:notes||null});
+      }
+      toast(`${ops.length} préstamo${ops.length!==1?'s':''} registrado${ops.length!==1?'s':''}`);
+      $('vzLBlocks').innerHTML='';$('vzLApplyWrap').hidden=true;
+      $('lnMassPerson').value='';$('lnMassNotes').value='';
+      await loadLoans();render();
     }catch(e){toast('Error: '+e.message,false);}finally{ld(false);}
   });
 }
