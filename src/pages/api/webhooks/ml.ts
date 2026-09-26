@@ -35,7 +35,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     const idempotencyKey = `ml_order_${orderId}`;
 
-    // Idempotencia: si ya procesamos esta orden, ignorar
+    // Idempotencia con lock optimista:
+    // 1. Verificación rápida inicial
     const { data: existing } = await supabase
       .from('inventory_movements')
       .select('id')
@@ -43,6 +44,34 @@ export const POST: APIRoute = async ({ request }) => {
       .limit(1)
       .maybeSingle();
     if (existing) return new Response('Already processed', { status: 200 });
+
+    // 2. Insertar lock placeholder inmediatamente
+    const { data: lockRow } = await supabase.from('inventory_movements').insert({
+      type: 'venta',
+      product_name: `__lock_${orderId}`,
+      color: '', size: '', quantity: 0,
+      location: 'bodega', user_email: 'mercadolibre.com',
+      from_location: idempotencyKey,
+    }).select('id').single();
+
+    if (!lockRow) return new Response('OK', { status: 200 });
+
+    // 3. Esperar para que cualquier request concurrente también inserte su lock
+    await new Promise(r => setTimeout(r, 150));
+
+    // 4. Ver si soy el primero (id menor = llegué antes)
+    const { data: allLocks } = await supabase
+      .from('inventory_movements')
+      .select('id')
+      .eq('from_location', idempotencyKey)
+      .order('id', { ascending: true })
+      .limit(5);
+
+    if (!allLocks || allLocks[0]?.id !== lockRow.id) {
+      // Soy el duplicado — elimino mi lock y salgo
+      await supabase.from('inventory_movements').delete().eq('id', lockRow.id);
+      return new Response('Already processing', { status: 200 });
+    }
 
     const token = await getMLAccessToken(supabase);
     if (!token) return new Response('No ML token', { status: 200 });
@@ -57,13 +86,13 @@ export const POST: APIRoute = async ({ request }) => {
     // Solo descontar cuando la orden está pagada
     if (order.status !== 'paid') return new Response('OK', { status: 200 });
 
+    let lockUsed = false;
     for (const orderItem of (order.order_items || [])) {
       const mlItemId: string = orderItem.item?.id;
       const mlVariationId: number | null = orderItem.item?.variation_id || null;
       const qty: number = orderItem.quantity || 1;
       if (!mlItemId) continue;
 
-      // Buscar la variante: primero por variation_id si viene en la orden, si no por item_id solo
       let variantQuery = supabase
         .from('product_variants')
         .select('id,stock_almacen,color,size,product_id')
@@ -76,7 +105,6 @@ export const POST: APIRoute = async ({ request }) => {
       const { data: variant } = await variantQuery.maybeSingle();
       if (!variant) continue;
 
-      // Buscar nombre y marca del producto
       const { data: prod } = await supabase
         .from('products')
         .select('name,brand')
@@ -89,8 +117,7 @@ export const POST: APIRoute = async ({ request }) => {
         .update({ stock_almacen: newStock })
         .eq('id', variant.id);
 
-      // Registrar en historial — from_location actúa como idempotency key
-      await supabase.from('inventory_movements').insert({
+      const movData = {
         type: 'venta',
         product_name: prod?.name || orderItem.item?.title || '',
         brand_name: prod?.brand || null,
@@ -100,10 +127,22 @@ export const POST: APIRoute = async ({ request }) => {
         location: 'bodega',
         user_email: 'mercadolibre.com',
         from_location: idempotencyKey,
-      });
+      };
 
-      // Reflejar el nuevo stock en ML
+      if (!lockUsed) {
+        // Reusar el lock placeholder como el primer registro real
+        await supabase.from('inventory_movements').update(movData).eq('id', lockRow.id);
+        lockUsed = true;
+      } else {
+        await supabase.from('inventory_movements').insert(movData);
+      }
+
       syncVariantToML(supabase, variant.id);
+    }
+
+    // Si ningún item coincidió en la BD, limpiar el lock placeholder
+    if (!lockUsed) {
+      await supabase.from('inventory_movements').delete().eq('id', lockRow.id);
     }
 
     return new Response('OK', { status: 200 });
