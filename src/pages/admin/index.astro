@@ -408,6 +408,7 @@ body{font-family:'Barlow',sans-serif;background:var(--grey);color:var(--black);m
     <div class="form-header"><h3 id="brandFormTitle">Nueva Marca</h3><button class="form-close" onclick="document.getElementById('brandModal').classList.remove('open')">&times;</button></div>
     <div class="form-body">
       <input type="hidden" id="brandId"/>
+      <input type="checkbox" id="bAuthorized" style="display:none"/>
       <div class="field"><label>Nombre *</label><input type="text" id="bName" placeholder="Ej: Venus"/></div>
       <div class="field"><label>Slug</label><input type="text" id="bSlug" placeholder="auto-generado-de-nombre"/></div>
     </div>
