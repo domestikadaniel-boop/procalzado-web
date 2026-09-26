@@ -59,15 +59,21 @@ export const POST: APIRoute = async ({ request }) => {
 
     for (const orderItem of (order.order_items || [])) {
       const mlItemId: string = orderItem.item?.id;
+      const mlVariationId: number | null = orderItem.item?.variation_id || null;
       const qty: number = orderItem.quantity || 1;
       if (!mlItemId) continue;
 
-      // Buscar la variante por ml_item_id
-      const { data: variant } = await supabase
+      // Buscar la variante: primero por variation_id si viene en la orden, si no por item_id solo
+      let variantQuery = supabase
         .from('product_variants')
         .select('id,stock_almacen,color,size,product_id')
-        .eq('ml_item_id', mlItemId)
-        .maybeSingle();
+        .eq('ml_item_id', mlItemId);
+
+      if (mlVariationId) {
+        variantQuery = variantQuery.eq('ml_variation_id', mlVariationId);
+      }
+
+      const { data: variant } = await variantQuery.maybeSingle();
       if (!variant) continue;
 
       // Buscar nombre y marca del producto
