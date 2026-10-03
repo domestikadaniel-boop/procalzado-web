@@ -31,7 +31,7 @@ export const POST: APIRoute = async ({ request }) => {
         .select('id,stock_almacen,stock_bodega');
       if (error) throw error;
       if (!data || !data.length) throw new Error('Variante no encontrada');
-      syncVariantToML(sb, vid);
+      await syncVariantToML(sb, vid);
       return json({ data: data[0] });
 
     } else if (action === 'transfer') {
@@ -207,7 +207,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       const { error: updErr } = await sb.from('product_variants').update({ stock_almacen: newVal }).eq('id', variant_id);
       if (updErr) throw updErr;
-      syncVariantToML(sb, variant_id);
+      await syncVariantToML(sb, variant_id);
 
       const { error: insErr } = await sb.from('loans').insert({
         type, person_name, variant_id, product_name, brand_name: brand_name || null,
@@ -237,18 +237,18 @@ export const POST: APIRoute = async ({ request }) => {
       if (loan.type === 'prestado') {
         if (resolution === 'devuelto_mismo') {
           await adjustStock(loan.variant_id, qty);
-          syncVariantToML(sb, loan.variant_id);
+          await syncVariantToML(sb, loan.variant_id);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
           await adjustStock(rVid, rQty);
-          syncVariantToML(sb, rVid);
+          await syncVariantToML(sb, rVid);
         }
       } else {
         if (resolution === 'devuelto_mismo') {
           await adjustStock(loan.variant_id, -qty);
-          syncVariantToML(sb, loan.variant_id);
+          await syncVariantToML(sb, loan.variant_id);
         } else if (resolution === 'devuelto_otra_talla' && rVid) {
           await adjustStock(rVid, -rQty);
-          syncVariantToML(sb, rVid);
+          await syncVariantToML(sb, rVid);
         }
       }
 

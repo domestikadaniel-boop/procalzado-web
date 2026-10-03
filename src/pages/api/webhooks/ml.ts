@@ -145,7 +145,7 @@ async function handlePaidOrder(supabase: any, orderId: string, order: any) {
       await supabase.from('inventory_movements').insert(movData);
     }
 
-    syncVariantToML(supabase, variant.id);
+    await syncVariantToML(supabase, variant.id);
   }
 
   if (!lockUsed) {
@@ -232,7 +232,7 @@ async function handleCancelledOrder(supabase: any, orderId: string, order: any, 
       from_location: cancelKey,
     });
 
-    syncVariantToML(supabase, variant.id);
+    await syncVariantToML(supabase, variant.id);
     firstInsert = false;
   }
 
