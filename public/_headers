@@ -1,3 +1,6 @@
+/productos/*
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
