@@ -478,44 +478,60 @@ const schemaProduct = {
   const btnAdd = document.getElementById('btnAddCart');
   if (btnAdd) {
     btnAdd.addEventListener('click', () => {
-      const qty = parseInt(qtyInput?.value) || 1;
-      const item = {
-        productId: btnAdd.dataset.productId,
-        slug: btnAdd.dataset.slug,
-        name: btnAdd.dataset.name,
-        brand: btnAdd.dataset.brand,
-        color: selectedColor,
-        size: selectedSize,
-        price: btnAdd.dataset.price ? parseFloat(btnAdd.dataset.price) : null,
-        img: visibleImages[currentImgIdx]?.url || btnAdd.dataset.img,
-        disableBuy: btnAdd.dataset.disableBuy === 'true'
-      };
-      // Agregar todos los pares en una sola llamada
-      if (window.addToCart) window.addToCart(item, qty);
-      // Reset cantidad a 1
-      if (qtyInput) qtyInput.value = 1;
+      showShippingNotice(() => {
+        const qty = parseInt(qtyInput?.value) || 1;
+        const item = {
+          productId: btnAdd.dataset.productId,
+          slug: btnAdd.dataset.slug,
+          name: btnAdd.dataset.name,
+          brand: btnAdd.dataset.brand,
+          color: selectedColor,
+          size: selectedSize,
+          price: btnAdd.dataset.price ? parseFloat(btnAdd.dataset.price) : null,
+          img: visibleImages[currentImgIdx]?.url || btnAdd.dataset.img,
+          disableBuy: btnAdd.dataset.disableBuy === 'true'
+        };
+        if (window.addToCart) window.addToCart(item, qty);
+        if (qtyInput) qtyInput.value = 1;
+      });
     });
+  }
+
+  // Modal de aviso de envío
+  function showShippingNotice(onContinue) {
+    const overlay = document.getElementById('shippingNoticeOverlay');
+    if (!overlay) { onContinue(); return; }
+    overlay.style.display = 'flex';
+    const btnContinue = overlay.querySelector('#shippingNoticeContinue');
+    const btnClose = overlay.querySelector('#shippingNoticeClose');
+    function close() { overlay.style.display = 'none'; }
+    function proceed() { close(); onContinue(); }
+    btnContinue.onclick = proceed;
+    btnClose.onclick = close;
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
   }
 
   // Botón "Consultar por WhatsApp" — incluye talla, color y cantidad
   const btnWa = document.getElementById('btnWa');
   if (btnWa) {
     btnWa.addEventListener('click', () => {
-      const qty = parseInt(qtyInput?.value) || 1;
-      const productName = btnAdd?.dataset.name || '';
-      const brand = btnAdd?.dataset.brand || '';
-      const price = btnAdd?.dataset.price;
-      const slug = btnAdd?.dataset.slug || '';
+      showShippingNotice(() => {
+        const qty = parseInt(qtyInput?.value) || 1;
+        const productName = btnAdd?.dataset.name || '';
+        const brand = btnAdd?.dataset.brand || '';
+        const price = btnAdd?.dataset.price;
+        const slug = btnAdd?.dataset.slug || '';
 
-      let msg = `*Hola Procalzado, me interesa este producto:*\n\n`;
-      msg += `*${brand ? brand + ' ' : ''}${productName}*\n`;
-      if (selectedColor) msg += `Color: ${selectedColor}\n`;
-      if (selectedSize) msg += `Talla: ${selectedSize}\n`;
-      msg += `Cantidad: ${qty}\n`;
-      if (price) msg += `Precio: $${Number(price).toLocaleString('es-CO')}\n`;
-      msg += `Link: https://procalzado.com/productos/${slug}`;
+        let msg = `*Hola Procalzado, me interesa este producto:*\n\n`;
+        msg += `*${brand ? brand + ' ' : ''}${productName}*\n`;
+        if (selectedColor) msg += `Color: ${selectedColor}\n`;
+        if (selectedSize) msg += `Talla: ${selectedSize}\n`;
+        msg += `Cantidad: ${qty}\n`;
+        if (price) msg += `Precio: $${Number(price).toLocaleString('es-CO')}\n`;
+        msg += `Link: https://procalzado.com/productos/${slug}`;
 
-      window.open(`https://wa.me/573213154654?text=${encodeURIComponent(msg)}`, '_blank');
+        window.open(`https://wa.me/573213154654?text=${encodeURIComponent(msg)}`, '_blank');
+      });
     });
   }
 
@@ -538,10 +554,29 @@ const schemaProduct = {
         alert('Este producto no tiene precio visible para compra en línea. Usa "Cotizar por WhatsApp".');
         return;
       }
-      if (window.addToCart) window.addToCart(item, qty);
-      window.location.href = '/checkout';
+      showShippingNotice(() => {
+        if (window.addToCart) window.addToCart(item, qty);
+        window.location.href = '/checkout';
+      });
     });
   }
 })();
 </script>
+
+<!-- Modal aviso de envío -->
+<div id="shippingNoticeOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--bg,#fff);border-radius:10px;max-width:420px;width:100%;padding:1.6rem 1.4rem 1.4rem;box-shadow:0 8px 32px rgba(0,0,0,.18);position:relative">
+    <div style="display:flex;align-items:flex-start;gap:.75rem;margin-bottom:1.1rem">
+      <svg style="flex-shrink:0;margin-top:.1rem" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>
+        <div style="font-weight:700;font-size:.95rem;margin-bottom:.4rem">Información de envío</div>
+        <p style="font-size:.875rem;line-height:1.55;margin:0;color:var(--muted,#555)">El costo de envío no está incluido y lo paga el comprador a la transportadora al recibir el producto, según tarifa de la transportadora.</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:.6rem;justify-content:flex-end">
+      <button id="shippingNoticeClose" type="button" style="padding:.5rem 1rem;border:1px solid var(--border,#ddd);background:transparent;border-radius:6px;cursor:pointer;font-size:.85rem">Cancelar</button>
+      <button id="shippingNoticeContinue" type="button" style="padding:.5rem 1.2rem;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600">Continuar</button>
+    </div>
+  </div>
+</div>
 </Layout>
